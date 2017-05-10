@@ -1,0 +1,41 @@
+module tester;
+
+import stdio local;
+
+import c2test local;
+
+const Test[+] Tests;
+
+func void test1() {
+    printf("test1\n");
+}
+Tests += test1;
+
+func void test2() {
+    printf("test2\n");
+}
+Tests += test2;
+
+// or with simple macro:
+#define TEST(x) \
+    Tests += x; \
+    func void x()
+
+TEST(test3) {
+    printf("test3\n");
+}
+
+TEST(test4) {
+    printf("test4\n");
+}
+
+public func int32 main() {
+    uint32 num_tests = elemsof(Tests);
+    printf("running %d tests:\n", num_tests);
+    for (uint32 i=0; i<num_tests; i++) {
+        printf("  test %u/%u: ", i+1, num_tests);
+        Tests[i].run();
+    }
+    return 0;
+}
+

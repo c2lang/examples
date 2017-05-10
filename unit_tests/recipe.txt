@@ -1,0 +1,8 @@
+executable test
+#    $warnings no-unused
+	$generate-c single-module
+    $refs
+    c2test.c2
+    main.c2
+end
+

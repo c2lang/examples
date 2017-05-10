@@ -1,0 +1,8 @@
+module c2test;
+
+public type TestFunc func void();
+
+public type Test struct {
+    TestFunc run;
+}
+
