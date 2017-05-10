@@ -3,6 +3,7 @@ module c2test;
 public type TestFunc func void();
 
 public type Test struct {
+    const char* name;
     TestFunc run;
 }
 
