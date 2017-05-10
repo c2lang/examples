@@ -3,7 +3,6 @@ executable test
 	$generate-c single-module
     $refs
     c2test.c2
-    ../string_buffer/container/string_buffer.c2
     main.c2
 end
 
