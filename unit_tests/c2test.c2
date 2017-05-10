@@ -1,9 +1,41 @@
 module c2test;
 
+import stdio local;
+
 public type TestFunc func void();
+
+char[4096] error_buffer;
+char* error_msg;
 
 public type Test struct {
     const char* name;
     TestFunc run;
+}
+
+public func void runtests(const Test* tests, uint32 num_tests)
+{
+    uint32 num_ok = 0;
+    uint32 num_failed = 0;
+    for (uint32 i=0; i<num_tests; i++) {
+        printf("TEST %u/%u %s ", i+1, num_tests, tests[i].name);
+        error_buffer[0] = 0;
+        error_msg = error_buffer;
+        tests[i].run();
+        printf("[OK]\n");
+        num_ok++;
+        if (error_msg != error_buffer) {
+            printf("%s", error_buffer);
+        }
+    }
+    printf("RESULTS: %d tests (%d ok, %d failed)\n", num_tests, num_ok, num_failed);
+}
+
+const char* ansi_blue = "\033[0;34m";
+const char* ansi_normal = "\033[0m";
+
+public func void log(const char* msg)
+{
+    uint32 len = cast<uint32>(sprintf(error_msg, "  %sLOG: %s%s\n", ansi_blue, msg, ansi_normal));
+    error_msg += len;
 }
 
