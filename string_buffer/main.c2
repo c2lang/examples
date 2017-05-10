@@ -1,0 +1,22 @@
+module tester;
+
+import stdio local;
+import container;
+
+public func int32 main() {
+    container.StringBuffer* buf = container.StringBuffer.create(100);
+
+    buf.add("hello ");
+    buf.add("this ");
+    buf.add("is ");
+    buf.add("a ");
+    buf.add("test!");
+
+    printf("size = %d\n", buf.size());
+    printf("data = '%s'\n", buf.data());
+
+    buf.clear();
+    buf.destroy();
+    return 0;
+}
+
