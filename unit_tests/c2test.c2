@@ -5,6 +5,11 @@ import csetjmp local;
 
 public type TestFunc func void();
 
+public type Test struct {
+    const char* name;
+    TestFunc run;
+}
+
 const char* ansi_blue =   "\033[0;34m";
 const char* ansi_normal = "\033[0m";
 const char* ansi_red =    "\033[0;31m";
@@ -14,20 +19,9 @@ char[4096] error_buffer;
 char* error_msg;
 jmp_buf c2test_err;
 
-public type Test struct {
-    const char* name;
-    TestFunc run;
-}
-
-public func void fail(const char* msg = nil)
-{
-    if (msg != nil) color_print(ansi_yellow, "ERR", msg);
-    longjmp(c2test_err, 1);
-}
-
-uint32 num_ok = 0;
-uint32 num_failed = 0;
-uint32 cur_test = 0;
+uint32 num_ok;
+uint32 num_failed;
+uint32 cur_test;
 
 public func void runtests(const Test* tests, uint32 num_tests)
 {
@@ -51,12 +45,21 @@ public func void runtests(const Test* tests, uint32 num_tests)
             printf("%s", error_buffer);
         }
     }
-    printf("RESULTS: %d tests (%d ok, %d failed)\n", num_tests, num_ok, num_failed);
+    const char* color = ansi_normal;
+    if (num_failed) color = ansi_red;
+    printf("%sRESULTS: %d tests (%d ok, %d failed)%s\n", color,
+        num_tests, num_ok, num_failed, ansi_normal);
 }
 
 func void color_print(const char* color, const char* title, const char* msg) {
     uint32 len = cast<uint32>(sprintf(error_msg, "  %s%s: %s%s\n", color, title, msg, ansi_normal));
     error_msg += len;
+}
+
+public func void fail(const char* msg = nil)
+{
+    if (msg != nil) color_print(ansi_yellow, "ERR", msg);
+    longjmp(c2test_err, 1);
 }
 
 public func void log(const char* msg)
