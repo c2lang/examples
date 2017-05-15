@@ -1,15 +1,10 @@
 module tester;
 
 import c2test local;
+#include "c2test.inc"
 
 // incremental array 'Tests'
 const Test[+] Tests;
-
-// simple macro: (could be placed in c2test.inc and #included)
-#define TEST(x) \
-    Tests += { .name=#x, .run=x } \
-    func void x()
-
 
 // very easy to add tests this way that are auto-magically added to the list
 TEST(test1) {
@@ -19,7 +14,6 @@ TEST(test1) {
 TEST(test2) {
     fail("should not come here");
 }
-
 
 TEST(test3) {
    log("it's working");
