@@ -1,0 +1,7 @@
+executable jump
+    $warnings no-unused
+	$generate-c single-module
+    $refs
+    jump.c2
+end
+

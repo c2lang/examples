@@ -1,0 +1,44 @@
+module jump;
+
+import stdio local;
+import unistd local;
+import csetjmp local;
+
+jmp_buf env1;
+jmp_buf env2;
+
+func int32 function2(char n)
+{
+    printf("function2(%c)\n", n);
+    if (n == 'D') longjmp(env1, 5);
+    if (n == 'F') longjmp(env2, 6);
+    printf("returning from function2(%c)\n", n);
+    return 15;
+}
+
+func void function1()
+{
+    char i;
+    for (i='A'; i<'H'; i++) {
+        printf("--- %c ---\n", i);
+        int32 res = setjmp(&env1);
+        if (res != 0) {
+            printf("coming from jump ONE, res=%d\n", res);
+            continue;
+        }
+        res = setjmp(&env2);
+        if (res != 0) {
+            printf("comping from jump TWO, res=%d\n", res);
+            continue;
+        }
+        usleep(250000);
+        res = function2(i);
+    }
+}
+
+public func int32 main() {
+    printf("size=%d\n", sizeof(jmp_buf));
+    function1();
+    return 0;
+}
+

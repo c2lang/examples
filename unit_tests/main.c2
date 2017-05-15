@@ -5,32 +5,30 @@ import c2test local;
 // incremental array 'Tests'
 const Test[+] Tests;
 
-
-// manual creation of some unit tests
-func void test1() {
-   log("this is the first test");
-}
-Tests += { "test1", test1 }
-
-func void test2() {
-}
-Tests += { "test2", test2 }
-
-
-// or with simple macro: (could be placed in c2test.inc and #included)
+// simple macro: (could be placed in c2test.inc and #included)
 #define TEST(x) \
     Tests += { .name=#x, .run=x } \
     func void x()
 
+
 // very easy to add tests this way that are auto-magically added to the list
+TEST(test1) {
+   log("this is the first test");
+}
+
+TEST(test2) {
+    fail("should not come here");
+}
+
+
 TEST(test3) {
    log("it's working");
    log("very well");
 }
 
 TEST(test4) {
+    fail();
 }
-
 
 public func int32 main() {
     // use elemsof() to find out how many tests there are

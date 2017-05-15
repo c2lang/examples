@@ -1,28 +1,52 @@
 module c2test;
 
 import stdio local;
+import csetjmp local;
 
 public type TestFunc func void();
 
+const char* ansi_blue =   "\033[0;34m";
+const char* ansi_normal = "\033[0m";
+const char* ansi_red =    "\033[0;31m";
+const char* ansi_yellow = "\033[0;33m";
+
 char[4096] error_buffer;
 char* error_msg;
+jmp_buf c2test_err;
 
 public type Test struct {
     const char* name;
     TestFunc run;
 }
 
+public func void fail(const char* msg = nil)
+{
+    if (msg != nil) color_print(ansi_yellow, "ERR", msg);
+    longjmp(c2test_err, 1);
+}
+
+uint32 num_ok = 0;
+uint32 num_failed = 0;
+uint32 cur_test = 0;
+
 public func void runtests(const Test* tests, uint32 num_tests)
 {
-    uint32 num_ok = 0;
-    uint32 num_failed = 0;
-    for (uint32 i=0; i<num_tests; i++) {
+    num_ok = 0;
+    num_failed = 0;
+    for (cur_test = 0; cur_test < num_tests; cur_test++) {
+        uint32 i = cur_test;
         printf("TEST %u/%u %s ", i+1, num_tests, tests[i].name);
         error_buffer[0] = 0;
         error_msg = error_buffer;
-        tests[i].run();
-        printf("[OK]\n");
-        num_ok++;
+        int32 result = setjmp(&c2test_err);
+        if (result == 0) {
+            tests[i].run();
+            printf("[OK]\n");
+            num_ok++;
+        } else {
+            printf("%s[FAIL]%s\n", ansi_red, ansi_normal);
+            num_failed++;
+        }
         if (error_msg != error_buffer) {
             printf("%s", error_buffer);
         }
@@ -30,12 +54,13 @@ public func void runtests(const Test* tests, uint32 num_tests)
     printf("RESULTS: %d tests (%d ok, %d failed)\n", num_tests, num_ok, num_failed);
 }
 
-const char* ansi_blue = "\033[0;34m";
-const char* ansi_normal = "\033[0m";
+func void color_print(const char* color, const char* title, const char* msg) {
+    uint32 len = cast<uint32>(sprintf(error_msg, "  %s%s: %s%s\n", color, title, msg, ansi_normal));
+    error_msg += len;
+}
 
 public func void log(const char* msg)
 {
-    uint32 len = cast<uint32>(sprintf(error_msg, "  %sLOG: %s%s\n", ansi_blue, msg, ansi_normal));
-    error_msg += len;
+    color_print(ansi_blue, "LOG", msg);
 }
 
