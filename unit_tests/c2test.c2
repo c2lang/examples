@@ -51,19 +51,25 @@ public func void runtests(const Test* tests, uint32 num_tests)
         num_tests, num_ok, num_failed, ansi_normal);
 }
 
-func void color_print(const char* color, const char* title, const char* msg) {
-    uint32 len = cast<uint32>(sprintf(error_msg, "  %s%s: %s%s\n", color, title, msg, ansi_normal));
+func void color_print(const char* color, const char* title, const char* filename, uint32 line, const char* msg) {
+    uint32 len;
+    if (filename) {
+        len = cast<uint32>(sprintf(error_msg, "  %s%s: %s:%d %s%s\n", color, title, filename, line, msg, ansi_normal));
+    } else {
+        len = cast<uint32>(sprintf(error_msg, "  %s%s: %s%s\n", color, title, msg, ansi_normal));
+    }
     error_msg += len;
 }
 
-public func void fail(const char* msg = nil)
+public func void fail(const char* filename, uint32 line, char* msg = nil)
 {
-    if (msg != nil) color_print(ansi_yellow, "ERR", msg);
+    if (msg == nil) msg = "failed";
+    color_print(ansi_yellow, "ERR", filename, line, msg);
     longjmp(c2test_err, 1);
 }
 
 public func void log(const char* msg)
 {
-    color_print(ansi_blue, "LOG", msg);
+    color_print(ansi_blue, "LOG", nil, 0, msg);
 }
 

@@ -12,7 +12,7 @@ TEST(test1) {
 }
 
 TEST(test2) {
-    fail("should not come here");
+    FAIL();
 }
 
 TEST(test3) {
@@ -21,7 +21,7 @@ TEST(test3) {
 }
 
 TEST(test4) {
-    fail();
+    FAIL();
 }
 
 public func int32 main() {

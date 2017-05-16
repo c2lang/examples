@@ -4,3 +4,5 @@
     Tests += { .name=#x, .run=x } \
     func void x()
 
+#define FAIL() c2test.fail(__FILE__, __LINE__)
+
