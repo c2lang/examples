@@ -21,7 +21,7 @@ TEST(test3) {
 }
 
 TEST(test4) {
-    FAIL();
+    ASSERT_EQUAL(10, 20);
 }
 
 public func int32 main() {

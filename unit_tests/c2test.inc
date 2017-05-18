@@ -6,3 +6,5 @@
 
 #define FAIL() c2test.fail(__FILE__, __LINE__)
 
+#define ASSERT_EQUAL(exp, real) c2test.assert_equal(exp, real, __FILE__, __LINE__)
+

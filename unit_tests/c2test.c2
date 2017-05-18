@@ -68,6 +68,15 @@ public func void fail(const char* filename, uint32 line, char* msg = nil)
     longjmp(c2test_err, 1);
 }
 
+public func void assert_equal(int64 exp, int64 real, const char* caller, uint32 line)
+{
+    if (exp != real) {
+        char[64] msg;
+        sprintf(msg, "expected %ld, got %ld", exp, real);
+        color_print(ansi_yellow, "ERR", caller, line, msg);
+    }
+}
+
 public func void log(const char* msg)
 {
     color_print(ansi_blue, "LOG", nil, 0, msg);
