@@ -3,6 +3,8 @@ module tester;
 import stdio local;
 import container;
 
+type Callback func void (container.StringBuffer* buf, const char* text);
+
 public func int32 main() {
     container.StringBuffer* buf = container.StringBuffer.create(100);
 
@@ -14,6 +16,8 @@ public func int32 main() {
 
     printf("size = %d\n", buf.size());
     printf("data = '%s'\n", buf.data());
+
+    Callback cb = container.StringBuffer.add;
 
     buf.clear();
     buf.destroy();
