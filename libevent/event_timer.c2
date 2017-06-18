@@ -1,0 +1,90 @@
+module event;
+
+public type TimerHandler func void(void* arg);
+
+// struct fields for internal use only. Users should consider this struct opaque
+public type Timer struct {
+    Timer* next;
+    uint64 timeout;
+    Base* base;
+    TimerHandler handler;
+    void* handler_arg;
+    uint64 interval_usec;
+    uint32 flags;
+}
+
+public const uint32 TIMER_PERSIST = 0x1;
+const uint32 TIMER_PENDING        = 0x2;
+
+public func void Timer.assign(Timer* timer, Base* base, uint32 flags, TimerHandler fn, void* arg)
+{
+    timer.next = nil;
+    timer.timeout = 0;
+    timer.base = base;
+    timer.handler = fn;
+    timer.handler_arg = arg;
+    timer.interval_usec = 0;
+    timer.flags = flags;
+}
+
+func void Timer.add_internal(Timer* timer)
+{
+    Base* base = timer.base;
+    uint64 timeout = timer.timeout;
+    if (base.timers) {
+        if (timeout < base.timers.timeout) {
+            // add before first
+            timer.next = base.timers;
+            base.timers = timer;
+        } else {
+            // add sorted
+            Timer* cur = base.timers;
+            while (cur.next) {
+                if (cur.next.timeout > timeout) break;
+                cur = cur.next;
+            }
+            timer.next = cur.next;
+            cur.next = timer;
+        }
+    } else {
+        // add as first
+        base.timers = timer;
+    }
+}
+
+public func void Timer.add(Timer* timer, uint64 delay_usec)
+{
+    uint64 now = current_time();
+    timer.interval_usec = delay_usec;
+    timer.timeout = now + delay_usec;
+    timer.flags |= TIMER_PENDING;
+    timer.next = nil;
+    timer.add_internal();
+}
+
+public func bool Timer.isActive(const Timer* timer)
+{
+    return (timer.flags & TIMER_PENDING) != 0;
+}
+
+public func void Timer.del(Timer* timer)
+{
+    if (!timer.isActive()) return;
+    Base* base = timer.base;
+
+    if (timer == base.timers) {
+        base.timers = timer.next;
+    } else {
+        Timer* cur = base.timers;
+        while (cur.next) {
+            if (cur.next == timer) {
+                cur.next = timer.next;
+                break;
+            }
+            cur = cur.next;
+        }
+    }
+    timer.next = nil;
+    timer.flags &= ~TIMER_PENDING;
+
+}

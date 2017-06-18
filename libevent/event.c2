@@ -1,23 +1,35 @@
 module event;
 import stdlib;
+import unistd;
+import sys_time;
+import stdio local;
 
-public type EventBase struct {
+public func uint64 current_time() {
+    sys_time.timeval tv;
+    sys_time.gettimeofday(&tv, nil);
+    uint64 now64 = cast<uint64>(tv.tv_sec);
+    now64 *= 1000000;
+    now64 += tv.tv_usec;
+    return now64;
+}
+
+public type Base struct {
     uint32 running_loop;
     uint32 loop_break;
     uint8 return_value;
+    Timer* timers;
 } @(opaque)
 
-public func EventBase* EventBase.create() {
-    EventBase* base = stdlib.malloc(sizeof(EventBase));
+public func Base* Base.create() {
+    Base* base = stdlib.malloc(sizeof(Base));
     return base;
 }
 
-public func void EventBase.free(EventBase* base) {
+public func void Base.free(Base* base) {
     stdlib.free(base);
 }
 
-public func uint8 EventBase.mainloop(EventBase* base) {
-    // TODO
+public func uint8 Base.mainloop(Base* base) {
     base.return_value = 0;
     base.running_loop = 1;
     while (!base.loop_break) {
@@ -27,13 +39,35 @@ public func uint8 EventBase.mainloop(EventBase* base) {
     return base.return_value;
 }
 
-public func void EventBase.loopbreak(EventBase* base, uint8 return_value) {
+public func void Base.loopbreak(Base* base, uint8 return_value) {
     base.return_value = return_value;
     base.loop_break = 1;
     //if (base->running_loop) base.sendcmd(stop_cmd);
 }
 
-func void EventBase.internal_loop(EventBase* base) {
-    // TODO
+func void Base.fire_timer(Base* base) {
+    Timer* timer = base.timers;
+    base.timers = timer.next;
+    timer.next = nil;
+    if (timer.flags &= TIMER_PERSIST) {
+        timer.timeout += timer.interval_usec;
+        timer.add_internal();
+    } else {
+        timer.flags &= ~TIMER_PENDING;
+    }
+    timer.handler(timer.handler_arg);
+}
+
+func void Base.internal_loop(Base* base) {
+    if (base.timers) {
+        Timer* timer = base.timers;
+        uint64 now = current_time();
+        if (now >= timer.timeout) {
+            base.fire_timer();
+            return;
+        } else {
+            //uint64 delay = timer.timeout - now;
+        }
+    }
 }
 

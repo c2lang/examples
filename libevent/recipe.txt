@@ -5,6 +5,7 @@ executable event
     $refs
     $deps
     event.c2
+    event_timer.c2
     main.c2
 end
 
