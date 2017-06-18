@@ -1,0 +1,14 @@
+module event_test;
+import event local;
+//import signal;
+
+public func int32 main() {
+    EventBase* base = EventBase.create();
+
+    uint8 ret = base.mainloop();
+
+    base.free();
+    return ret;
+}
+
+

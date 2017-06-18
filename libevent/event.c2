@@ -1,0 +1,39 @@
+module event;
+import stdlib;
+
+public type EventBase struct {
+    uint32 running_loop;
+    uint32 loop_break;
+    uint8 return_value;
+} @(opaque)
+
+public func EventBase* EventBase.create() {
+    EventBase* base = stdlib.malloc(sizeof(EventBase));
+    return base;
+}
+
+public func void EventBase.free(EventBase* base) {
+    stdlib.free(base);
+}
+
+public func uint8 EventBase.mainloop(EventBase* base) {
+    // TODO
+    base.return_value = 0;
+    base.running_loop = 1;
+    while (!base.loop_break) {
+        base.internal_loop();
+    }
+    base.running_loop = 0;
+    return base.return_value;
+}
+
+public func void EventBase.loopbreak(EventBase* base, uint8 return_value) {
+    base.return_value = return_value;
+    base.loop_break = 1;
+    //if (base->running_loop) base.sendcmd(stop_cmd);
+}
+
+func void EventBase.internal_loop(EventBase* base) {
+    // TODO
+}
+
