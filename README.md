@@ -11,6 +11,9 @@ be found in a subdir 'output/test/'
 ## libevent
 An event framework, based on libevent
 
+## socket
+Open a server socket and listen to it
+
 ## string_buffer
 A very simple StringBuffer showing off struct functions
 
