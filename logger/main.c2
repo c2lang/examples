@@ -2,13 +2,14 @@ module test;
 import logger;
 import unistd;
 
-public func int32 main() {
+public func int32 main(int32 argc, char*[] argv) {
     // TODO create file/stdout backend
-    logger.create(unistd.isatty(1), false);
+    logger.create(unistd.isatty(1), argc == 2);
 
     logger.Log log;
     log.init("main", logger.INFO);
 
+    log.info("call this example with an extra argument to show relative times");
     log.debug("debug msg");
     log.info("info msg");
     log.warn("this is a %s warning", "real");
