@@ -1,10 +1,10 @@
 module test;
 import logger;
-import unistd local;
+import unistd;
 
 public func int32 main() {
-    logger.create(isatty(1), false);
-    //logger.create(isatty(1), true);
+    // TODO create file/stdout backend
+    logger.create(unistd.isatty(1), false);
 
     logger.Log log;
     log.init("main", logger.INFO);
