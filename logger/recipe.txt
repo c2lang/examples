@@ -1,0 +1,9 @@
+executable log
+    $warnings no-unused
+	$generate-c single-module
+    $refs
+    logger.c2
+    color.c2
+    main.c2
+end
+

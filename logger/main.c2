@@ -1,0 +1,31 @@
+module test;
+import logger;
+import unistd local;
+
+public func int32 main() {
+    logger.create(isatty(1), false);
+    //logger.create(isatty(1), true);
+
+    logger.Log log;
+    log.init("main", logger.INFO);
+
+    log.debug("debug msg");
+    log.info("info msg");
+    log.warn("this is a %s warning", "real");
+    log.error("Error number %d", 10);
+
+    // meanwhile in another component..
+    logger.Log log2;
+    log2.init("server", logger.INFO);
+    log2.setLevel(logger.DEBUG);
+    log2.info("got new connection");
+    log2.debug("client connected from %s, fd %d", "127.0.0.1", 34);
+    log2.warn("client disconnected");
+
+    // and back to the first one..
+    log.info("almost done");
+    log.fatal("uh ooh, totally FUBAR");
+
+    return 0;
+}
+
