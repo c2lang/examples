@@ -4,19 +4,19 @@ import unistd;
 import sys_time;
 import stdio local;
 
-public func uint64 current_time() {
+public func u64 current_time() {
     sys_time.timeval tv;
     sys_time.gettimeofday(&tv, nil);
-    uint64 now64 = cast<uint64>(tv.tv_sec);
+    u64 now64 = cast<u64>(tv.tv_sec);
     now64 *= 1000000;
     now64 += tv.tv_usec;
     return now64;
 }
 
 public type Base struct {
-    uint32 running_loop;
-    uint32 loop_break;
-    uint8 return_value;
+    u32 running_loop;
+    u32 loop_break;
+    u8 return_value;
     Timer* timers;
 } @(opaque)
 
@@ -29,7 +29,7 @@ public func void Base.free(Base* base) {
     stdlib.free(base);
 }
 
-public func uint8 Base.mainloop(Base* base) {
+public func u8 Base.mainloop(Base* base) {
     base.return_value = 0;
     base.running_loop = 1;
     while (!base.loop_break) {
@@ -39,7 +39,7 @@ public func uint8 Base.mainloop(Base* base) {
     return base.return_value;
 }
 
-public func void Base.loopbreak(Base* base, uint8 return_value) {
+public func void Base.loopbreak(Base* base, u8 return_value) {
     base.return_value = return_value;
     base.loop_break = 1;
     //if (base->running_loop) base.sendcmd(stop_cmd);
@@ -61,12 +61,12 @@ func void Base.fire_timer(Base* base) {
 func void Base.internal_loop(Base* base) {
     if (base.timers) {
         Timer* timer = base.timers;
-        uint64 now = current_time();
+        u64 now = current_time();
         if (now >= timer.timeout) {
             base.fire_timer();
             return;
         } else {
-            //uint64 delay = timer.timeout - now;
+            //u64 delay = timer.timeout - now;
         }
     }
 }

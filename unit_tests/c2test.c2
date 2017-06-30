@@ -19,20 +19,20 @@ char[4096] error_buffer;
 char* error_msg;
 jmp_buf c2test_err;
 
-uint32 num_ok;
-uint32 num_failed;
-uint32 cur_test;
+u32 num_ok;
+u32 num_failed;
+u32 cur_test;
 
-public func void runtests(const Test* tests, uint32 num_tests)
+public func void runtests(const Test* tests, u32 num_tests)
 {
     num_ok = 0;
     num_failed = 0;
     for (cur_test = 0; cur_test < num_tests; cur_test++) {
-        uint32 i = cur_test;
+        u32 i = cur_test;
         printf("TEST %u/%u %s ", i+1, num_tests, tests[i].name);
         error_buffer[0] = 0;
         error_msg = error_buffer;
-        int32 result = setjmp(&c2test_err);
+        i32 result = setjmp(&c2test_err);
         if (result == 0) {
             tests[i].run();
             printf("[OK]\n");
@@ -51,24 +51,24 @@ public func void runtests(const Test* tests, uint32 num_tests)
         num_tests, num_ok, num_failed, ansi_normal);
 }
 
-func void color_print(const char* color, const char* title, const char* filename, uint32 line, const char* msg) {
-    uint32 len;
+func void color_print(const char* color, const char* title, const char* filename, u32 line, const char* msg) {
+    u32 len;
     if (filename) {
-        len = cast<uint32>(sprintf(error_msg, "  %s%s: %s:%d %s%s\n", color, title, filename, line, msg, ansi_normal));
+        len = cast<u32>(sprintf(error_msg, "  %s%s: %s:%d %s%s\n", color, title, filename, line, msg, ansi_normal));
     } else {
-        len = cast<uint32>(sprintf(error_msg, "  %s%s: %s%s\n", color, title, msg, ansi_normal));
+        len = cast<u32>(sprintf(error_msg, "  %s%s: %s%s\n", color, title, msg, ansi_normal));
     }
     error_msg += len;
 }
 
-public func void fail(const char* filename, uint32 line, char* msg = nil)
+public func void fail(const char* filename, u32 line, char* msg = nil)
 {
     if (msg == nil) msg = "failed";
     color_print(ansi_yellow, "ERR", filename, line, msg);
     longjmp(c2test_err, 1);
 }
 
-public func void assert_equal(int64 exp, int64 real, const char* caller, uint32 line)
+public func void assert_equal(i64 exp, i64 real, const char* caller, u32 line)
 {
     if (exp != real) {
         char[64] msg;

@@ -12,7 +12,7 @@ import time;
 // TODO get from backend
 bool useColor = true;
 bool relativeTimes = true;
-uint64 startTime;
+u64 startTime;
 
 public func void create(bool useColor_, bool relTimes) {
     useColor = useColor_;
@@ -20,7 +20,7 @@ public func void create(bool useColor_, bool relTimes) {
     startTime = current_time();
 }
 
-public type Level enum uint8 {
+public type Level enum u8 {
     FATAL = 0,
     ERROR,
     WARN,
@@ -39,10 +39,10 @@ func const char* level2str(Level lvl) {
     return nil;
 }
 
-func uint64 current_time() {
+func u64 current_time() {
    timeval tv;
    gettimeofday(&tv, nil);
-   uint64 tv64 = cast<uint64>(tv.tv_sec);
+   u64 tv64 = cast<u64>(tv.tv_sec);
    tv64 *= 1000000;
    tv64 += tv.tv_usec;
    return tv64;
@@ -109,9 +109,9 @@ func void Log.internal(Log* log, Level level, const char* color_, const char* fo
     if (useColor) cp += sprintf(cp, "%s", color_);
     *cp++ = '[';
     if (relativeTimes) {
-        uint64 now = current_time();
+        u64 now = current_time();
         now -= startTime;
-        uint64 subsec = now % 1000000;
+        u64 subsec = now % 1000000;
         cp += sprintf(cp, "%04ld.%06ld", now / 1000000, subsec);
     } else {
         timeval tv;

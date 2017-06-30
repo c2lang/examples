@@ -5,16 +5,16 @@ import stdlib local;
 import stdio local;
 import unistd local;
 
-func void fatal(const uint8* msg) {
+func void fatal(const u8* msg) {
 	exit(EXIT_FAILURE);
 }
 
-func void signal_handler(int32 num) {
+func void signal_handler(i32 num) {
 	printf("got signal %d\n", num);
 	exit(EXIT_SUCCESS);
 }
 
-public func int32 main() {
+public func i32 main() {
     Sigaction act;
     memset(&act, 0, sizeof(act));
     act.sa_flags = SA_NOCLDSTOP|SA_RESTART;

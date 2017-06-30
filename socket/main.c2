@@ -11,9 +11,9 @@ func void fatal(const char* msg) {
     exit(EXIT_FAILURE);
 }
 
-func int32 open_socket(uint16 port)
+func i32 open_socket(u16 port)
 {
-    int32 fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP);
+    i32 fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP);
     if (fd == -1) {
         fatal("opening TCP socket");
     }
@@ -24,7 +24,7 @@ func int32 open_socket(uint16 port)
     my_addr.sin_addr.s_addr = INADDR_ANY;
     memset(&my_addr.sin_zero, 0, 8);
 
-    int32 reuse = 1;
+    i32 reuse = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) != 0) {
         fatal("setsockopt(SO_REUSEADDR)");
     }
@@ -36,33 +36,33 @@ func int32 open_socket(uint16 port)
     return fd;
 }
 
-func int32 wait_for_connection(int32 fd, char** src_ipnr)
+func i32 wait_for_connection(i32 fd, char** src_ipnr)
 {
-    uint32 sin_size = sizeof(sockaddr_in);
+    u32 sin_size = sizeof(sockaddr_in);
     sockaddr_in remote;
-    int32 new_fd = accept4(fd, &remote, &sin_size, SOCK_CLOEXEC);
+    i32 new_fd = accept4(fd, &remote, &sin_size, SOCK_CLOEXEC);
     if (new_fd == -1) fatal("accept4");
 
     *src_ipnr = inet_ntoa(remote.sin_addr);
     return new_fd;
 }
 
-public func int32 main() {
+public func i32 main() {
     // open socket
-    uint16 port = 8888;
-    int32 fd = open_socket(port);
+    u16 port = 8888;
+    i32 fd = open_socket(port);
     printf("listering on port %d (press Ctrl-C to quit)\n", port);
 
     // wait until accept
     char* src_ipnr = nil;
-    int32 conn_fd = wait_for_connection(fd, &src_ipnr);
+    i32 conn_fd = wait_for_connection(fd, &src_ipnr);
     printf("connection from %s\n", src_ipnr);
 
     // read until disconnect
     while (1) {
-        const uint32 BufSize = 64;
-        uint8[BufSize] buffer;
-        int64 numread = read(conn_fd, buffer, BufSize-1);
+        const u32 BufSize = 64;
+        u8[BufSize] buffer;
+        i64 numread = read(conn_fd, buffer, BufSize-1);
         if (numread == 0) {
             printf("client disconnected\n");
             break;

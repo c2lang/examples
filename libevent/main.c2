@@ -13,7 +13,7 @@ func void timeout_func(void*) {
     printf("timeout\n");
 }
 
-public func int32 main() {
+public func i32 main() {
     base = Base.create();
 
     Sigaction act;
@@ -27,17 +27,17 @@ public func int32 main() {
     timer.assign(base, TIMER_PERSIST, timeout_func, nil);
     timer.add(250000);
 
-    uint8 ret = base.mainloop();
+    u8 ret = base.mainloop();
 
     base.free();
     return ret;
 }
 
-func void fatal(const uint8* msg) {
+func void fatal(const u8* msg) {
 	exit(EXIT_FAILURE);
 }
 
-func void signal_handler(int32 num) {
+func void signal_handler(i32 num) {
     base.loopbreak(EXIT_SUCCESS);
 }
 

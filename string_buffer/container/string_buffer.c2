@@ -4,12 +4,12 @@ import stdlib local;
 import string local;
 
 public type StringBuffer struct {
-    uint32 capacity_;
-    uint32 size_;
+    u32 capacity_;
+    u32 size_;
     char[0] data_;
 } @(opaque)
 
-public func StringBuffer* StringBuffer.create(uint32 capacity_)
+public func StringBuffer* StringBuffer.create(u32 capacity_)
 {
     StringBuffer* buf = malloc(sizeof(StringBuffer) + capacity_);
     buf.capacity_ = capacity_;
@@ -22,7 +22,7 @@ public func void StringBuffer.destroy(StringBuffer* buf)
     free(buf);
 }
 
-public func uint32 StringBuffer.size(const StringBuffer* buf)
+public func u32 StringBuffer.size(const StringBuffer* buf)
 {
     return buf.size_;
 }
@@ -39,7 +39,7 @@ public func void StringBuffer.clear(StringBuffer* buf)
 
 public func void StringBuffer.add(StringBuffer* buf, const char* text)
 {
-    uint32 len = cast<uint32>(strlen(text));
+    u32 len = cast<u32>(strlen(text));
     if (len >= (buf.capacity_ - buf.size_)) return;
     strcpy(&buf.data_[buf.size_], text);
     buf.size_ += len;

@@ -5,7 +5,7 @@ import container;
 
 type Callback func void (container.StringBuffer* buf, const char* text);
 
-public func int32 main() {
+public func i32 main() {
     container.StringBuffer* buf = container.StringBuffer.create(100);
 
     buf.add("hello ");

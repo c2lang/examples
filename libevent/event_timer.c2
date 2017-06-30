@@ -5,18 +5,18 @@ public type TimerHandler func void(void* arg);
 // struct fields for internal use only. Users should consider this struct opaque
 public type Timer struct {
     Timer* next;
-    uint64 timeout;
+    u64 timeout;
     Base* base;
     TimerHandler handler;
     void* handler_arg;
-    uint64 interval_usec;
-    uint32 flags;
+    u64 interval_usec;
+    u32 flags;
 }
 
-public const uint32 TIMER_PERSIST = 0x1;
-const uint32 TIMER_PENDING        = 0x2;
+public const u32 TIMER_PERSIST = 0x1;
+const u32 TIMER_PENDING        = 0x2;
 
-public func void Timer.assign(Timer* timer, Base* base, uint32 flags, TimerHandler fn, void* arg)
+public func void Timer.assign(Timer* timer, Base* base, u32 flags, TimerHandler fn, void* arg)
 {
     timer.next = nil;
     timer.timeout = 0;
@@ -30,7 +30,7 @@ public func void Timer.assign(Timer* timer, Base* base, uint32 flags, TimerHandl
 func void Timer.add_internal(Timer* timer)
 {
     Base* base = timer.base;
-    uint64 timeout = timer.timeout;
+    u64 timeout = timer.timeout;
     if (base.timers) {
         if (timeout < base.timers.timeout) {
             // add before first
@@ -52,9 +52,9 @@ func void Timer.add_internal(Timer* timer)
     }
 }
 
-public func void Timer.add(Timer* timer, uint64 delay_usec)
+public func void Timer.add(Timer* timer, u64 delay_usec)
 {
-    uint64 now = current_time();
+    u64 now = current_time();
     timer.interval_usec = delay_usec;
     timer.timeout = now + delay_usec;
     timer.flags |= TIMER_PENDING;
