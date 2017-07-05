@@ -1,20 +1,32 @@
 module event_test;
 
-import event local;
 import csignal local;
 import string local;
 import stdlib local;
 import stdio local;
 import unistd local;
+import example_socket local;
+import events;
+import logger;
 
-Base* base;
+events.Base* base;
+logger.Log* mainlog;
 
 func void timeout_func(void*) {
-    printf("timeout\n");
+    mainlog.warn("timeout");
 }
 
 public func i32 main() {
-    base = Base.create();
+    logger.Base logbase;
+    logbase.init(logger.INFO, unistd.isatty(1), true);
+
+    logger.Log log;
+    log.init(&logbase, "main");
+    mainlog = &log;
+
+    log.info("starting");
+
+    base = events.Base.create();
 
     Sigaction act;
     memset(&act, 0, sizeof(act));
@@ -23,13 +35,22 @@ public func i32 main() {
     if (sigaction(SIGINT, &act, nil) != 0) fatal("sigaction(SIGINT)");
     if (sigaction(SIGTERM, &act, nil) != 0) fatal("sigaction(SIGTERM)");
 
-    Timer timer;
-    timer.assign(base, TIMER_PERSIST, timeout_func, nil);
-    timer.add(250000);
+    events.Timer timer;
+    timer.assign(base, events.PERSIST, timeout_func, nil);
+    //timer.add(250000);
 
+    Socket* socket1 = Socket.create(base, &logbase, "server1", 7777);
+    Socket* socket2 = Socket.create(base, &logbase, "server2", 8888);
+
+    log.info("before mainloop");
     u8 ret = base.mainloop();
+    log.info("after mainloop");
 
-    base.free();
+    socket2.destroy();
+    socket1.destroy();
+    base.destroy();
+    logbase.destroy();
+
     return ret;
 }
 

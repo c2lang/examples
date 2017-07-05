@@ -1,0 +1,124 @@
+module events;
+import stdlib;
+import unistd;
+import sys_time;
+import stdio local;
+import libc_poll local;
+
+public func u64 current_time() {
+    sys_time.timeval tv;
+    sys_time.gettimeofday(&tv, nil);
+    u64 now64 = cast<u64>(tv.tv_sec);
+    now64 *= 1000000;
+    now64 += tv.tv_usec;
+    return now64;
+}
+
+const u32 MaxEvents = 64;
+
+public type Base struct {
+    u32 running_loop;
+    u32 loop_break;
+    u8 return_value;
+    Event* event_head;
+    Event* event_tail;
+    Timer* timers;
+    pollfd[MaxEvents] fds;
+    Event*[MaxEvents] events;
+    u32 numfds;
+    bool eventsDirty;
+} @(opaque)
+
+public func Base* Base.create() {
+    Base* base = stdlib.calloc(1, sizeof(Base));
+    // TODO add pipefd
+    base.updateEvents();
+    return base;
+}
+
+public func void Base.destroy(Base* base) {
+    stdlib.free(base);
+}
+
+public func u8 Base.mainloop(Base* base) {
+    base.return_value = 0;
+    base.running_loop = 1;
+    while (!base.loop_break) {
+        base.internal_loop();
+    }
+    base.running_loop = 0;
+    return base.return_value;
+}
+
+public func void Base.loopbreak(Base* base, u8 return_value) {
+    base.return_value = return_value;
+    base.loop_break = 1;
+    //if (base->running_loop) base.sendcmd(stop_cmd);
+}
+
+func void Base.fire_timer(Base* base) {
+    Timer* timer = base.timers;
+    base.timers = timer.next;
+    timer.next = nil;
+    if (timer.flags &= PERSIST) {
+        timer.timeout += timer.interval_usec;
+        timer.add_internal();
+    } else {
+        timer.flags &= ~TIMER_PENDING;
+    }
+    timer.handler(timer.handler_arg);
+}
+
+func void Base.internal_loop(Base* base) {
+    i32 timeout_ms = -1;    // infinity
+    if (base.timers) {
+        u64 now = current_time();
+        Timer* timer = base.timers;
+        if (now >= timer.timeout) {
+            base.fire_timer();
+            return;
+        }
+        u64 delay = (timer.timeout - now);
+        // Round delay to ms
+        delay += 500;
+        delay /= 1000;
+        timeout_ms = cast<i32>(delay);
+        //timeout_ms = (delay + 500) / 1000;     // causes assert in c2c
+    }
+    if (base.eventsDirty) {
+        Event* ev = base.event_head;
+        u32 i = 0;
+        while (ev) {
+            base.fds[i].fd = ev.fd;
+            // TEMP only read, should check events.READ/WRITE
+            base.fds[i].events = POLLIN;
+            base.events[i] = ev;
+            ev = ev.next;
+            i++;
+        }
+        base.numfds = i;
+        base.eventsDirty = false;
+    }
+    i32 ret = poll(base.fds, base.numfds, timeout_ms);
+    if (ret == 0) { // timeout
+        if (base.timers) base.fire_timer();
+    } else if (ret < 0) {   // error
+        // interrupted (by signal, etc)
+    } else { // events
+        for (u32 i=0; i<ret; i++) {
+            pollfd* current = &base.fds[i];
+            if (current.revents) {
+                // TODO check POLLIN/POLLOUT
+                Event* ev = base.events[i];
+                ev.handler(current.fd, ev.handler_arg, READ);
+                return;
+            }
+        }
+    }
+}
+
+func void Base.updateEvents(Base* base)
+{
+    base.eventsDirty = true;
+}
+

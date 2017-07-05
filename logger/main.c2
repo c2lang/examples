@@ -3,7 +3,7 @@ import logger;
 import unistd;
 
 public func i32 main(i32 argc, char*[] argv) {
-    logger.LogBase logbase;
+    logger.Base logbase;
     logbase.init(logger.INFO, unistd.isatty(1), argc == 2);
 
     logger.Log log;

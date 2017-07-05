@@ -1,4 +1,4 @@
-module event;
+module events;
 
 public type TimerHandler func void(void* arg);
 
@@ -13,7 +13,7 @@ public type Timer struct {
     u32 flags;
 }
 
-public const u32 TIMER_PERSIST = 0x1;
+public const u32 PERSIST = 0x1;
 const u32 TIMER_PENDING        = 0x2;
 
 public func void Timer.assign(Timer* timer, Base* base, u32 flags, TimerHandler fn, void* arg)

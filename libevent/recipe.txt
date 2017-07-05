@@ -4,8 +4,12 @@ executable event
 	$generate-c single-module
     $refs
     $deps
-    event.c2
-    event_timer.c2
+    color.c2
+    logger.c2
+    events.c2
+    events_timer.c2
+    events_event.c2
+    example_socket.c2
     main.c2
 end
 

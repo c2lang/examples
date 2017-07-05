@@ -1,0 +1,145 @@
+module example_socket;
+
+import stdio local;
+import stdlib local;
+import unistd local;
+import string local;
+import sys_socket local;
+import events;
+import logger;
+
+func void fatal(const char* msg) {
+    printf("%s\n", msg);
+    exit(EXIT_FAILURE);
+}
+
+
+type Connection struct {
+    i32 fd;
+    Connection* next;
+    logger.Log* log;
+    events.Event event;
+}
+
+func Connection* Connection.create(i32 fd, events.Base* base, logger.Log* log) {
+    Connection* conn = calloc(1, sizeof(Connection));
+    conn.fd = fd;
+    conn.log = log;
+    conn.event.assign(base, fd, events.READ, connection_on_data, conn);
+    conn.event.add();
+
+    const char* msg = "welcome\n";
+    write(fd, msg, strlen(msg));
+    return conn;
+}
+
+func void Connection.onData(Connection* conn)
+{
+    char[128] buffer;
+
+    i64 numread = read(conn.fd, buffer, 128);
+    if (numread == 0) {
+        conn.log.warn("client disconnected");
+        conn.destroy();
+        return;
+    }
+    buffer[numread] = 0;
+    if (buffer[numread-1] == '\n') buffer[numread-1] = 0;
+    conn.log.info("[%d] read %s", conn.fd, buffer);
+}
+
+func void Connection.destroy(Connection* conn)
+{
+    // TODO notify Socket
+    conn.event.del();
+    close(conn.fd);
+    free(conn);
+}
+
+func void connection_on_data(i32 fd, void* arg, u16 flags)
+{
+    printf("ONDATA\n");
+    Connection* conn = arg;
+    conn.onData();
+}
+
+
+public type Socket struct {
+    i32 fd;
+    events.Base* base;
+    events.Event event;
+    logger.Log log;
+    Connection* conns;
+} @(opaque)
+
+public func Socket* Socket.create(events.Base* base, logger.Base* logbase, const char* name, u16 port)
+{
+    Socket* s = calloc(1, sizeof(Socket));
+    s.base = base;
+    s.log.init(logbase, name);
+    s.log.setLevel(logger.DEBUG);
+
+    s.fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP);
+    if (s.fd == -1) {
+        fatal("opening TCP socket");
+    }
+
+	sockaddr_in my_addr;
+	my_addr.sin_family = AF_INET;
+    my_addr.sin_port = htons(port);
+    my_addr.sin_addr.s_addr = INADDR_ANY;
+    memset(&my_addr.sin_zero, 0, 8);
+
+    i32 reuse = 1;
+    if (setsockopt(s.fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) != 0) {
+        fatal("setsockopt(SO_REUSEADDR)");
+    }
+
+    if (bind(s.fd, &my_addr, sizeof(sockaddr)) != 0) fatal("bind() failed");
+
+    if (listen(s.fd, 1) != 0) fatal("listen() failed");
+
+    s.log.info("listening to port %d", port);
+    s.event.assign(base, s.fd, events.READ, socket_on_connection, s);
+    s.event.add();
+    return s;
+}
+
+public func void Socket.destroy(Socket* s)
+{
+    s.log.debug("closing socket");
+    // TODO also destroy all Connections
+    s.event.del();
+    close(s.fd);
+    free(s);
+}
+
+func void Socket.addConnection(Socket* s, Connection* c)
+{
+    if (s.conns == nil) {
+        s.conns = c;
+    } else {
+        Connection* cur = s.conns;
+        while (cur.next) cur = cur.next;
+        cur.next = c;
+    }
+}
+
+func void Socket.onConnection(Socket* s)
+{
+    u32 sin_size = sizeof(sockaddr_in);
+    sockaddr_in remote;
+    i32 new_fd = accept4(s.fd, &remote, &sin_size, SOCK_CLOEXEC);
+    if (new_fd == -1) fatal("accept4");
+
+    char* src_ipnr = inet_ntoa(remote.sin_addr);
+    s.log.info("new connection from %s", src_ipnr);
+    s.addConnection(Connection.create(new_fd, s.base, &s.log));
+}
+
+func void socket_on_connection(i32 fd, void* arg, u16 flags)
+{
+    Socket* s = arg;
+    s.onConnection();
+}
+
