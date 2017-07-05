@@ -9,17 +9,6 @@ import sys_time local;
 import unistd;
 import time;
 
-// TODO get from backend
-bool useColor = true;
-bool relativeTimes = true;
-u64 startTime;
-
-public func void create(bool useColor_, bool relTimes) {
-    useColor = useColor_;
-    relativeTimes = relTimes;
-    startTime = current_time();
-}
-
 public type Level enum u8 {
     FATAL = 0,
     ERROR,
@@ -48,14 +37,44 @@ func u64 current_time() {
    return tv64;
 }
 
-public type Log struct {
-    char[16] name;
-    Level level;
+public type WriteFunc func void(const char* data, u32 len);
+
+public type LogBase struct {
+    Level defaultLevel;
+    bool useColor;
+    bool relativeTimes;
+    u64 startTime;
+    WriteFunc write;
 }
 
-public func void Log.init(Log* log, const char* name_, Level lvl) {
-    strcpy(log.name, name_);
-    log.level = lvl;
+func void log_stdout(const char* data, u32 len) {
+    printf("%s", data);
+}
+
+public func void LogBase.init(LogBase* base, Level lvl_, bool color_, bool relativeTimes_)
+{
+    base.defaultLevel = lvl_;
+    base.useColor = color_;
+    base.relativeTimes = relativeTimes_;
+    base.startTime = current_time();
+    base.write = log_stdout;
+}
+
+public func void LogBase.destroy(LogBase* base)
+{
+}
+
+public type Log struct {
+    LogBase* base;
+    Level level;
+    char[16] name;
+}
+
+public func void Log.init(Log* log, LogBase* base, const char* name_) {
+    log.base = base;
+    log.level = base.defaultLevel;
+    strncpy(log.name, name_, 16);
+    log.name[15] = 0;
 }
 
 public func void Log.setLevel(Log* log, Level lvl) {
@@ -106,11 +125,11 @@ func void Log.internal(Log* log, Level level, const char* color_, const char* fo
     char[256] buffer;
     char* cp = buffer;
 
-    if (useColor) cp += sprintf(cp, "%s", color_);
+    if (log.base.useColor) cp += sprintf(cp, "%s", color_);
     *cp++ = '[';
-    if (relativeTimes) {
+    if (log.base.relativeTimes) {
         u64 now = current_time();
-        now -= startTime;
+        now -= log.base.startTime;
         u64 subsec = now % 1000000;
         cp += sprintf(cp, "%04ld.%06ld", now / 1000000, subsec);
     } else {
@@ -125,10 +144,9 @@ func void Log.internal(Log* log, Level level, const char* color_, const char* fo
     *cp++ = ']';
     cp += sprintf(cp, " %s %s: ", level2str(level), log.name);
     cp += vsprintf(cp, format, args);
-    if (useColor) cp += sprintf(cp, "%s", color.normal);
+    if (log.base.useColor) cp += sprintf(cp, "%s", color.normal);
     *cp++ = '\n';
     *cp = 0;
-    printf("%s", buffer);
-    // TODO replace with write() to backend
+    log.base.write(buffer, cast<u32>(cp - buffer));
 }
 

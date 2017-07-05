@@ -3,11 +3,11 @@ import logger;
 import unistd;
 
 public func i32 main(i32 argc, char*[] argv) {
-    // TODO create file/stdout backend
-    logger.create(unistd.isatty(1), argc == 2);
+    logger.LogBase logbase;
+    logbase.init(logger.INFO, unistd.isatty(1), argc == 2);
 
     logger.Log log;
-    log.init("main", logger.INFO);
+    log.init(&logbase, "main");
 
     log.info("call this example with an extra argument to show relative times");
     log.debug("debug msg");
@@ -17,7 +17,7 @@ public func i32 main(i32 argc, char*[] argv) {
 
     // meanwhile in another component..
     logger.Log log2;
-    log2.init("server", logger.INFO);
+    log2.init(&logbase, "server");
     log2.setLevel(logger.DEBUG);
     log2.info("got new connection");
     log2.debug("client connected from %s, fd %d", "127.0.0.1", 34);
@@ -26,6 +26,8 @@ public func i32 main(i32 argc, char*[] argv) {
     // and back to the first one..
     log.info("almost done");
     log.fatal("uh ooh, totally FUBAR");
+
+    logbase.destroy();
 
     return 0;
 }
