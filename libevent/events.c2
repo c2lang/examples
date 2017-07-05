@@ -105,7 +105,7 @@ func void Base.internal_loop(Base* base) {
     } else if (ret < 0) {   // error
         // interrupted (by signal, etc)
     } else { // events
-        for (u32 i=0; i<ret; i++) {
+        for (u32 i=0; i<base.numfds; i++) {
             pollfd* current = &base.fds[i];
             if (current.revents) {
                 // TODO check POLLIN/POLLOUT
@@ -114,6 +114,8 @@ func void Base.internal_loop(Base* base) {
                 return;
             }
         }
+        printf("no event found.. error\n");
+        stdlib.exit(stdlib.EXIT_FAILURE);
     }
 }
 

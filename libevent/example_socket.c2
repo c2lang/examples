@@ -58,7 +58,6 @@ func void Connection.destroy(Connection* conn)
 
 func void connection_on_data(i32 fd, void* arg, u16 flags)
 {
-    printf("ONDATA\n");
     Connection* conn = arg;
     conn.onData();
 }
