@@ -8,24 +8,40 @@ import sys_socket local;
 import events;
 import logger;
 
+const u8 LF = 0x0A;
+const u8 CR = 0x0D;
+
 func void fatal(const char* msg) {
     printf("%s\n", msg);
     exit(EXIT_FAILURE);
 }
 
+func void stripNewline(u8* buffer, i64 len)
+{
+    if (buffer[len-1] == LF) {
+        buffer[len-1] = 0;
+        len--;
+    }
+    if (buffer[len-1] == CR) {
+        buffer[len-1] = 0;
+        len--;
+    }
+}
 
 type Connection struct {
     i32 fd;
     Connection* next;
     logger.Log* log;
     events.Event event;
+    Socket* socket;
 }
 
-func Connection* Connection.create(i32 fd, events.Base* base, logger.Log* log) {
+func Connection* Connection.create(i32 fd, Socket* s, logger.Log* log) {
     Connection* conn = calloc(1, sizeof(Connection));
     conn.fd = fd;
     conn.log = log;
-    conn.event.assign(base, fd, events.READ, connection_on_data, conn);
+    conn.socket = s;
+    conn.event.assign(s.base, fd, events.READ, connection_on_data, conn);
     conn.event.add();
 
     const char* msg = "welcome\n";
@@ -44,13 +60,19 @@ func void Connection.onData(Connection* conn)
         return;
     }
     buffer[numread] = 0;
-    if (buffer[numread-1] == '\n') buffer[numread-1] = 0;
-    conn.log.info("[%d] read %s", conn.fd, buffer);
+    stripNewline(buffer, numread);
+
+    conn.log.info("[%d] read [%s]", conn.fd, buffer);
+    if (strcmp(buffer, "quit") == 0) {
+        conn.log.warn("client requested disconnect");
+        conn.destroy();
+    }
 }
 
 func void Connection.destroy(Connection* conn)
 {
-    // TODO notify Socket
+    conn.log.debug("destroy conn %d", conn.fd);
+    conn.socket.removeConnection(conn);
     conn.event.del();
     close(conn.fd);
     free(conn);
@@ -107,7 +129,9 @@ public func Socket* Socket.create(events.Base* base, logger.Base* logbase, const
 public func void Socket.destroy(Socket* s)
 {
     s.log.debug("closing socket");
-    // TODO also destroy all Connections
+    while (s.conns) {
+        s.conns.destroy(); // self-removes itself from list
+    }
     s.event.del();
     close(s.fd);
     free(s);
@@ -115,6 +139,7 @@ public func void Socket.destroy(Socket* s)
 
 func void Socket.addConnection(Socket* s, Connection* c)
 {
+    s.log.debug("add conn %d", c.fd);
     if (s.conns == nil) {
         s.conns = c;
     } else {
@@ -122,6 +147,19 @@ func void Socket.addConnection(Socket* s, Connection* c)
         while (cur.next) cur = cur.next;
         cur.next = c;
     }
+}
+
+func void Socket.removeConnection(Socket* s, Connection* c)
+{
+    s.log.debug("remove conn %d", c.fd);
+    if (s.conns == c) {
+        s.conns = c.next;
+    } else {
+        Connection* cur = s.conns;
+        while (cur.next != c) cur = cur.next;
+        cur.next = c.next;
+    }
+    c.next = nil;
 }
 
 func void Socket.onConnection(Socket* s)
@@ -133,7 +171,7 @@ func void Socket.onConnection(Socket* s)
 
     char* src_ipnr = inet_ntoa(remote.sin_addr);
     s.log.info("new connection from %s", src_ipnr);
-    s.addConnection(Connection.create(new_fd, s.base, &s.log));
+    s.addConnection(Connection.create(new_fd, s, &s.log));
 }
 
 func void socket_on_connection(i32 fd, void* arg, u16 flags)
