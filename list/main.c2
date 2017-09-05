@@ -1,0 +1,61 @@
+module test;
+import logger;
+import stdio local;
+import unistd;
+import list;
+
+type TestItem struct {
+    u32 value;
+    list.Element entry;
+}
+
+func void dump(const list.Element* src) {
+    const list.Element* node = src.next;
+    printf("list:\n");
+    while (node != src) {
+        printf("  %p\n", node);
+        // TODO use to_container
+        //const TestItem* ti = to_container(list.Element, node, entry);
+        node = node.next;
+    }
+}
+
+public func i32 main(i32 argc, char*[] argv) {
+    logger.Base logbase;
+    logbase.init(logger.DEBUG, unistd.isatty(1), argc == 2);
+
+    logger.Log log;
+    log.init(&logbase, "list");
+
+    list.Element l;
+    l.init();
+    log.debug("size %d  empty %d", l.size(), l.isEmpty());
+
+    TestItem i1 = { .value = 1 }
+    TestItem i2 = { .value = 2 }
+    TestItem i3 = { .value = 2 }
+    TestItem i4 = { .value = 2 }
+
+    log.info("adding 1");
+    l.addTail(&i1.entry);
+    log.debug("size %d  empty %d", l.size(), l.isEmpty());
+
+    log.info("adding 2");
+    l.addTail(&i2.entry);
+    log.debug("size %d  empty %d", l.size(), l.isEmpty());
+    dump(&l);
+
+    log.info("removing 1");
+    i1.entry.remove();
+    log.debug("size %d  empty %d", l.size(), l.isEmpty());
+
+    log.info("removing 2");
+    i2.entry.remove();
+    log.debug("size %d  empty %d", l.size(), l.isEmpty());
+    dump(&l);
+
+    logbase.destroy();
+
+    return 0;
+}
+
