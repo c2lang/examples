@@ -1,0 +1,17 @@
+{
+  "update": "yes",
+  "platform":
+  {
+    "version": "3.6.1.0",
+    "url": "https://blabla/platform",
+    "checksum": "1234456789",
+    "size": "46000000"
+  },
+  "application":
+  {
+    "version": "3.6.1.0",
+    "url": "https://blabla/application",
+    "checksum": "1234456789",
+    "size": "7000000"
+  }
+}

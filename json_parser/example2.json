@@ -1,0 +1,15 @@
+{
+  "UpdateAvailable": true,
+  "Platform":
+   {
+    "Url": null,
+    "Checksum": null,
+    "Version": null
+   },
+   "Application":
+   {
+    "Url": "DownloadUrl",
+    "Checksum": "Checksum",
+    "Version": "2.0"
+  }
+}

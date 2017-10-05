@@ -1,0 +1,377 @@
+module json;
+
+import stdio local;
+import string local;
+import csetjmp local;
+
+const u32 MAX_DIAG = 256;
+
+public type Parser struct {
+    char[MAX_DIAG] message;
+}
+
+public func bool Parser.parse(Parser* p, const char* text) {
+    p.message[0] = 0;
+
+    JParser parser;
+    return parser.parse(text, p.message);
+}
+
+public func const char* Parser.getDiag(Parser* p) {
+    return p.message;
+}
+
+
+type JParser struct {
+    Tokenizer tokenizer;
+    Token token;
+    Location prev;
+    jmp_buf jmp_err;
+    char* msg;
+}
+
+func bool JParser.parse(JParser* p, const char* text, char* diagMsg) {
+    p.tokenizer.init(text);
+    p.token.init();
+    p.prev.set(0, 0);
+    p.msg = diagMsg;
+
+    i32 res = setjmp(p.jmp_err);
+    if (res == 0) {
+        p.consumeToken();
+        p.parseFile();
+        return true;
+    } // else got error, msg should be set
+    return false;
+}
+
+func Location JParser.consumeToken(JParser* p) {
+    p.prev = p.token.getLoc();
+    p.tokenizer.lex(&p.token);
+#if 0
+    printf("  %8s %s", token.getName(), p.diagLoc());
+    if (token.is(Text)) printf("  %s", token.getText());
+    printf("\n");
+#endif
+    if (p.token.is(Error)) {
+        strcpy(p.msg, p.token.getText());
+        longjmp(p.jmp_err, 1);
+    }
+    return p.prev;
+}
+
+func void JParser.parseFile(JParser* p) {
+    p.parseEntry("");
+    p.expect(Eof);
+}
+
+func const char* JParser.diagLoc(const JParser* p) {
+    Location loc = p.token.getLoc();
+    return loc.str();
+}
+
+func void JParser.expect(JParser* p, TokenKind k) {
+    if (p.token.isNot(k)) {
+        sprintf(p.msg, "expected '%s' %s", getTokenName(k), p.diagLoc());
+        longjmp(p.jmp_err, 1);
+    }
+}
+
+func void JParser.expectAndConsume(JParser* p, TokenKind k) {
+    p.expect(k);
+    p.consumeToken();
+}
+
+func void JParser.parseEntry(JParser* p, const char* parent) {
+    p.expectAndConsume(L_brace);
+    while (1) {
+        p.expect(Text);
+        char [MAX_TEXT] name;
+        strcpy(name, p.token.getText());
+        p.consumeToken();
+
+        char[MAX_TEXT] fullName;
+        if (!parent[0]) strcpy(fullName, name);
+        else sprintf(fullName, "%s.%s", parent, name);
+
+        p.expectAndConsume(Colon);
+        switch (p.token.getKind()) {
+        case Kw_true:
+        case Kw_false:
+        case Kw_null:
+        case Text:
+            p.parseValue(fullName);
+            break;
+        case L_brace:
+            p.parseEntry(fullName);
+            break;
+        case R_brace:
+        case Colon:
+        case Comma:
+        case Eof:
+        case Error:
+            sprintf(p.msg, "expected '{' or text %s", p.diagLoc());
+            longjmp(p.jmp_err, 1);
+            break;
+        }
+
+        if (p.token.isNot(Comma)) break;
+        Location commaLoc = p.consumeToken();
+        if (p.token.is(R_brace)) {
+            sprintf(p.msg, "superfluous comma %s", commaLoc.str());
+            longjmp(p.jmp_err, 1);
+        }
+    }
+    p.expectAndConsume(R_brace);
+}
+
+func void JParser.parseValue(JParser* p, const char* name) {
+    char[MAX_TEXT] value;
+    switch (p.token.getKind()) {
+    case Kw_true:
+        value[0] = '1';
+        value[1] = 0;
+        break;
+    case Kw_false:
+        value[0] = '0';
+        value[1] = 0;
+        break;
+    case Kw_null:
+        value[0] = 0;
+        break;
+    case Text:
+        strcpy(value, p.token.getText());
+        break;
+    default:
+        sprintf(p.msg, "syntax error %s", p.diagLoc());
+        longjmp(p.jmp_err, 1);
+        break;
+    }
+    p.consumeToken();
+    // values[name] = value
+    printf("  %s = %s\n", name, value);
+}
+
+
+const u32 MAX_TEXT = 256;
+
+type Tokenizer struct {
+    const char* dataStart;
+    const char* current;
+    Location loc;
+    char[MAX_TEXT] msg;
+}
+
+func void Tokenizer.init(Tokenizer* t, const char* text) {
+    t.dataStart = text;
+    t.current = text;
+    t.loc.set(1, 1);
+}
+
+func void Tokenizer.lex(Tokenizer* t, Token* result) {
+    result.clear();
+    while (1) {
+        switch (t.current[0]) {
+        case 0:
+            result.setLocation(t.loc);
+            result.setKind(Eof);
+            return;
+        case ' ':
+        case '\t':
+            t.advance(1);
+            break;
+        case '\r':
+            t.current++;
+            if (t.current[0] != '\n') {
+                sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());
+                result.setKind(Error);
+                result.setData(t.msg);
+                return;
+            }
+            // else fallthrough
+        case '\n':
+            t.current++;
+            t.loc.line++;
+            t.loc.col = 1;
+            break;
+        case '{':
+            result.setLocation(t.loc);
+            result.setKind(L_brace);
+            t.advance(1);
+            return;
+        case '}':
+            result.setLocation(t.loc);
+            result.setKind(R_brace);
+            t.advance(1);
+            return;
+        case ':':
+            result.setLocation(t.loc);
+            result.setKind(Colon);
+            t.advance(1);
+            return;
+        case ',':
+            result.setLocation(t.loc);
+            result.setKind(Comma);
+            t.advance(1);
+            return;
+        case '"':
+            t.parseText(result);
+            return;
+        case 'f':
+        case 'n':
+        case 't':
+            t.parseKeyword(result);
+            return;
+        default:
+            sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());
+            result.setKind(Error);
+            result.setData(t.msg);
+            return;
+        }
+    }
+}
+
+func void Tokenizer.parseText(Tokenizer* t, Token* result) {
+    t.current++;
+    const char* start = t.current;
+    while (t.current[0] && t.current[0] != '"') t.current++;
+    // TODO size_t
+    u32 len = cast<u32>(t.current - start);
+    memcpy(t.msg, start, len);
+    t.msg[len] = 0;
+    result.setKind(Text);
+    result.setData(t.msg);
+    result.setLocation(t.loc);
+    if (t.current[0] == '"') {
+        t.current++;
+        len++;
+    }
+    // NOTE: dont use advance() since current is already moved
+    t.loc.col += len;
+}
+
+func void Tokenizer.parseKeyword(Tokenizer* t, Token* result) {
+    // TODO should check on next char as well (not letter/number/undercore/etc)
+    if (strncmp(t.current, "true", 4) == 0) {
+        result.setLocation(t.loc);
+        result.setKind(Kw_true);
+        t.advance(4);
+    } else if (strncmp(t.current, "false", 5) == 0) {
+        result.setLocation(t.loc);
+        result.setKind(Kw_false);
+        t.advance(5);
+    } else if (strncmp(t.current, "null", 4) == 0) {
+        result.setLocation(t.loc);
+        result.setKind(Kw_false);
+        t.advance(4);
+    } else {
+        sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());
+        result.setKind(Error);
+        result.setData(t.msg);
+    }
+}
+
+func void Tokenizer.advance(Tokenizer* t, u32 amount) {
+    t.loc.col += amount;
+    t.current += amount;
+}
+
+
+type TokenKind enum u8 {
+    Kw_true,
+    Kw_false,
+    Kw_null,
+    L_brace,
+    R_brace,
+    Colon,
+    Comma,
+    Text,
+    Eof,
+    Error,
+}
+
+func const char* getTokenName(TokenKind k) {
+    switch (k) {
+    case Kw_true:   return "true";
+    case Kw_false:  return "false";
+    case Kw_null:   return "null";
+    case L_brace:   return "{";
+    case R_brace:   return "}";
+    case Colon:     return ":";
+    case Comma:     return ",";
+    case Text:      return "text";
+    case Eof:       return "eof";
+    case Error:     return "error";
+    }
+    return "?";
+}
+
+type Token struct {
+    Location loc;
+    TokenKind kind;
+    const char* text;
+}
+
+func void Token.init(Token* t) {
+    t.loc.set(0, 0);
+    t.kind = Eof;
+    t.text = nil;
+}
+
+func Location Token.getLoc(const Token* t) {
+    return t.loc;
+}
+
+func void Token.clear(Token* t) {
+    t.text = nil;
+}
+
+func void Token.setData(Token* t, const char* d) {
+    t.text = d;
+}
+
+func const char* Token.getName(const Token* t) {
+    return getTokenName(t.kind);
+}
+
+func TokenKind Token.getKind(const Token* t) {
+    return t.kind;
+}
+
+func bool Token.is(const Token* t, TokenKind kind) {
+    return t.kind == kind;
+}
+
+func bool Token.isNot(const Token* t, TokenKind kind) {
+    return t.kind != kind;
+}
+
+func const char* Token.getText(const Token* t) {
+    return t.text;
+}
+
+func void Token.setKind(Token* t, TokenKind kind) {
+    t.kind = kind;
+}
+
+func void Token.setLocation(Token* t, Location loc) {
+    t.loc = loc;
+}
+
+
+type Location struct {
+    u32 line;
+    u32 col;
+}
+
+func void Location.set(Location* loc, u32 l, u32 c) {
+    loc.line = l;
+    loc.col = c;
+}
+
+func const char* Location.str(const Location* loc) {
+    local char[32] msg;
+    sprintf(msg, "at line %d:%d", loc.line, loc.col);
+    return msg;
+}
+

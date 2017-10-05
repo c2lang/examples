@@ -1,0 +1,52 @@
+module file_utils;
+
+import stdio local;
+import stdlib local;
+import libc_fcntl local;
+import string local;
+import c_errno local;
+import sys_stat local;
+import sys_mman local;
+import unistd local;
+
+public type File struct {
+    void* region;
+    u32 size;
+}
+
+public func void File.open(File* file, const char* filename) {
+    i32 fd = open(filename, O_RDONLY);
+    if (fd == -1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    stat statbuf;
+    i32 err = fstat(fd, &statbuf);
+    if (err) {
+        perror("fstat");
+        //printf("error opening %s: %s\n", filename, strerror(errno));
+        exit(EXIT_FAILURE);
+    }
+    file.size = cast<u32>(statbuf.st_size);
+
+	file.region = mmap(0, file.size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_POPULATE, fd, 0);
+	if (file.region == MAP_FAILED) {
+		perror("mmap");
+		exit(EXIT_FAILURE);
+	}
+	close(fd);
+}
+
+public func void File.close(File* file) {
+    munmap(file.region, file.size);
+}
+
+public func const u8* File.data(File* file) {
+    return cast<u8*>(file.region);
+}
+
+public func bool File.isEmpty(const File* file) {
+    return file.size == 0;
+}
+

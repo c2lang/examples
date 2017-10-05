@@ -8,8 +8,26 @@ c2c
 in the directory of the example. The output can usually
 be found in a subdir 'output/test/'
 
+## file_ops
+Example showing how to open and mmap a file
+
+## json_parser
+A fast minimalistic JSON parser
+
 ## libevent
 An event framework, based on libevent
+
+## list
+Implementation of the Linux kernel list. Still missing is the conversion 'macro'
+
+## logger
+Basic logging framework
+
+## longjmp
+Demo of working longjmp()
+
+## signals
+Signal handling example
 
 ## socket
 Open a server socket and listen to it
