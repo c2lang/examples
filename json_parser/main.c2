@@ -30,7 +30,7 @@ public func i32 main(i32 argc, char*[] argv) {
     }
     json.Parser parser;
     if (!parser.parse(file.data())) {
-        log.error("error parsing %s: %s\n", argv[1], parser.getDiag());
+        log.error("error parsing %s: %s", argv[1], parser.getDiag());
     }
     //parser.destroy();
 
