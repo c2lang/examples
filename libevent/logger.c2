@@ -85,7 +85,7 @@ public func void Log.debug(Log* log, const char* format, ...) {
     if (DEBUG > log.level) return;
     va_list args;
     va_start(args, format);
-    log.internal(DEBUG, color.blue, format, args);
+    log.internal(DEBUG, color.Blue, format, args);
     va_end(args);
 }
 
@@ -93,7 +93,7 @@ public func void Log.info(Log* log, const char* format, ...) {
     if (INFO > log.level) return;
     va_list args;
     va_start(args, format);
-    log.internal(INFO, color.white, format, args);
+    log.internal(INFO, color.White, format, args);
     va_end(args);
 }
 
@@ -101,7 +101,7 @@ public func void Log.warn(Log* log, const char* format, ...) {
     if (WARN > log.level) return;
     va_list args;
     va_start(args, format);
-    log.internal(WARN, color.yellow, format, args);
+    log.internal(WARN, color.Yellow, format, args);
     va_end(args);
 }
 
@@ -109,14 +109,14 @@ public func void Log.error(Log* log, const char* format, ...) {
     if (ERROR > log.level) return;
     va_list args;
     va_start(args, format);
-    log.internal(ERROR, color.red, format, args);
+    log.internal(ERROR, color.Red, format, args);
     va_end(args);
 }
 
 public func void Log.fatal(Log* log, const char* format, ...) {
     va_list args;
     va_start(args, format);
-    log.internal(FATAL, color.red, format, args);
+    log.internal(FATAL, color.Red, format, args);
     va_end(args);
     exit(EXIT_FAILURE);
 }
@@ -144,7 +144,7 @@ func void Log.internal(Log* log, Level level, const char* color_, const char* fo
     *cp++ = ']';
     cp += sprintf(cp, " %s %s: ", level2str(level), log.name);
     cp += vsprintf(cp, format, args);
-    if (log.base.useColor) cp += sprintf(cp, "%s", color.normal);
+    if (log.base.useColor) cp += sprintf(cp, "%s", color.Normal);
     *cp++ = '\n';
     *cp = 0;
     log.base.write(buffer, cast<u32>(cp - buffer));

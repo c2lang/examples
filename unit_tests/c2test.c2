@@ -10,10 +10,10 @@ public type Test struct {
     TestFunc run;
 }
 
-const char* ansi_blue =   "\033[0;34m";
-const char* ansi_normal = "\033[0m";
-const char* ansi_red =    "\033[0;31m";
-const char* ansi_yellow = "\033[0;33m";
+const char[] ColorBlue   = "\033[0;34m";
+const char[] ColorNormal = "\033[0m";
+const char[] ColorRed    = "\033[0;31m";
+const char[] ColorYellow = "\033[0;33m";
 
 char[4096] error_buffer;
 char* error_msg;
@@ -38,25 +38,25 @@ public func void runtests(const Test* tests, u32 num_tests)
             printf("[OK]\n");
             num_ok++;
         } else {
-            printf("%s[FAIL]%s\n", ansi_red, ansi_normal);
+            printf("%s[FAIL]%s\n", ColorRed, ColorNormal);
             num_failed++;
         }
         if (error_msg != error_buffer) {
             printf("%s", error_buffer);
         }
     }
-    const char* color = ansi_normal;
-    if (num_failed) color = ansi_red;
+    const char* color = ColorNormal;
+    if (num_failed) color = ColorRed;
     printf("%sRESULTS: %d tests (%d ok, %d failed)%s\n", color,
-        num_tests, num_ok, num_failed, ansi_normal);
+        num_tests, num_ok, num_failed, ColorNormal);
 }
 
 func void color_print(const char* color, const char* title, const char* filename, u32 line, const char* msg) {
     u32 len;
     if (filename) {
-        len = cast<u32>(sprintf(error_msg, "  %s%s: %s:%d %s%s\n", color, title, filename, line, msg, ansi_normal));
+        len = cast<u32>(sprintf(error_msg, "  %s%s: %s:%d %s%s\n", color, title, filename, line, msg, ColorNormal));
     } else {
-        len = cast<u32>(sprintf(error_msg, "  %s%s: %s%s\n", color, title, msg, ansi_normal));
+        len = cast<u32>(sprintf(error_msg, "  %s%s: %s%s\n", color, title, msg, ColorNormal));
     }
     error_msg += len;
 }
@@ -64,7 +64,7 @@ func void color_print(const char* color, const char* title, const char* filename
 public func void fail(const char* filename, u32 line, char* msg = nil)
 {
     if (msg == nil) msg = "failed";
-    color_print(ansi_yellow, "ERR", filename, line, msg);
+    color_print(ColorYellow, "ERR", filename, line, msg);
     longjmp(c2test_err, 1);
 }
 
@@ -73,12 +73,12 @@ public func void assert_equal(i64 exp, i64 real, const char* caller, u32 line)
     if (exp != real) {
         char[64] msg;
         sprintf(msg, "expected %ld, got %ld", exp, real);
-        color_print(ansi_yellow, "ERR", caller, line, msg);
+        color_print(ColorYellow, "ERR", caller, line, msg);
     }
 }
 
 public func void log(const char* msg)
 {
-    color_print(ansi_blue, "LOG", nil, 0, msg);
+    color_print(ColorBlue, "LOG", nil, 0, msg);
 }
 
