@@ -1,0 +1,117 @@
+module base64;
+
+// based on github.com/zhicheng/base64.git
+
+const i8[] Lut_enc = {
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+    'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+    'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+    'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',
+    'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
+    'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+    'w', 'x', 'y', 'z', '0', '1', '2', '3',
+    '4', '5', '6', '7', '8', '9', '+', '/',
+}
+
+const i8[] Lut_dec = {
+    // '+', ',', '-', '.', '/', '0', '1', '2'
+        62,  -1,  -1,  -1,  63,  52,  53,  54,
+    // '3', '4', '5', '6', '7', '8', '9', ':'
+        55,  56,  57,  58,  59,  60,  61,  -1,
+    // ';', '<', '=', '>', '?', '@', 'A', 'B'
+        -1,  -1,  -1,  -1,  -1,  -1,   0,   1,
+    // 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'
+         2,   3,   4,   5,   6,   7,   8,   9,
+    // 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R'
+        10,  11,  12,  13,  14,  15,  16,  17,
+    // 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+        18,  19,  20,  21,  22,  23,  24,  25,
+    // '[', '\', ']', '^', '_', '`', 'a', 'b'
+        -1,  -1,  -1,  -1,  -1,  -1,  26,  27,
+    // 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'
+        28,  29,  30,  31,  32,  33,  34,  35,
+    // 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r'
+        36,  37,  38,  39,  40,  41,  42,  43,
+    // 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+        44,  45,  46,  47,  48,  49,  50,  51,
+}
+
+
+const u8 PAD = '=';
+const u8 FIRST = '+';
+const u8 LAST = 'z';
+
+public func void encode(const u8* in, u32 len, i8* out) {
+	u32 i = 0;
+	u32 j = 0;
+
+	for (; i< len; ++i) {
+        switch (i % 3) {
+        case 0:
+            out[j++] = Lut_enc[(in[i] >> 2) & 0x3F];
+            continue;
+        case 1:
+            out[j++] = Lut_enc[((in[i-1] & 0x3) << 4) + ((in[i] >> 4) & 0xF)];
+            continue;
+        case 2:
+            out[j++] = Lut_enc[((in[i-1] & 0xF) << 2) + ((in[i] >> 6) & 0x3)];
+            out[j++] = Lut_enc[in[i] & 0x3F];
+            break;
+        }
+	}
+    i -= 1;    // move back
+    // check the last and add padding
+    switch (i % 3) {
+    case 0:
+        out[j++] = Lut_enc[(in[i] & 0x3) << 4];
+        out[j++] = PAD;
+        out[j++] = PAD;
+        break;
+    case 1:
+        out[j++] = Lut_enc[(in[i] & 0xF) << 2];
+        out[j++] = PAD;
+        break;
+    }
+}
+
+public func bool decode(const u8* in, u32 len, u8* out) {
+    u32 i = 0;
+    u32 j = 0;
+
+    for (; i < len; ++i) {
+        if (in[i] == PAD) return true;
+        i8 c;
+        if (in[i] < FIRST || in[i] > LAST || (c = Lut_dec[in[i] - FIRST]) == -1) return false;
+
+        i8 cc;
+        switch (i % 4) {
+        case 0:
+            cc = (c << 2);
+            out[j] = cast<u8>(cc);
+            //out[j] = cast<u8>((c << 2) & 0xFF);       // TODO c2c assert fails on cast
+            continue;
+        case 1:
+            out[j++] += (c >> 4) & 0x3;
+            // if not last char with padding
+            if (i < (len -3) || in[len -2] != PAD) {
+                //out[j] = cast<u8>((c & 0xF) << 4);    // TODO c2c assert fails on cast
+                cc = (c & 0xF) << 4;
+                out[j] = cast<u8>(cc);
+            }
+            continue;
+        case 2:
+            out[j++] += (c >> 2) & 0xF;
+            if (i < (len -2) || in[len -1] != PAD) {
+                //out[j] = cast<u8>((c & 0x3) << 6);  // TODO c2c assert fails on cast
+                cc = (c & 0x3) << 6;
+                out[j] = cast<u8>(cc);
+            }
+            continue;
+        case 3:
+            out[j++] += c;
+            break;
+        }
+    }
+    return true;
+}
+

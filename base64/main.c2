@@ -1,0 +1,24 @@
+module tester;
+
+import stdio local;
+import string local;
+import base64;
+
+func void test(const char* input) {
+    u8[64] encoded;
+    u8[64] decoded;
+    memset(encoded, 0, sizeof(encoded));
+    memset(decoded, 0, sizeof(decoded));
+    base64.encode(input, cast<u32>(strlen(input)), encoded);
+    base64.decode(encoded, cast<u32>(strlen(encoded)), decoded);
+    printf("[%s]\n", input);
+    printf("   encoded: %s\n", encoded);
+    printf("   decoded: %s\n", decoded);
+}
+
+public func i32 main() {
+    test("pleasure.");
+    test("The quick brown fox jumped");
+    return 0;
+}
+
