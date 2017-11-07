@@ -1,0 +1,10 @@
+executable test
+    $warnings no-unused
+	$generate-c single-module
+    $use lua static
+    $refs
+    color.c2
+    script.c2
+    main.c2
+end
+
