@@ -37,7 +37,7 @@ public func i32 main() {
 
     events.Timer timer;
     timer.assign(base, events.PERSIST, timeout_func, nil);
-    //timer.add(250000);
+    timer.add(2000000);
 
     Socket* socket1 = Socket.create(base, &logbase, "server1", 7777);
     Socket* socket2 = Socket.create(base, &logbase, "server2", 8888);

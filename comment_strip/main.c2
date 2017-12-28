@@ -83,23 +83,26 @@ public func i32 main(i32 argc, char*[] argv) {
         printf("Usage: parser [c-file]\n");
         return 0;
     }
-    file_utils.Reader file;
-    file.open(argv[1]);
+    file_utils.Reader infile;
+    infile.open(argv[1]);
 
     //printf("%s", file.data());
-    if (file.isEmpty()) {
+    if (infile.isEmpty()) {
         printf("file %s is empty\n", argv[1]);
         return 0;
     }
 
-    container.StringBuffer* buffer = container.StringBuffer.create(file.size);
+    container.StringBuffer* buffer = container.StringBuffer.create(infile.size);
 
-    strip_comments(file.data(), buffer);
+    strip_comments(infile.data(), buffer);
+    infile.close();
 
-    writeFile("out.c", buffer.data(), buffer.size());
+    file_utils.Writer outfile;
+    if (!outfile.write("out.c", buffer.data(), buffer.size())) {
+        printf("error writing file: %s\n", outfile.getError());
+    }
 
     buffer.destroy();
-    file.close();
 
     return 0;
 }

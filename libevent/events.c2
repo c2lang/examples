@@ -1,9 +1,12 @@
 module events;
-import stdlib;
-import unistd;
+
+import stdlib local;
+import unistd local;
 import sys_time;
 import stdio local;
+import string local;
 import libc_poll local;
+import libc_fcntl local;
 
 public func u64 current_time() {
     sys_time.timeval tv;
@@ -16,6 +19,28 @@ public func u64 current_time() {
 
 const u32 MaxEvents = 64;
 
+type CmdKind enum u8 {
+   LoopBreak = 0,
+   Callback,
+   TimerAdd,
+   TimerDel,
+}
+
+type Cmd struct {
+    CmdKind kind;
+    union {
+        struct callback {
+            Function fn;
+            void* arg1;
+            void* arg2;
+        }
+        struct timer {
+            Timer* timer;
+            u64 delay_us;
+        }
+    }
+}
+
 public type Base struct {
     u32 running_loop;
     u32 loop_break;
@@ -25,13 +50,24 @@ public type Base struct {
     Timer* timers;
     pollfd[MaxEvents] fds;
     Event*[MaxEvents] events;
+    Event selfpipe;
+    i32 read_pipe;
+    i32 write_pipe;
     u32 numfds;
     bool eventsDirty;
 } @(opaque)
 
 public func Base* Base.create() {
+    i32[2] pipefd;
+    if (pipe2(pipefd, O_CLOEXEC | O_NONBLOCK) != 0) {
+        return nil;
+    }
+
     Base* base = stdlib.calloc(1, sizeof(Base));
-    // TODO add pipefd
+    base.read_pipe = pipefd[0];
+    base.write_pipe = pipefd[1];
+    base.selfpipe.assign(base, base.read_pipe, READ, handlePipe, base);
+    base.selfpipe.add();
     base.updateEvents();
     return base;
 }
@@ -53,7 +89,42 @@ public func u8 Base.mainloop(Base* base) {
 public func void Base.loopbreak(Base* base, u8 return_value) {
     base.return_value = return_value;
     base.loop_break = 1;
-    //if (base->running_loop) base.sendcmd(stop_cmd);
+    if (base.running_loop) {
+        Cmd cmd;
+        memset(&cmd, 0, sizeof(Cmd));
+        cmd.kind = LoopBreak;
+        base.writeCmd(&cmd);
+    }
+}
+
+func void Base.writeCmd(Base* base, Cmd* cmd) {
+    printf("Write\n");
+    i64 written = write(base.write_pipe, cmd, sizeof(Cmd));
+    if (written != sizeof(Cmd)) {
+        fprintf(stderr, "Error writing to pipe\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+func void handlePipe(i32 fd, void* arg, u16 flags) {
+    Base* base = cast<Base*>(arg);
+    printf("HandlePipe\n");
+    Cmd cmd;
+    i64 numread = read(base.read_pipe, &cmd, sizeof(Cmd));
+    // TODO assert numread
+    switch (cmd.kind) {
+    case LoopBreak:
+        break;
+    case Callback:
+        cmd.callback.fn(cmd.callback.arg1, cmd.callback.arg2);
+        break;
+    case TimerAdd:
+        cmd.timer.timer.add(cmd.timer.delay_us);
+        break;
+    case TimerDel:
+        cmd.timer.timer.del();
+        break;
+    }
 }
 
 func void Base.fire_timer(Base* base) {
@@ -122,5 +193,17 @@ func void Base.internal_loop(Base* base) {
 func void Base.updateEvents(Base* base)
 {
     base.eventsDirty = true;
+}
+
+public type Function func void (void* arg1, void* arg2);
+
+public func void Base.schedule_safe(Base* base, Function fn, void* arg1, void* arg2) {
+    Cmd cmd;
+    memset(&cmd, 0, sizeof(Cmd));
+    cmd.kind = Callback;
+    cmd.callback.fn = fn;
+    cmd.callback.arg1 = arg1;
+    cmd.callback.arg2 = arg2;
+    base.writeCmd(&cmd);
 }
 

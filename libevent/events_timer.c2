@@ -1,5 +1,7 @@
 module events;
 
+import string local;
+
 public type TimerHandler func void(void* arg);
 
 // struct fields for internal use only. Users should consider this struct opaque
@@ -88,3 +90,23 @@ public func void Timer.del(Timer* timer)
     timer.flags &= ~TIMER_PENDING;
 
 }
+
+public func void Timer.add_sync(Timer* timer, u64 delay_us)
+{
+    Cmd cmd;
+    memset(&cmd, 0, sizeof(Cmd));
+    cmd.kind = TimerAdd;
+    cmd.timer.timer = timer;
+    cmd.timer.delay_us = delay_us;
+    timer.base.writeCmd(&cmd);
+}
+
+public func void Timer.del_sync(Timer* timer)
+{
+    Cmd cmd;
+    memset(&cmd, 0, sizeof(Cmd));
+    cmd.kind = TimerDel;
+    cmd.timer.timer = timer;
+    timer.base.writeCmd(&cmd);
+}
+
