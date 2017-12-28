@@ -1,0 +1,53 @@
+module container;
+
+import stdlib local;
+import string local;
+
+public type StringBuffer struct {
+    u32 capacity_;
+    u32 size_;
+    char[0] data_;
+} @(opaque)
+
+public func StringBuffer* StringBuffer.create(u32 capacity_)
+{
+    StringBuffer* buf = malloc(sizeof(StringBuffer) + capacity_);
+    buf.capacity_ = capacity_;
+    buf.size_ = 0;
+    return buf;
+}
+
+public func void StringBuffer.destroy(StringBuffer* buf)
+{
+    free(buf);
+}
+
+public func u32 StringBuffer.size(const StringBuffer* buf)
+{
+    return buf.size_;
+}
+
+public func const char* StringBuffer.data(const StringBuffer* buf)
+{
+    return buf.data_;
+}
+
+public func void StringBuffer.clear(StringBuffer* buf)
+{
+    buf.size_ = 0;
+}
+
+public func void StringBuffer.add(StringBuffer* buf, const char* text)
+{
+    u32 len = cast<u32>(strlen(text));
+    buf.add2(text, len);
+}
+
+public func void StringBuffer.add2(StringBuffer* buf, const char* text, u32 len)
+{
+    if (len >= (buf.capacity_ - buf.size_)) return;
+    strcpy(&buf.data_[buf.size_], text);
+    buf.size_ += len;
+    buf.data_[buf.size_] = 0;
+}
+

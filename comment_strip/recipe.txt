@@ -1,0 +1,11 @@
+executable cstrip
+    $warnings no-unused
+	$generate-c single-module
+    $refs
+    $deps
+    file/reader.c2
+    file/writer.c2
+    string_buffer.c2
+    main.c2
+end
+

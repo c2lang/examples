@@ -8,6 +8,9 @@ c2c
 in the directory of the example. The output can usually
 be found in a subdir 'output/test/'
 
+## comment_strip
+Tool to strip comment lines from c-like code
+
 ## file_ops
 Example showing how to open and mmap a file
 
