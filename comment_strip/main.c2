@@ -9,21 +9,6 @@ import stdlib local;
 import file_utils;
 import container;
 
-func void writeFile(const char* filename, const char* data, u32 len) {
-    i32 fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
-    if (fd == -1) {
-        perror("open");
-        exit(EXIT_FAILURE);
-    }
-    i64 written = write(fd, data, len);
-    if (written != len) {
-        perror("write");
-        exit(EXIT_FAILURE);
-    }
-    close(fd);
-    printf("written %s\n", filename);
-}
-
 const char NEWLINE = 0x0A;
 
 /*
@@ -98,7 +83,9 @@ public func i32 main(i32 argc, char*[] argv) {
     infile.close();
 
     file_utils.Writer outfile;
-    if (!outfile.write("out.c", buffer.data(), buffer.size())) {
+    const char* outname = "out.c";
+    printf("written %s\n", outname);
+    if (!outfile.write(outname, buffer.data(), buffer.size())) {
         printf("error writing file: %s\n", outfile.getError());
     }
 
