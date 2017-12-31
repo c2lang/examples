@@ -1,7 +1,0 @@
-executable test
-	$generate-c single-module
-    $refs
-    base64.c2
-    main.c2
-end
-
