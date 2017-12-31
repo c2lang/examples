@@ -5,8 +5,8 @@ To build an example run
 ```bash
 c2c
 ```
-in the directory of the example. The output can usually
-be found in a subdir 'output/test/'
+in the directory of the example. The output can
+be found in a subdir 'output/'
 
 ## comment_strip
 Tool to strip comment lines from c-like code
