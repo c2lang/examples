@@ -8,7 +8,7 @@ import unistd local;
 import file_utils;
 
 public func i32 main(i32 argc, char*[] argv) {
-    file_utils.File file;
+    file_utils.Reader file;
     file.open(argv[1]);
 
     printf("%s", file.data());

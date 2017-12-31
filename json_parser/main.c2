@@ -20,7 +20,7 @@ public func i32 main(i32 argc, char*[] argv) {
     log.init(&logbase, "main");
 
     log.info("parsing %s", argv[1]);
-    file_utils.File file;
+    file_utils.Reader file;
     file.open(argv[1]);
 
     //printf("%s", file.data());

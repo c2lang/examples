@@ -1,8 +1,0 @@
-executable test
-    $warnings no-unused
-	$generate-c single-module
-    $refs
-    $deps
-    main.c2
-end
-

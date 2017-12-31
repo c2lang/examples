@@ -1,9 +1,0 @@
-executable test
-    $warnings no-unused
-	$generate-c single-module
-    $refs
-    $deps
-    container/string_buffer.c2
-    main.c2
-end
-

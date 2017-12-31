@@ -1,7 +1,7 @@
 module tester;
 
 import c2test local;
-#include "c2test.inc"
+#include "unit_tests/c2test.inc"
 
 // incremental array 'Tests'
 const Test[+] Tests;

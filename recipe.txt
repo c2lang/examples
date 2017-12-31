@@ -1,0 +1,111 @@
+executable base64
+	$generate-c single-module
+    $refs
+    base64/base64.c2
+    base64/main.c2
+end
+
+executable cstrip
+    $warnings no-unused
+	$generate-c single-module
+    $refs
+    $deps
+    common/file/reader.c2
+    common/file/writer.c2
+    common/string_buffer.c2
+    comment_strip/main.c2
+end
+
+executable event
+    $warnings no-unused
+	$generate-c single-module
+    $refs
+    $deps
+    common/color.c2
+    common/logger.c2
+    event/events.c2
+    event/events_timer.c2
+    event/events_event.c2
+    event/example_socket.c2
+    event/main.c2
+end
+
+executable file_ops
+    $warnings no-unused
+	$generate-c single-module
+    $refs
+    $deps
+    common/file/reader.c2
+    file_ops/main.c2
+end
+
+executable json_parser
+    $warnings no-unused
+	$generate-c single-module
+    $refs
+    $deps
+    common/logger.c2
+    common/file/reader.c2
+    common/color.c2
+    json_parser/json_parser.c2
+    json_parser/main.c2
+end
+
+executable log
+    $warnings no-unused
+	$generate-c single-module
+    $refs
+    common/logger.c2
+    common/color.c2
+    logger/main.c2
+end
+
+executable jump
+    $warnings no-unused
+	$generate-c single-module
+    $refs
+    longjmp/jump.c2
+end
+
+executable lua_test
+    $warnings no-unused
+	$generate-c single-module
+    $use lua static
+    $refs
+    common/color.c2
+    lua/script.c2
+    lua/main.c2
+end
+
+executable signal_test
+    $warnings no-unused
+	$generate-c single-module
+    $refs
+    $deps
+    signals/main.c2
+end
+
+executable socket
+	$generate-c single-module
+    $refs
+    $deps
+    socket/main.c2
+end
+
+executable string
+    $warnings no-unused
+	$generate-c single-module
+    $refs
+    $deps
+    common/string_buffer.c2
+    string_buffer/main.c2
+end
+
+executable unittest
+    $warnings no-unused
+	$generate-c single-module
+    $refs
+    unit_tests/c2test.c2
+    unit_tests/main.c2
+end
+
