@@ -120,7 +120,7 @@ public func Socket* Socket.create(events.Base* base, logger.Base* logbase, const
 
     if (listen(s.fd, 1) != 0) fatal("listen() failed");
 
-    s.log.info("listening to port %d", port);
+    s.log.debug("listening to port %d", port);
     s.event.assign(base, s.fd, events.READ, socket_on_connection, s);
     s.event.add();
     return s;
