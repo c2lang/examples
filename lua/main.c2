@@ -11,7 +11,7 @@ func i32 atpanic(lua_State* l) {
 }
 
 public func i32 main(i32 argc, char*[] argv) {
-    const char* scriptName = "script1.lua";
+    const char* scriptName = "lua/script1.lua";
     if (argc == 2) scriptName = argv[1];
 
     script.State ls;

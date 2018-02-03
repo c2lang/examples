@@ -1,5 +1,4 @@
 executable base64
-	$generate-c single-module
     $refs
     base64/base64.c2
     base64/main.c2
