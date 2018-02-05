@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- comments -->
+<room name='Goblin camp' access="public">
+    <descr>This is the main goblin camp. Several tiny passages that are too small
+    too crawl through line the walls and floors. They must lead to even bigger
+    goblin outposts. There is a big chest standing in the corner.
+    </descr>
+    <exit name="west" to="goblin_hallway"><descr/></exit>
+    <container name="chest" special="lockable" reset="30s" key="haagh_key">
+        <descr>
+        It's a solid goblin war chest. Scribbled with what appears to be blood,
+        it says 'Propetie of Haagh'
+        </descr>
+        <spawn item="jewel" reset="20s"/>
+    </container>
+    <spawn creature="haagh" reset="2m">HHAAAAAGGGHHHH!!</spawn>
+    <spawn creature="goblin_warrior" reset="1m"></spawn>
+    <spawn item="haagh_key" reset="2m"/>
+</room>

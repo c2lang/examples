@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ldi>
+  <element name="Presentatie.P1">
+    <uses provider="Applicatie.A1" strength="1"/>
+    <uses provider="Utility.U1" strength="2"/>
+    <uses provider="Utility.U2" strength="4"/>
+  </element>
+  <element name="Presentatie.P2">
+    <uses provider="Applicatie.A2" strength="1"/>
+    <uses provider="Utility.U2" strength="3"/>
+  </element>
+  <element name="Presentatie.P3">
+    <uses provider="Utility.U1" strength="2"/>
+    <uses provider="Utility.U3" strength="2"/>
+  </element>
+  <element name="Presentatie.P4">
+    <uses provider="Applicatie.A2" strength="1"/>
+    <uses provider="Utility.U1" strength="10"/>
+    <uses provider="Utility.U2" strength="13"/>
+  </element>
+  <element name="Presentatie.P5">
+    <uses provider="Data.D3" strength="4"/>
+    <uses provider="Utility.U1" strength="10"/>
+    <uses provider="Utility.U2" strength="13"/>
+  </element>
+
+  <element name="Applicatie.A1">
+    <uses provider="Applicatie.A3" strength="1"/>
+    <uses provider="Data.D1" strength="4"/>
+    <uses provider="Utility.U1" strength="2"/>
+    <uses provider="Utility.U2" strength="9"/>
+    <uses provider="Utility.U3" strength="6"/>
+  </element>
+  <element name="Applicatie.A2">
+    <uses provider="Data.D2" strength="7"/>
+    <uses provider="Applicatie.A4" strength="2"/>
+    <uses provider="Utility.U1" strength="5"/>
+    <uses provider="Utility.U3" strength="11"/>
+  </element>
+  <element name="Applicatie.A3">
+    <uses provider="Presentatie.P3" strength="1"/>
+    <uses provider="Utility.U1" strength="2"/>
+  </element>
+  <element name="Applicatie.A4">
+    <uses provider="Applicatie.A5" strength="1"/>
+    <uses provider="Utility.U1" strength="3"/>
+    <uses provider="Utility.U2" strength="2"/>
+  </element>
+  <element name="Applicatie.A5">
+    <uses provider="Applicatie.A4" strength="5"/>
+  </element>
+  <element name="Applicatie.A6">
+    <uses provider="Utility.U1" strength="13"/>
+    <uses provider="Utility.U3" strength="13"/>
+  </element>
+
+  <element name="Data.D1">
+    <uses provider="Utility.U1" strength="4"/>
+  </element>
+  <element name="Data.D2">
+    <uses provider="Utility.U1" strength="9"/>
+  </element>
+  <element name="Data.D3">
+    <uses provider="Utility.U1" strength="2"/>
+  </element>
+
+  <element name="Utility.U1">
+  </element>
+  <element name="Utility.U2">
+    <uses provider="Utility.U3" strength="1"/>
+    <uses provider="Presentatie.P1" strength="1"/>
+	<uses provider="Presentatie.P2" strength="1"/>
+    <uses provider="Presentatie.P3" strength="1"/>
+	<uses provider="Presentatie.P4" strength="1"/>
+    <uses provider="Applicatie.A1" strength="1"/>
+    <uses provider="Applicatie.A2" strength="1"/>
+	<uses provider="Data.D1" strength="1"/>
+	<uses provider="Data.D2" strength="1"/>
+    <uses provider="Utility.U3" strength="1"/>
+  </element>
+  <element name="Utility.U3">
+  </element>
+</ldi>

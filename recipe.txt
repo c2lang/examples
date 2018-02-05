@@ -100,6 +100,18 @@ executable string
     string_buffer/main.c2
 end
 
+executable xml_parser
+    $warnings no-unused
+	$generate-c
+    $refs
+    common/color.c2
+    common/file/reader.c2
+#    file_utils.c2
+    xml_parser/xml_parser.c2
+    xml_parser/xml_structure.c2
+    xml_parser/main.c2
+end
+
 executable unittest
     $warnings no-unused
 	$generate-c single-module

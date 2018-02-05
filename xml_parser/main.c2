@@ -1,0 +1,48 @@
+module test;
+
+import stdio local;
+import file_utils;
+import xml;
+
+public func i32 main(i32 argc, char*[] argv) {
+    if (argc != 2 && argc != 3) {
+        printf("Usage: parser [xml-file] <verbose>\n");
+        return 0;
+    }
+    const char* filename = argv[1];
+    bool verbose = (argc == 3);
+
+    printf("parsing %s\n", filename);
+    file_utils.Reader file;
+    file.open(filename);
+
+    if (file.isEmpty()) {
+        printf("file %s is empty\n", filename);
+        return 0;
+    }
+
+    xml.Parser parser;
+    if (!parser.parse(file.data(), verbose)) {
+        printf("error parsing %s: %s\n", filename, parser.getDiag());
+    }
+
+    xml.Node2 root = parser.getRoot();
+
+    printf("root = %s\n", root.getName());
+    const char* name = root.getAttr("name");
+    if (name) printf("  name = %s\n", name);
+
+    // iterate all children
+    xml.NodeIter iter = root.getIter();
+    while (!iter.done()) {
+        xml.Node2 child = iter.get();
+        printf("  child %s\n", child.getName());
+        iter.next();
+    }
+
+    parser.destroy();
+    file.close();
+
+    return 0;
+}
+

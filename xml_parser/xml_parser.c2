@@ -1,0 +1,735 @@
+module xml;
+
+import stdio local;
+import string local;
+import csetjmp local;
+import ctype local;
+import color;
+
+const u32 MAX_NAME = 128;
+const u32 MAX_VALUE = 128;
+const u32 MAX_TEXT = 1024;
+public const u32 MAX_DIAG = 256;
+
+const u32 CHILD_TEXT = (1<<31);
+
+func bool isNameStartChar(u8 ch) {
+    if (ch >= 128) return true;
+    if (isalpha(ch)) return true;
+    return ch == ':' || ch == '_';
+}
+
+func bool isNameChar(u8 ch) {
+    return isNameStartChar(ch)
+        || isdigit(ch)
+        || ch == '.'
+        || ch == '-';
+}
+
+public type Parser struct {
+    char[MAX_DIAG] message;
+    Blocks blocks;
+}
+
+public func void Parser.destroy(Parser* p) {
+    p.blocks.destroy();
+}
+
+public func bool Parser.parse(Parser* p, const char* text, bool verbose) {
+    p.message[0] = 0;
+    p.blocks.init();
+
+    XmlParser parser;
+    bool status = parser.parse(text, p.message, &p.blocks);
+    if (status && verbose)  p.blocks.dump(true);
+    return status;
+}
+
+public func const Node2 Parser.getRoot(const Parser* p) {
+    Node2 result;
+    if (p.blocks.node_count == 0) {
+        result.node = nil;
+    } else {
+        result.node = &p.blocks.nodes[0];
+    }
+    result.blocks = &p.blocks;
+    return result;
+}
+
+public func const char* Parser.getDiag(Parser* p) {
+    return p.message;
+}
+
+
+type XmlParser struct {
+    Tokenizer tokenizer;
+    Token token;
+    Location prev;
+    jmp_buf jmp_err;
+    char* msg;
+    Blocks* blocks;
+}
+
+func bool XmlParser.parse(XmlParser* p, const char* text, char* diagMsg, Blocks* blocks_) {
+    p.tokenizer.init(text);
+    p.token.init();
+    p.prev.set(0, 0);
+    p.msg = diagMsg;
+    p.blocks = blocks_;
+
+    i32 res = setjmp(p.jmp_err);
+    if (res == 0) {
+        p.consumeToken();
+        p.parseXml();
+        while (p.token.isNot(Eof)) {
+#if 0
+            p.consumeToken();
+#else
+            p.parseNode();
+#endif
+        }
+        return true;
+    } // else got error, msg should be set
+    return false;
+}
+
+func void XmlParser.fatal(XmlParser* p, const char* text) {
+    sprintf(p.msg, "error %s %s", text, p.diagLoc());
+    longjmp(p.jmp_err, 1);
+}
+
+func u32 XmlParser.parseNode(XmlParser* p) {
+    p.expectAndConsume(ElemBegin);
+    p.expect(Name);
+    u32 off = p.blocks.addNode(p.token.getText());
+    Node* node = &p.blocks.nodes[off];
+    p.consumeToken();
+    Node* lastChild = nil;
+    bool hasText = false;
+
+    bool is_open = p.parseTag(node);
+    if (!is_open) return off;
+
+    while (1) {
+        switch (p.token.getKind()) {
+        case XmlBegin:
+        case XmlEnd:
+            p.fatal("unexpected xml tag");
+            break;
+        case CdataBegin:
+        case CdataEnd:
+        case DtdBegin:
+            p.fatal("TODO Cdata/Dtd");
+            break;
+        case ElemBegin:
+        {
+            if (hasText) p.fatal("node with text cannot have children");
+            u32 child = p.parseNode();
+            Node* childNode = &p.blocks.nodes[child];
+            if (lastChild) lastChild.next_node = child;
+            else node.children = child;
+            lastChild = childNode;
+            break;
+        }
+        case ElemEnd:
+            p.fatal("syntax error");
+            break;
+        case ElemBeginClose:
+            p.parseEndTag(node);
+            return off;
+        case ElemEndClose:
+        case Equals:
+        case Name:
+        case Value:
+            p.fatal("syntax error");
+        case Text:
+        {
+            if (lastChild) p.fatal("node with children cannot have text");
+            u32 value_off = p.blocks.addValue(p.token.getText());
+            node.children = (value_off | CHILD_TEXT);
+            p.consumeToken();
+            hasText = true;
+            break;
+        }
+        case Eof:
+            p.fatal("unexpected eof");
+            break;
+        case Error:
+            break;
+        }
+    }
+    return off;
+}
+
+func bool XmlParser.parseTag(XmlParser* p, Node* node) {
+    u32 last_attr_off = 0;
+    Attr* lastAttr = nil;
+
+    // <name has been parsed already
+    while (1) {
+        switch (p.token.getKind()) {
+        case XmlBegin:
+        case XmlEnd:
+            p.fatal("unexpected xml tag");
+            break;
+        case CdataBegin:
+        case CdataEnd:
+        case DtdBegin:
+            p.fatal("TODO");
+            break;
+        case ElemBegin:
+            p.fatal("syntax error");
+            break;
+        case ElemEnd:
+            p.consumeToken();
+            return true;
+        case ElemBeginClose:
+            p.fatal("syntax error");
+            break;
+        case ElemEndClose:
+            p.consumeToken();
+            return false;
+        case Equals:
+            p.fatal("syntax error");
+            break;
+        case Name:
+        {
+            u32 off = p.parseAttribute();
+            Attr* attr = &p.blocks.attrs[off];
+            if (lastAttr) lastAttr.next_attr = off;
+            else node.attr_off = off;
+            lastAttr = attr;
+            break;
+        }
+        case Value:
+        case Text:
+        case Eof:
+            p.fatal("unexpected eof");
+            break;
+        case Error:
+            break;
+        }
+    }
+    return false;
+}
+
+func void XmlParser.parseEndTag(XmlParser* p, const Node* node) {
+    // Syntax: </name>
+    p.consumeToken();
+    p.expect(Name);
+    const char* begin_name = &p.blocks.node_names[node.name_off];
+    const char* end_name = p.token.getText();
+    if (strcmp(begin_name, end_name) != 0) p.fatal("unmatched tag");
+
+    p.consumeToken();
+    p.expectAndConsume(ElemEnd);
+}
+
+func void XmlParser.parseXml(XmlParser* p) {
+    p.expectAndConsume(XmlBegin);
+    while (1) {
+        switch (p.token.getKind()) {
+        case XmlBegin:
+            p.fatal("unexpected xml tag");
+            break;
+        case XmlEnd:
+            p.consumeToken();
+            return;
+        case CdataBegin:
+        case CdataEnd:
+        case DtdBegin:
+        case ElemBegin:
+        case ElemEnd:
+        case ElemBeginClose:
+        case ElemEndClose:
+        case Equals:
+            p.fatal("syntax error");
+            break;
+        case Name:
+            p.parseAttribute();
+            break;
+        case Value:
+        case Text:
+        case Eof:
+            p.fatal("unexpected eof");
+            break;
+        case Error:
+            break;
+        }
+    }
+}
+
+func u32 XmlParser.parseAttribute(XmlParser* p) {
+    // Syntax: name='value'
+    u32 off = p.blocks.addAttr(p.token.getText());
+    Attr* attr = &p.blocks.attrs[off];
+    p.consumeToken();
+    p.expectAndConsume(Equals);
+    p.expect(Value);
+    attr.value_off = p.blocks.addValue(p.token.getText());
+    p.consumeToken();
+    return off;
+}
+
+func Location XmlParser.consumeToken(XmlParser* p) {
+    p.prev = p.token.getLoc();
+    p.tokenizer.lex(&p.token);
+#if 0
+    printf("  %s%8s%s %s", color.Yellow, p.token.getName(), color.Normal, p.diagLoc());
+    if (p.token.is(Text) || p.token.is(Value) || p.token.is(Name)) {
+        printf("  %s%s%s", color.Green, p.token.getText(), color.Normal);
+    }
+    printf("\n");
+#endif
+    if (p.token.is(Error)) {
+        strcpy(p.msg, p.token.getText());
+        longjmp(p.jmp_err, 1);
+    }
+    return p.prev;
+}
+
+func const char* XmlParser.diagLoc(const XmlParser* p) {
+    Location loc = p.token.getLoc();
+    return loc.str();
+}
+
+func void XmlParser.expect(XmlParser* p, TokenKind k) {
+    if (p.token.isNot(k)) {
+        sprintf(p.msg, "expected '%s' %s", getTokenName(k), p.diagLoc());
+        longjmp(p.jmp_err, 1);
+    }
+}
+
+func void XmlParser.expectAndConsume(XmlParser* p, TokenKind k) {
+    p.expect(k);
+    p.consumeToken();
+}
+
+
+type Tokenizer struct {
+    const char* current;
+    Location loc;
+    char[MAX_TEXT] msg;
+    bool inElement;
+}
+
+func void Tokenizer.init(Tokenizer* t, const char* text) {
+    t.current = text;
+    t.loc.set(1, 1);
+    t.inElement = false;
+}
+
+func void Tokenizer.lex(Tokenizer* t, Token* result) {
+    result.clear();
+
+    // read away whitespace
+    if (!t.inElement) {
+        const char* start = t.current;
+        Location textLoc = t.loc;
+        bool haveText = false;
+        // TODO handle escapes
+        // TODO depending on mode, strip newlines and leading/trailing whitespace
+        bool done = false;
+        while (!done) {
+            switch (t.current[0]) {
+            case 0:
+                result.setLocation(t.loc);
+                result.setKind(Eof);
+                return;
+            case ' ':
+            case '\t':
+                t.advance(1);
+                break;
+            case '\r':
+                t.current++;
+                if (t.current[0] != '\n') {
+                    sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());
+                    result.setKind(Error);
+                    result.setData(t.msg);
+                    return;
+                }
+                // else fallthrough
+            case '\n':
+                t.current++;
+                t.loc.line++;
+                t.loc.col = 1;
+                break;
+            case '<':
+                done = true;
+                break;
+            default:
+                t.current++;
+                haveText = true;
+                break;
+            }
+        }
+        t.inElement = false;
+        if (haveText) {
+            i32 len = t.current - start;
+            memcpy(t.msg, start, cast<u64>(len));
+            t.msg[len] = 0;
+
+            result.setLocation(textLoc);
+            result.setKind(Text);
+            result.setData(t.msg);
+            t.loc.col += len;
+            return;
+        }
+    }
+
+    while (1) {
+        switch (t.current[0]) {
+        case 0:
+            sprintf(t.msg, "unexpected eof %s", t.loc.str());
+            result.setKind(Error);
+            result.setData(t.msg);
+            return;
+        case ' ':
+        case '\t':
+            t.advance(1);
+            break;
+        case '\r':
+            t.current++;
+            if (t.current[0] != '\n') {
+                sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());
+                result.setKind(Error);
+                result.setData(t.msg);
+                return;
+            }
+            // else fallthrough
+        case '\n':
+            t.current++;
+            t.loc.line++;
+            t.loc.col = 1;
+            break;
+        case '<':
+            if (t.readLtToken(result)) return;
+            break;
+        case '>':
+            result.setLocation(t.loc);
+            result.setKind(ElemEnd);
+            t.advance(1);
+            t.inElement = false;
+            return;
+        case '/':       // expect '/>'
+            if (t.current[1] != '>') {
+                sprintf(t.msg, "expected '/>' %s", t.loc.str());
+                result.setKind(Error);
+                result.setData(t.msg);
+                return;
+            }
+            result.setLocation(t.loc);
+            result.setKind(ElemEndClose);
+            t.advance(2);
+            t.inElement = false;
+            return;
+        case '?':   // expect '?>'
+            if (t.current[1] != '>') {
+                sprintf(t.msg, "expected '?>' %s", t.loc.str());
+                result.setKind(Error);
+                result.setData(t.msg);
+                return;
+            }
+            result.setLocation(t.loc);
+            result.setKind(XmlEnd);
+            t.advance(2);
+            t.inElement = false;
+            return;
+        case '\'':
+        case '"':
+            t.parseValue(result, t.current[0]);
+            return;
+        case '=':
+            result.setLocation(t.loc);
+            result.setKind(Equals);
+            t.advance(1);
+            return;
+        case ']':   // expect ']]>'
+            if (t.current[1] != ']' || t.current[2] != '>') {
+                sprintf(t.msg, "expected ']]>' %s", t.loc.str());
+                result.setKind(Error);
+                result.setData(t.msg);
+                return;
+            }
+            result.setLocation(t.loc);
+            result.setKind(CdataEnd);
+            t.advance(3);
+            return;
+        default:
+            if (isNameStartChar(t.current[0])) {
+                t.parseName(result);
+            } else {
+                sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());
+                result.setKind(Error);
+                result.setData(t.msg);
+
+            }
+            return;
+        }
+    }
+}
+
+func bool Tokenizer.readLtToken(Tokenizer* t, Token* result) {
+    if (t.current[1] == '/') {
+        result.setLocation(t.loc);
+        result.setKind(ElemBeginClose);
+        t.advance(2);
+        t.inElement = true;
+        return true;
+    }
+    if (t.current[1] == '!') {  // can be <![CDATA[, <!-- or <!
+        switch (t.current[2]) {
+        case 0:
+            sprintf(t.msg, "unexpected eof %s", t.loc.str());
+            result.setKind(Error);
+            result.setData(t.msg);
+            break;
+        case '[':
+            if (strncmp(t.current, "<![CDATA[", 9) == 0) {
+                result.setLocation(t.loc);
+                result.setKind(CdataBegin);
+                t.advance(9);
+            } else {
+                sprintf(t.msg, "expected '<!CDATA[' %s", t.loc.str());
+                result.setKind(Error);
+                result.setData(t.msg);
+            }
+            break;
+        case '-':
+            if (t.current[3] == '-') {
+                if (!t.readComments(result)) return true;
+                return false;
+            } else {
+                sprintf(t.msg, "expected '<!--' %s", t.loc.str());
+                result.setKind(Error);
+                result.setData(t.msg);
+            }
+            break;
+        default:
+            result.setLocation(t.loc);
+            result.setKind(DtdBegin);
+            t.advance(2);
+            break;
+        }
+        return true;
+    }
+    if (t.current[1] == '?') {
+        if (strncmp(t.current, "<?xml", 5) == 0) {
+            result.setLocation(t.loc);
+            result.setKind(XmlBegin);
+            t.advance(5);
+            t.inElement = true;
+        } else {
+            sprintf(t.msg, "expected '<?xml' %s", t.loc.str());
+            result.setKind(Error);
+            result.setData(t.msg);
+        }
+        return true;
+    }
+    result.setLocation(t.loc);
+    result.setKind(ElemBegin);
+    t.advance(1);
+    t.inElement = true;
+    return true;
+}
+
+func bool Tokenizer.readComments(Tokenizer* t, Token* result) {
+    t.advance(3);
+    // TODO escaped chars
+    while (1) {
+        switch (t.current[0]) {
+        case 0:
+            sprintf(t.msg, "unexpected eof %s", t.loc.str());
+            result.setKind(Error);
+            result.setData(t.msg);
+            return false;
+        case ' ':
+        case '\t':
+            t.advance(1);
+            break;
+        case '\r':
+            t.current++;
+            if (t.current[0] != '\n') {
+                sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());
+                result.setKind(Error);
+                result.setData(t.msg);
+                return false;
+            }
+            // else fallthrough
+        case '\n':
+            t.current++;
+            t.loc.line++;
+            t.loc.col = 1;
+            break;
+        case '-':
+            if (t.current[1] == '-' && t.current[2] == '>') {
+                t.advance(3);
+                return true;
+            }
+            t.advance(1);
+            break;
+        default:
+            t.advance(1);
+            break;
+        }
+    }
+    return true;
+}
+
+func void Tokenizer.parseValue(Tokenizer* t, Token* result, char delimiter) {
+    t.advance(1);
+    const char* start = t.current;
+    // NOTE: newlines are not supported
+    // TODO support escaped delimiters
+    while (true) {
+        if (t.current[0] == 0) {
+            sprintf(t.msg, "unexpected eof %s", t.loc.str());
+            result.setKind(Error);
+            result.setData(t.msg);
+            return;
+        }
+        if (t.current[0] == delimiter) break;
+        t.current++;
+    }
+
+    i32 len = t.current - start;
+    memcpy(t.msg, start, cast<u64>(len));
+    t.msg[len] = 0;
+
+    result.setLocation(t.loc);
+    result.setKind(Value);
+    result.setData(t.msg);
+    t.current++;
+    t.loc.col += len+1;
+}
+
+func void Tokenizer.parseName(Tokenizer* t, Token* result) {
+    const char* start = t.current;
+    while (t.current[0] && isNameChar(t.current[0])) t.current++;
+
+    i32 len = t.current - start;
+    memcpy(t.msg, start, cast<u64>(len));
+    t.msg[len] = 0;
+
+    result.setLocation(t.loc);
+    result.setKind(Name);
+    result.setData(t.msg);
+    // NOTE: dont use advance() since current is already moved
+    t.loc.col += len;
+}
+
+func void Tokenizer.advance(Tokenizer* t, u32 amount) {
+    t.loc.col += amount;
+    t.current += amount;
+}
+
+
+type TokenKind enum u8 {
+    XmlBegin,      // <?xml
+    XmlEnd,        // ?>
+    CdataBegin,    // <![CDATA[
+    CdataEnd,      // ]]>
+    DtdBegin,      // <!       (NOT supported yet, read until balanced '>')
+    ElemBegin,     // <
+    ElemEnd,       // >
+    ElemBeginClose,// </
+    ElemEndClose,  // />
+    Equals,        // =
+    Name,          // (word) [a-zA-Z0-9_:] ?    number
+    Value,         // any text 'abc' or "abc"
+    Text,          // any text (until delimiter) between Elements
+    Eof,
+    Error,
+}
+
+func const char* getTokenName(TokenKind k) {
+    switch (k) {
+    case XmlBegin:      return "<?xml";
+    case XmlEnd:        return "?>";
+    case CdataBegin:    return "<![CDATA[";
+    case CdataEnd:      return "]]>";
+    case DtdBegin:      return "<!";
+    case ElemBegin:     return "<";
+    case ElemEnd:       return ">";
+    case ElemBeginClose:    return "</";
+    case ElemEndClose:  return "/>";
+    case Equals:        return "=";
+    case Name:          return "name";
+    case Value:         return "value";
+    case Text:          return "text";
+    case Eof:           return "eof";
+    case Error:         return "error";
+    }
+    return "?";
+}
+
+
+type Token struct {
+    Location loc;
+    TokenKind kind;
+    const char* text;
+}
+
+func void Token.init(Token* t) {
+    t.loc.set(0, 0);
+    t.kind = Eof;
+    t.text = nil;
+}
+
+func Location Token.getLoc(const Token* t) {
+    return t.loc;
+}
+
+func void Token.clear(Token* t) {
+    t.text = nil;
+}
+
+func void Token.setData(Token* t, const char* d) {
+    t.text = d;
+}
+
+func const char* Token.getName(const Token* t) {
+    return getTokenName(t.kind);
+}
+
+func TokenKind Token.getKind(const Token* t) {
+    return t.kind;
+}
+
+func bool Token.is(const Token* t, TokenKind kind) {
+    return t.kind == kind;
+}
+
+func bool Token.isNot(const Token* t, TokenKind kind) {
+    return t.kind != kind;
+}
+
+func const char* Token.getText(const Token* t) {
+    return t.text;
+}
+
+func void Token.setKind(Token* t, TokenKind kind) {
+    t.kind = kind;
+}
+
+func void Token.setLocation(Token* t, Location loc) {
+    t.loc = loc;
+}
+
+
+type Location struct {
+    u32 line;
+    u32 col;
+}
+
+func void Location.set(Location* loc, u32 l, u32 c) {
+    loc.line = l;
+    loc.col = c;
+}
+
+func const char* Location.str(const Location* loc) {
+    local char[32] msg;
+    sprintf(msg, "at line %d:%-3d", loc.line, loc.col);
+    return msg;
+}
+

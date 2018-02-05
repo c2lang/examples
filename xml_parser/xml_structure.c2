@@ -1,0 +1,309 @@
+module xml;
+
+import stdlib local;
+import string local;
+import stdio local;   // TEMP
+
+const u32 MAX_NODES = 1024;
+const u32 MAX_ATTRS = 1024;
+
+public type Blocks struct {
+    Node* nodes;
+    u32 node_count;
+    u32 max_nodes;
+
+    char* node_names;
+    u32 node_name_off;
+    u32 node_name_size;
+    // TODO remove these 2, only used during parse
+    char* last_node_name;
+    u32 last_node_name_off;
+
+    Attr* attrs;
+    u32 attr_count;
+    u32 max_attrs;
+
+    char* attr_names;
+    u32 attr_name_off;
+    u32 attr_name_size;
+
+    char* data;             // attribute values + text
+    u32 data_off;
+    u32 data_size;
+}
+
+public type Node2 struct {
+    const Node* node;
+    const Blocks* blocks;
+}
+
+public func const char* Node2.getName(const Node2* node) {
+    return &node.blocks.node_names[node.node.name_off];
+}
+
+public func const char* Node2.getAttr(const Node2* node, const char* name) {
+    u32 offset = node.node.attr_off;
+    while (offset != 0) {
+        const Attr* attr = &node.blocks.attrs[offset];
+        const char* attr_name = &node.blocks.attr_names[attr.name_off];
+        if (strcmp(attr_name, name) == 0) {
+            return &node.blocks.data[attr.value_off];
+        }
+        offset = attr.next_attr;
+    }
+    return nil;
+}
+
+public func NodeIter Node2.getIter(const Node2* node) {
+    NodeIter iter;
+    // TODO check CHILD_TEXT
+    u32 child = node.node.children;
+    if (child == 0) iter.current = nil;
+    else iter.current = &node.blocks.nodes[child];
+    iter.blocks = node.blocks;
+    return iter;
+}
+public type NodeIter struct {
+    Node* current;
+    Blocks* blocks;
+}
+
+public func bool NodeIter.done(const NodeIter* iter) {
+    return iter.current == nil;
+}
+
+public func void NodeIter.next(NodeIter* iter) {
+    u32 next = iter.current.next_node;
+    if (next == 0) iter.current = nil;
+    else iter.current = &iter.blocks.nodes[next];
+}
+
+public func Node2 NodeIter.get(NodeIter* iter) {
+    Node2 result;
+    result.node = iter.current;
+    result.blocks = iter.blocks;
+    return result;
+}
+
+public type Node struct {
+    u32 name_off;    // off in node_names
+    u32 next_node;      // off in nodes (index of Node)
+    u32 attr_off;    // off in attrs
+    u32 children;       // if upper bit is set, point to Data
+} @(packed, opaque)
+
+public type Attr struct {
+    u32 name_off;     // off in attr_names
+    u32 next_attr;    // off in attrs (index of Attr)
+    u32 value_off;    // off in data;
+} @(packed, opaque)
+
+
+func void Blocks.init(Blocks* b) {
+    memset(b, 0, sizeof(Blocks));
+    b.nodes = calloc(MAX_NODES, sizeof(Node));
+    b.max_nodes = MAX_NODES;
+
+    b.node_name_size = 4096;
+    b.node_names = calloc(1, b.node_name_size);
+
+    b.attrs = calloc(MAX_ATTRS, sizeof(Attr));
+    b.attr_count = 1;   // 0 is used to indicate no attrs
+    b.max_attrs = MAX_ATTRS;
+
+    b.attr_name_size = 4096;
+    b.attr_names = calloc(1, b.attr_name_size);
+
+    b.data_size = 4096;
+    b.data = calloc(1, b.data_size);
+}
+
+func void Blocks.destroy(Blocks* b) {
+    free(b.attrs);
+    free(b.node_names);
+    free(b.nodes);
+}
+
+func u32 Blocks.addNode(Blocks* b, const char* name) {
+    // TODO check if fits in block, otherwise re-alloc
+    if (b.node_count == b.max_nodes) {
+        printf("NODE LIMIT REACHED!\n");
+        exit(-1);
+    }
+    u32 off = b.node_count;
+    Node* node = &b.nodes[off];
+    b.node_count++;
+
+    // TODO improve matching with depth etc
+    if (b.last_node_name && strcmp(b.last_node_name, name) == 0) {
+        node.name_off = b.last_node_name_off;
+    } else {
+        // TODO check if it fits in block
+        u32 len = cast<u32>(strlen(name)) + 1;
+        u32 name_off = b.node_name_off;
+        node.name_off = name_off;
+        char* newname = &b.node_names[name_off];
+        memcpy(newname, name, len);
+        b.last_node_name = newname;
+        b.last_node_name_off = name_off;
+        b.node_name_off += len;
+    }
+    return off;
+}
+
+func u32 Blocks.addAttr(Blocks* b, const char* name) {
+    // TODO check if fits in block, otherwise re-alloc
+    if (b.attr_count == b.max_attrs) {
+        printf("ATTR LIMIT REACHED!\n");
+        exit(-1);
+    }
+    u32 off = b.attr_count;
+    Attr* attr = &b.attrs[off];
+    b.attr_count++;
+
+    // TODO search existing attribute names
+
+    u32 len = cast<u32>(strlen(name)) + 1;
+    // TODO check if it fits in block
+    u32 name_off = b.attr_name_off;
+    attr.name_off= name_off;
+    memcpy(&b.attr_names[name_off], name, len);
+    b.attr_name_off += len;
+    return off;
+}
+
+func u32 Blocks.addValue(Blocks* b, const char* value) {
+    u32 len = cast<u32>(strlen(value)) + 1;
+    if (b.data_off + len >= b.data_size) {
+        printf("DATA LIMIT REACHED\n");
+        exit(-1);
+    }
+    u32 off = b.data_off;
+    memcpy(&b.data[off], value, len);
+    b.data_off += len;
+    return off;
+}
+
+func void Blocks.dump(const Blocks* b, bool full) {
+    if (b.node_count != 0) b.dumpNode(0, 0);
+
+    if (full) {
+        u32 size = sizeof(Blocks);
+        size += (b.max_nodes * sizeof(Node));
+        size += b.node_name_size;
+        size += (b.max_attrs * sizeof(Attr));
+        size += b.attr_name_size;
+        size += b.data_size;
+        u32 used = sizeof(Blocks);
+        used += (b.node_count * sizeof(Node));
+        used += b.node_name_off;
+        used += (b.attr_count * sizeof(Attr));
+        used += b.attr_name_off;
+        used += b.data_off;
+        printf("blocks: (%u/%u Kb)\n", (used + 1023) / 1024, (size + 1023)/ 1024);
+
+        printf("  nodes %u/%d\n", b.node_count * sizeof(Node), b.max_nodes * sizeof(Node));
+        for (u32 i=0; i<b.node_count; ++i) {
+            const Node* n = &b.nodes[i];
+            if (n.children & CHILD_TEXT) {
+                printf("     [%3u]  name %3u  next %3u      text %3u  attr %3u\n",
+                    i, n.name_off, n.next_node, n.children & ~CHILD_TEXT, n.attr_off);
+            } else {
+                printf("     [%3u]  name %3u  next %3u  children %3u  attr %3u\n",
+                    i, n.name_off, n.next_node, n.children, n.attr_off);
+            }
+        }
+
+        printf("  node names %u/%u\n", b.node_name_off, b.node_name_size);
+        {
+            u32 i = 0;
+            u32 start = i;
+            while (i<b.node_name_off) {
+                if (b.node_names[i] == 0) {
+                    printf("    [%3u] %s\n", start, &b.node_names[start]);
+                    i++;
+                    start = i;
+                } else {
+                    i++;
+                }
+            }
+        }
+
+        printf("  attributes %u/%u\n", b.attr_count * sizeof(Attr), b.max_attrs * sizeof(Attr));
+        for (u32 i=1; i<b.attr_count; ++i) {
+            const Attr* a = &b.attrs[i];
+            printf("     [%3u]  name %3u  next %3u  value %3u\n",
+                i, a.name_off, a.next_attr, a.value_off);
+        }
+
+        printf("  attr names %u/%u\n", b.attr_name_off, b.attr_name_size);
+        {
+            u32 i = 0;
+            u32 start = i;
+            while (i<b.attr_name_off) {
+                if (b.attr_names[i] == 0) {
+                    printf("    [%3u] %s\n", start, &b.attr_names[start]);
+                    i++;
+                    start = i;
+                } else {
+                    i++;
+                }
+            }
+        }
+
+        printf("  values %u/%u\n", b.data_off, b.data_size);
+        {
+            u32 i = 0;
+            u32 start = i;
+            while (i<b.data_off) {
+                if (b.data[i] == 0) {
+                    if (i - start > 32) {
+                        printf("    [%3u] %.32s..\n", start, &b.data[start]);
+                    } else {
+                        printf("    [%3u] %s\n", start, &b.data[start]);
+                    }
+                    i++;
+                    start = i;
+                } else {
+                    i++;
+                }
+            }
+        }
+    }
+}
+
+func void Blocks.dumpNode(const Blocks* b, u32 off, u32 depth) {
+    const Node* node = &b.nodes[off];
+    for (u32 i=0; i<depth; ++i) printf("   ");
+    printf("%s", &b.node_names[node.name_off]);
+    // TODO check upper bit for text
+    if (node.attr_off != 0) {
+        printf("  [");
+        u32 attr_off = node.attr_off;
+        bool first = true;
+        while (attr_off != 0) {
+            const Attr* attr = &b.attrs[attr_off];
+            if (first) first = false;
+            else printf(", ");
+            printf("%s=%s", &b.attr_names[attr.name_off], &b.data[attr.value_off]);
+            attr_off = attr.next_attr;
+        }
+        printf("]");
+    }
+    printf("\n");
+    if (node.children) {
+        if (node.children & CHILD_TEXT) {
+            for (u32 i=0; i<depth+1; ++i) printf("   ");
+            printf("<TEXT>\n");
+#if 0
+            // TODO print first 32 chars
+            u32 value_off = node.children & ~CHILD_TEXT;
+            printf("%s\n", &b.data[value_off]);
+#endif
+        } else {
+            b.dumpNode(node.children, depth+1);
+        }
+    }
+    if (node.next_node) b.dumpNode(node.next_node, depth);
+}
+
