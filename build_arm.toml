@@ -1,0 +1,15 @@
+target = "x86_64-unknown-linux-gnu"
+
+[toolchain]
+cc = "arm-xilinx-linux-gnueabi-gcc"
+cflags = "-E -march=armv7-a -marm -mfpu=neon -mfloat-abi=hard --sysroot=.."
+ldflags = "--sysroot=.."        needed?
+path = "/opt/toolchain/sysrootfs/.."
+
+[[libdir]]
+dir = "${C2_LIBDIR}"
+
+[[libdir]]
+dir = "/tmp/bla"
+
+

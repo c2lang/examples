@@ -1,0 +1,10 @@
+target = "x_build-generic"
+
+[toolchain]
+cc = "${CC}"
+cflags = "${CFLAGS}"
+ldflags = "${LDFLAGS}"
+
+[[libdir]]
+dir = "${C2_LIBDIR}"
+
