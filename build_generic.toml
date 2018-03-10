@@ -1,10 +1,12 @@
-target = "x_build-generic"
+target = "$TARGET_PREFIX"
 
 [toolchain]
-cc = "${CC}"
-cflags = "${CFLAGS}"
-ldflags = "${LDFLAGS}"
+cc = "$CC"
+cflags = "$CFLAGS"
+ldflags = "$LDFLAGS"
 
 [[libdir]]
-dir = "${C2_LIBDIR}"
+dir = "$C2_LIBDIR"
 
+[output]
+dir="output_arm"
