@@ -1,16 +1,15 @@
-target = "x86_64-unknown-linux-gnu"
+# Set for Ubuntu 17.04 arm toolchain
+# install with sudo apt-get install gcc-arm-linux-gnueabi qemu-user
+
+target = "arm-linux-gnueabi"
 
 [toolchain]
-cc = "arm-xilinx-linux-gnueabi-gcc"
-cflags = "-E -march=armv7-a -marm -mfpu=neon -mfloat-abi=hard --sysroot=.."
-ldflags = "--sysroot=.."
-path = "/opt/toolchain/sysrootfs/.."
+cc = "arm-linux-gnueabi-gcc"
+cflags = "-march=armv7-a -marm"
+ldflags = "-static"
 
 [[libdir]]
 dir = "$C2_LIBDIR"
-
-[[libdir]]
-dir = "/tmp/bla"
 
 [output]
 dir = "output_arm"
