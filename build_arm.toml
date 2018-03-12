@@ -1,7 +1,10 @@
 # Set for Ubuntu 17.04 arm toolchain
 # install with sudo apt-get install gcc-arm-linux-gnueabi qemu-user
 
-target = "arm-linux-gnueabi"
+target = "arm-unknown-linux-gnueabi"
+
+[output]
+dir = "output_arm"
 
 [toolchain]
 cc = "arm-linux-gnueabi-gcc"
@@ -11,5 +14,3 @@ ldflags = "-static"
 [[libdir]]
 dir = "$C2_LIBDIR"
 
-[output]
-dir = "output_arm"

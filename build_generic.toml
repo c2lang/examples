@@ -1,5 +1,8 @@
 target = "$TARGET_PREFIX"
 
+[output]
+dir="output_arm"
+
 [toolchain]
 cc = "$CC"
 cflags = "$CFLAGS"
@@ -8,5 +11,3 @@ ldflags = "$LDFLAGS"
 [[libdir]]
 dir = "$C2_LIBDIR"
 
-[output]
-dir="output_arm"
