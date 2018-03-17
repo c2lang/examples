@@ -1,3 +1,5 @@
+# Generic build file that can be used in combination of ENVIRONMENT variables
+
 target = "$TARGET_PREFIX"
 
 [output]
