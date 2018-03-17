@@ -1,5 +1,6 @@
 # Set for Ubuntu 17.04 arm toolchain
 # install with sudo apt-get install gcc-arm-linux-gnueabi qemu-user
+# then use with: c2c -b build_arm.toml
 
 target = "arm-unknown-linux-gnueabi"
 
