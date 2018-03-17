@@ -74,14 +74,14 @@ public func void encode(const u8* in, u32 len, i8* out) {
     }
 }
 
-public func bool decode(const u8* in, u32 len, u8* out) {
+public func i32 decode(const u8* in, u32 len, u8* out) {
     u32 i = 0;
     u32 j = 0;
 
     for (; i < len; ++i) {
-        if (in[i] == PAD) return true;
+        if (in[i] == PAD) return cast<i32>(j);
         i8 c;
-        if (in[i] < FIRST || in[i] > LAST || (c = Lut_dec[in[i] - FIRST]) == -1) return false;
+        if (in[i] < FIRST || in[i] > LAST || (c = Lut_dec[in[i] - FIRST]) == -1) return -1;
 
         i8 cc;
         switch (i % 4) {
@@ -112,6 +112,6 @@ public func bool decode(const u8* in, u32 len, u8* out) {
             break;
         }
     }
-    return true;
+    return cast<i32>(j);
 }
 
