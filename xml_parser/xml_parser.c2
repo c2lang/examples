@@ -365,7 +365,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
         }
         t.inElement = false;
         if (haveText) {
-            i32 len = t.current - start;
+            i32 len = cast<i32>(t.current - start);
             memcpy(t.msg, start, cast<u64>(len));
             t.msg[len] = 0;
 
@@ -592,7 +592,7 @@ func void Tokenizer.parseValue(Tokenizer* t, Token* result, char delimiter) {
         t.current++;
     }
 
-    i32 len = t.current - start;
+    i32 len = cast<i32>(t.current - start);
     memcpy(t.msg, start, cast<u64>(len));
     t.msg[len] = 0;
 
@@ -607,7 +607,7 @@ func void Tokenizer.parseName(Tokenizer* t, Token* result) {
     const char* start = t.current;
     while (t.current[0] && isNameChar(t.current[0])) t.current++;
 
-    i32 len = t.current - start;
+    i32 len = cast<i32>(t.current - start);
     memcpy(t.msg, start, cast<u64>(len));
     t.msg[len] = 0;
 
