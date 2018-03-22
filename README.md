@@ -41,3 +41,20 @@ A very simple StringBuffer showing off struct functions
 ## unit_tests
 showing of incremental arrays, used to store unit tests
 
+
+# cross-compilation example
+To show working cross-compilation to ARM, install the arm cross toolchain in
+Ubuntu 17.04 with
+
+```bash
+sudo apt-get install gcc-arm-linux-gnueabi qemu-user
+```
+
+Then cross compile the examples with
+
+```bash
+c2c -b build_arm.toml
+```
+
+This should even work for the lua example that uses a lua library.
+
