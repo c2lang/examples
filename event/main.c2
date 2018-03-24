@@ -54,7 +54,7 @@ public func i32 main() {
     return ret;
 }
 
-func void fatal(const u8* msg) {
+func void fatal(const char* msg) {
 	exit(EXIT_FAILURE);
 }
 

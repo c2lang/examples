@@ -13,13 +13,13 @@ public const u32 MAX_DIAG = 256;
 
 const u32 CHILD_TEXT = (1<<31);
 
-func bool isNameStartChar(u8 ch) {
-    if (ch >= 128) return true;
+func bool isNameStartChar(i8 ch) {
+    if (ch < 0) return true;
     if (isalpha(ch)) return true;
     return ch == ':' || ch == '_';
 }
 
-func bool isNameChar(u8 ch) {
+func bool isNameChar(i8 ch) {
     return isNameStartChar(ch)
         || isdigit(ch)
         || ch == '.'
@@ -142,6 +142,7 @@ func u32 XmlParser.parseNode(XmlParser* p) {
         case Name:
         case Value:
             p.fatal("syntax error");
+            break;
         case Text:
         {
             if (lastChild) p.fatal("node with children cannot have text");

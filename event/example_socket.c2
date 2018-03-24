@@ -16,7 +16,7 @@ func void fatal(const char* msg) {
     exit(EXIT_FAILURE);
 }
 
-func void stripNewline(u8* buffer, i64 len)
+func void stripNewline(char* buffer, i64 len)
 {
     if (buffer[len-1] == LF) {
         buffer[len-1] = 0;

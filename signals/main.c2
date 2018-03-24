@@ -5,7 +5,7 @@ import stdlib local;
 import stdio local;
 import unistd local;
 
-func void fatal(const u8* msg) {
+func void fatal(const char* msg) {
 	exit(EXIT_FAILURE);
 }
 

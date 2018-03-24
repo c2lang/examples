@@ -37,7 +37,7 @@ func void function1()
 }
 
 public func i32 main() {
-    printf("size=%d\n", sizeof(jmp_buf));
+    printf("size=%zu\n", sizeof(jmp_buf));
     function1();
     return 0;
 }

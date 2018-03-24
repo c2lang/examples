@@ -137,7 +137,7 @@ func void Log.internal(Log* log, Level level, const char* color_, const char* fo
         gettimeofday(&tv, nil);
         time_t now = tv.tv_sec;
         time.tm* now2 = time.localtime(&now);
-        cp += sprintf(cp, "%02d/%02d/%02d %02d:%02d:%02d.%0.lu",
+        cp += sprintf(cp, "%02d/%02d/%02d %02d:%02d:%02d.%lu",
             now2.tm_year % 100, now2.tm_mon + 1, now2.tm_mday,
             now2.tm_hour, now2.tm_min, now2.tm_sec, tv.tv_usec / 1000);
     }

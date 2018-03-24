@@ -29,7 +29,7 @@ public func i32 main(i32 argc, char*[] argv) {
         return 0;
     }
     json.Parser parser;
-    if (!parser.parse(file.data())) {
+    if (!parser.parse(cast<const char*>(file.data()))) {
         log.error("error parsing %s: %s", argv[1], parser.getDiag());
     }
     //parser.destroy();
