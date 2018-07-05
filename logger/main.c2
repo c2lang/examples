@@ -4,7 +4,7 @@ import unistd;
 
 public func i32 main(i32 argc, char*[] argv) {
     logger.Base logbase;
-    logbase.init(logger.INFO, unistd.isatty(1), argc == 2);
+    logbase.init(logger.Level.Info, unistd.isatty(1), argc == 2);
 
     logger.Log log;
     log.init(&logbase, "main");
@@ -18,7 +18,7 @@ public func i32 main(i32 argc, char*[] argv) {
     // meanwhile in another component..
     logger.Log log2;
     log2.init(&logbase, "server");
-    log2.setLevel(logger.DEBUG);
+    log2.setLevel(logger.Level.Debug);
     log2.info("got new connection");
     log2.debug("client connected from %s, fd %d", "127.0.0.1", 34);
     log2.warn("client disconnected");

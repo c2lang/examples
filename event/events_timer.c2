@@ -95,7 +95,7 @@ public func void Timer.add_sync(Timer* timer, u64 delay_us)
 {
     Cmd cmd;
     memset(&cmd, 0, sizeof(Cmd));
-    cmd.kind = TimerAdd;
+    cmd.kind = CmdKind.TimerAdd;
     cmd.timer.timer = timer;
     cmd.timer.delay_us = delay_us;
     timer.base.writeCmd(&cmd);
@@ -105,7 +105,7 @@ public func void Timer.del_sync(Timer* timer)
 {
     Cmd cmd;
     memset(&cmd, 0, sizeof(Cmd));
-    cmd.kind = TimerDel;
+    cmd.kind = CmdKind.TimerDel;
     cmd.timer.timer = timer;
     timer.base.writeCmd(&cmd);
 }

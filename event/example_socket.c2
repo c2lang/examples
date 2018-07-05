@@ -98,9 +98,9 @@ public func Socket* Socket.create(events.Base* base, logger.Base* logbase, const
     Socket* s = calloc(1, sizeof(Socket));
     s.base = base;
     s.log.init(logbase, name);
-    s.log.setLevel(logger.DEBUG);
+    s.log.setLevel(logger.Level.Debug);
 
-    s.fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP);
+    s.fd = socket(AF_INET, __socket_type.SOCK_STREAM | __socket_type.SOCK_CLOEXEC, IPPROTO_TCP);
     if (s.fd == -1) {
         fatal("opening TCP socket");
     }
@@ -166,7 +166,7 @@ func void Socket.onConnection(Socket* s)
 {
     u32 sin_size = sizeof(sockaddr_in);
     sockaddr_in remote;
-    i32 new_fd = accept4(s.fd, &remote, &sin_size, SOCK_CLOEXEC);
+    i32 new_fd = accept4(s.fd, &remote, &sin_size, __socket_type.SOCK_CLOEXEC);
     if (new_fd == -1) fatal("accept4");
 
     char* src_ipnr = inet_ntoa(remote.sin_addr);

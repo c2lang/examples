@@ -18,7 +18,7 @@ func void timeout_func(void*) {
 
 public func i32 main() {
     logger.Base logbase;
-    logbase.init(logger.INFO, unistd.isatty(1), true);
+    logbase.init(logger.Level.Info, unistd.isatty(1), true);
 
     logger.Log log;
     log.init(&logbase, "main");

@@ -10,20 +10,20 @@ import unistd;
 import time;
 
 public type Level enum u8 {
-    FATAL = 0,
-    ERROR,
-    WARN,
-    INFO,
-    DEBUG,
+    Fatal = 0,
+    Error,
+    Warn,
+    Info,
+    Debug,
 }
 
 func const char* level2str(Level lvl) {
     switch (lvl) {
-    case FATAL: return "FATAL";
-    case ERROR: return "ERROR";
-    case WARN:  return "WARN ";
-    case INFO:  return "INFO ";
-    case DEBUG: return "DEBUG";
+    case Level.Fatal: return "Fatal";
+    case Level.Error: return "Error";
+    case Level.Warn:  return "Warn ";
+    case Level.Info:  return "Info ";
+    case Level.Debug: return "Debug";
     }
     return nil;
 }
@@ -82,41 +82,41 @@ public func void Log.setLevel(Log* log, Level lvl) {
 }
 
 public func void Log.debug(Log* log, const char* format, ...) {
-    if (DEBUG > log.level) return;
+    if (Level.Debug > log.level) return;
     va_list args;
     va_start(args, format);
-    log.internal(DEBUG, color.Blue, format, args);
+    log.internal(Level.Debug, color.Blue, format, args);
     va_end(args);
 }
 
 public func void Log.info(Log* log, const char* format, ...) {
-    if (INFO > log.level) return;
+    if (Level.Info > log.level) return;
     va_list args;
     va_start(args, format);
-    log.internal(INFO, color.White, format, args);
+    log.internal(Level.Info, color.White, format, args);
     va_end(args);
 }
 
 public func void Log.warn(Log* log, const char* format, ...) {
-    if (WARN > log.level) return;
+    if (Level.Warn > log.level) return;
     va_list args;
     va_start(args, format);
-    log.internal(WARN, color.Yellow, format, args);
+    log.internal(Level.Warn, color.Yellow, format, args);
     va_end(args);
 }
 
 public func void Log.error(Log* log, const char* format, ...) {
-    if (ERROR > log.level) return;
+    if (Level.Error > log.level) return;
     va_list args;
     va_start(args, format);
-    log.internal(ERROR, color.Red, format, args);
+    log.internal(Level.Error, color.Red, format, args);
     va_end(args);
 }
 
 public func void Log.fatal(Log* log, const char* format, ...) {
     va_list args;
     va_start(args, format);
-    log.internal(FATAL, color.Red, format, args);
+    log.internal(Level.Fatal, color.Red, format, args);
     va_end(args);
     exit(EXIT_FAILURE);
 }

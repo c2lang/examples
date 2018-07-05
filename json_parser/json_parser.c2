@@ -50,10 +50,10 @@ func Location JParser.consumeToken(JParser* p) {
     p.tokenizer.lex(&p.token);
 #if 0
     printf("  %8s %s", token.getName(), p.diagLoc());
-    if (token.is(Text)) printf("  %s", token.getText());
+    if (token.is(TokenKind.Text)) printf("  %s", token.getText());
     printf("\n");
 #endif
-    if (p.token.is(Error)) {
+    if (p.token.is(TokenKind.Error)) {
         strcpy(p.msg, p.token.getText());
         longjmp(p.jmp_err, 1);
     }
@@ -62,7 +62,7 @@ func Location JParser.consumeToken(JParser* p) {
 
 func void JParser.parseFile(JParser* p) {
     p.parseEntry("");
-    p.expect(Eof);
+    p.expect(TokenKind.Eof);
 }
 
 func const char* JParser.diagLoc(const JParser* p) {
@@ -83,9 +83,9 @@ func void JParser.expectAndConsume(JParser* p, TokenKind k) {
 }
 
 func void JParser.parseEntry(JParser* p, const char* parent) {
-    p.expectAndConsume(L_brace);
+    p.expectAndConsume(TokenKind.L_brace);
     while (1) {
-        p.expect(Text);
+        p.expect(TokenKind.Text);
         char [MAX_TEXT] name;
         strcpy(name, p.token.getText());
         p.consumeToken();
@@ -94,52 +94,52 @@ func void JParser.parseEntry(JParser* p, const char* parent) {
         if (!parent[0]) strcpy(fullName, name);
         else sprintf(fullName, "%s.%s", parent, name);
 
-        p.expectAndConsume(Colon);
+        p.expectAndConsume(TokenKind.Colon);
         switch (p.token.getKind()) {
-        case Kw_true:
-        case Kw_false:
-        case Kw_null:
-        case Text:
+        case TokenKind.Kw_true:
+        case TokenKind.Kw_false:
+        case TokenKind.Kw_null:
+        case TokenKind.Text:
             p.parseValue(fullName);
             break;
-        case L_brace:
+        case TokenKind.L_brace:
             p.parseEntry(fullName);
             break;
-        case R_brace:
-        case Colon:
-        case Comma:
-        case Eof:
-        case Error:
+        case TokenKind.R_brace:
+        case TokenKind.Colon:
+        case TokenKind.Comma:
+        case TokenKind.Eof:
+        case TokenKind.Error:
             sprintf(p.msg, "expected '{' or text %s", p.diagLoc());
             longjmp(p.jmp_err, 1);
             break;
         }
 
-        if (p.token.isNot(Comma)) break;
+        if (p.token.isNot(TokenKind.Comma)) break;
         Location commaLoc = p.consumeToken();
-        if (p.token.is(R_brace)) {
+        if (p.token.is(TokenKind.R_brace)) {
             sprintf(p.msg, "superfluous comma %s", commaLoc.str());
             longjmp(p.jmp_err, 1);
         }
     }
-    p.expectAndConsume(R_brace);
+    p.expectAndConsume(TokenKind.R_brace);
 }
 
 func void JParser.parseValue(JParser* p, const char* name) {
     char[MAX_TEXT] value;
     switch (p.token.getKind()) {
-    case Kw_true:
+    case TokenKind.Kw_true:
         value[0] = '1';
         value[1] = 0;
         break;
-    case Kw_false:
+    case TokenKind.Kw_false:
         value[0] = '0';
         value[1] = 0;
         break;
-    case Kw_null:
+    case TokenKind.Kw_null:
         value[0] = 0;
         break;
-    case Text:
+    case TokenKind.Text:
         strcpy(value, p.token.getText());
         break;
     default:
@@ -174,7 +174,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
         switch (t.current[0]) {
         case 0:
             result.setLocation(t.loc);
-            result.setKind(Eof);
+            result.setKind(TokenKind.Eof);
             return;
         case ' ':
         case '\t':
@@ -184,7 +184,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
             t.current++;
             if (t.current[0] != '\n') {
                 sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());
-                result.setKind(Error);
+                result.setKind(TokenKind.Error);
                 result.setData(t.msg);
                 return;
             }
@@ -196,22 +196,22 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
             break;
         case '{':
             result.setLocation(t.loc);
-            result.setKind(L_brace);
+            result.setKind(TokenKind.L_brace);
             t.advance(1);
             return;
         case '}':
             result.setLocation(t.loc);
-            result.setKind(R_brace);
+            result.setKind(TokenKind.R_brace);
             t.advance(1);
             return;
         case ':':
             result.setLocation(t.loc);
-            result.setKind(Colon);
+            result.setKind(TokenKind.Colon);
             t.advance(1);
             return;
         case ',':
             result.setLocation(t.loc);
-            result.setKind(Comma);
+            result.setKind(TokenKind.Comma);
             t.advance(1);
             return;
         case '"':
@@ -224,7 +224,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
             return;
         default:
             sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());
-            result.setKind(Error);
+            result.setKind(TokenKind.Error);
             result.setData(t.msg);
             return;
         }
@@ -239,7 +239,7 @@ func void Tokenizer.parseText(Tokenizer* t, Token* result) {
     u32 len = cast<u32>(t.current - start);
     memcpy(t.msg, start, len);
     t.msg[len] = 0;
-    result.setKind(Text);
+    result.setKind(TokenKind.Text);
     result.setData(t.msg);
     result.setLocation(t.loc);
     if (t.current[0] == '"') {
@@ -254,19 +254,19 @@ func void Tokenizer.parseKeyword(Tokenizer* t, Token* result) {
     // TODO should check on next char as well (not letter/number/undercore/etc)
     if (strncmp(t.current, "true", 4) == 0) {
         result.setLocation(t.loc);
-        result.setKind(Kw_true);
+        result.setKind(TokenKind.Kw_true);
         t.advance(4);
     } else if (strncmp(t.current, "false", 5) == 0) {
         result.setLocation(t.loc);
-        result.setKind(Kw_false);
+        result.setKind(TokenKind.Kw_false);
         t.advance(5);
     } else if (strncmp(t.current, "null", 4) == 0) {
         result.setLocation(t.loc);
-        result.setKind(Kw_false);
+        result.setKind(TokenKind.Kw_false);
         t.advance(4);
     } else {
         sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());
-        result.setKind(Error);
+        result.setKind(TokenKind.Error);
         result.setData(t.msg);
     }
 }
@@ -292,16 +292,16 @@ type TokenKind enum u8 {
 
 func const char* getTokenName(TokenKind k) {
     switch (k) {
-    case Kw_true:   return "true";
-    case Kw_false:  return "false";
-    case Kw_null:   return "null";
-    case L_brace:   return "{";
-    case R_brace:   return "}";
-    case Colon:     return ":";
-    case Comma:     return ",";
-    case Text:      return "text";
-    case Eof:       return "eof";
-    case Error:     return "error";
+    case TokenKind.Kw_true:   return "true";
+    case TokenKind.Kw_false:  return "false";
+    case TokenKind.Kw_null:   return "null";
+    case TokenKind.L_brace:   return "{";
+    case TokenKind.R_brace:   return "}";
+    case TokenKind.Colon:     return ":";
+    case TokenKind.Comma:     return ",";
+    case TokenKind.Text:      return "text";
+    case TokenKind.Eof:       return "eof";
+    case TokenKind.Error:     return "error";
     }
     return "?";
 }
@@ -314,7 +314,7 @@ type Token struct {
 
 func void Token.init(Token* t) {
     t.loc.set(0, 0);
-    t.kind = Eof;
+    t.kind = TokenKind.Eof;
     t.text = nil;
 }
 

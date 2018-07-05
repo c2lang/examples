@@ -13,7 +13,7 @@ public func i32 main(i32 argc, char*[] argv) {
         return 0;
     }
     logger.Base logbase;
-    logbase.init(logger.INFO, unistd.isatty(1), true);
+    logbase.init(logger.Level.Info, unistd.isatty(1), true);
 
 
     logger.Log log;

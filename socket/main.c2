@@ -13,7 +13,7 @@ func void fatal(const char* msg) {
 
 func i32 open_socket(u16 port)
 {
-    i32 fd = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP);
+    i32 fd = socket(AF_INET, __socket_type.SOCK_STREAM | __socket_type.SOCK_CLOEXEC, IPPROTO_TCP);
     if (fd == -1) {
         fatal("opening TCP socket");
     }
@@ -40,7 +40,7 @@ func i32 wait_for_connection(i32 fd, char** src_ipnr)
 {
     u32 sin_size = sizeof(sockaddr_in);
     sockaddr_in remote;
-    i32 new_fd = accept4(fd, &remote, &sin_size, SOCK_CLOEXEC);
+    i32 new_fd = accept4(fd, &remote, &sin_size, __socket_type.SOCK_CLOEXEC);
     if (new_fd == -1) fatal("accept4");
 
     *src_ipnr = inet_ntoa(remote.sin_addr);

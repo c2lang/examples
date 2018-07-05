@@ -92,7 +92,7 @@ public func void Base.loopbreak(Base* base, u8 return_value) {
     if (base.running_loop) {
         Cmd cmd;
         memset(&cmd, 0, sizeof(Cmd));
-        cmd.kind = LoopBreak;
+        cmd.kind = CmdKind.LoopBreak;
         base.writeCmd(&cmd);
     }
 }
@@ -113,15 +113,15 @@ func void handlePipe(i32 fd, void* arg, u16 flags) {
     i64 numread = read(base.read_pipe, &cmd, sizeof(Cmd));
     // TODO assert numread
     switch (cmd.kind) {
-    case LoopBreak:
+    case CmdKind.LoopBreak:
         break;
-    case Callback:
+    case CmdKind.Callback:
         cmd.callback.fn(cmd.callback.arg1, cmd.callback.arg2);
         break;
-    case TimerAdd:
+    case CmdKind.TimerAdd:
         cmd.timer.timer.add(cmd.timer.delay_us);
         break;
-    case TimerDel:
+    case CmdKind.TimerDel:
         cmd.timer.timer.del();
         break;
     }
@@ -200,7 +200,7 @@ public type Function func void (void* arg1, void* arg2);
 public func void Base.schedule_safe(Base* base, Function fn, void* arg1, void* arg2) {
     Cmd cmd;
     memset(&cmd, 0, sizeof(Cmd));
-    cmd.kind = Callback;
+    cmd.kind = CmdKind.Callback;
     cmd.callback.fn = fn;
     cmd.callback.arg1 = arg1;
     cmd.callback.arg2 = arg2;

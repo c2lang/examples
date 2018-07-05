@@ -81,7 +81,7 @@ func bool XmlParser.parse(XmlParser* p, const char* text, char* diagMsg, Blocks*
     if (res == 0) {
         p.consumeToken();
         p.parseXml();
-        while (p.token.isNot(Eof)) {
+        while (p.token.isNot(TokenKind.Eof)) {
 #if 0
             p.consumeToken();
 #else
@@ -99,8 +99,8 @@ func void XmlParser.fatal(XmlParser* p, const char* text) {
 }
 
 func u32 XmlParser.parseNode(XmlParser* p) {
-    p.expectAndConsume(ElemBegin);
-    p.expect(Name);
+    p.expectAndConsume(TokenKind.ElemBegin);
+    p.expect(TokenKind.Name);
     u32 off = p.blocks.addNode(p.token.getText());
     Node* node = &p.blocks.nodes[off];
     p.consumeToken();
@@ -112,16 +112,16 @@ func u32 XmlParser.parseNode(XmlParser* p) {
 
     while (1) {
         switch (p.token.getKind()) {
-        case XmlBegin:
-        case XmlEnd:
+        case TokenKind.XmlBegin:
+        case TokenKind.XmlEnd:
             p.fatal("unexpected xml tag");
             break;
-        case CdataBegin:
-        case CdataEnd:
-        case DtdBegin:
+        case TokenKind.CdataBegin:
+        case TokenKind.CdataEnd:
+        case TokenKind.DtdBegin:
             p.fatal("TODO Cdata/Dtd");
             break;
-        case ElemBegin:
+        case TokenKind.ElemBegin:
         {
             if (hasText) p.fatal("node with text cannot have children");
             u32 child = p.parseNode();
@@ -131,19 +131,19 @@ func u32 XmlParser.parseNode(XmlParser* p) {
             lastChild = childNode;
             break;
         }
-        case ElemEnd:
+        case TokenKind.ElemEnd:
             p.fatal("syntax error");
             break;
-        case ElemBeginClose:
+        case TokenKind.ElemBeginClose:
             p.parseEndTag(node);
             return off;
-        case ElemEndClose:
-        case Equals:
-        case Name:
-        case Value:
+        case TokenKind.ElemEndClose:
+        case TokenKind.Equals:
+        case TokenKind.Name:
+        case TokenKind.Value:
             p.fatal("syntax error");
             break;
-        case Text:
+        case TokenKind.Text:
         {
             if (lastChild) p.fatal("node with children cannot have text");
             u32 value_off = p.blocks.addValue(p.token.getText());
@@ -152,10 +152,10 @@ func u32 XmlParser.parseNode(XmlParser* p) {
             hasText = true;
             break;
         }
-        case Eof:
+        case TokenKind.Eof:
             p.fatal("unexpected eof");
             break;
-        case Error:
+        case TokenKind.Error:
             break;
         }
     }
@@ -169,31 +169,31 @@ func bool XmlParser.parseTag(XmlParser* p, Node* node) {
     // <name has been parsed already
     while (1) {
         switch (p.token.getKind()) {
-        case XmlBegin:
-        case XmlEnd:
+        case TokenKind.XmlBegin:
+        case TokenKind.XmlEnd:
             p.fatal("unexpected xml tag");
             break;
-        case CdataBegin:
-        case CdataEnd:
-        case DtdBegin:
+        case TokenKind.CdataBegin:
+        case TokenKind.CdataEnd:
+        case TokenKind.DtdBegin:
             p.fatal("TODO");
             break;
-        case ElemBegin:
+        case TokenKind.ElemBegin:
             p.fatal("syntax error");
             break;
-        case ElemEnd:
+        case TokenKind.ElemEnd:
             p.consumeToken();
             return true;
-        case ElemBeginClose:
+        case TokenKind.ElemBeginClose:
             p.fatal("syntax error");
             break;
-        case ElemEndClose:
+        case TokenKind.ElemEndClose:
             p.consumeToken();
             return false;
-        case Equals:
+        case TokenKind.Equals:
             p.fatal("syntax error");
             break;
-        case Name:
+        case TokenKind.Name:
         {
             u32 off = p.parseAttribute();
             Attr* attr = &p.blocks.attrs[off];
@@ -202,12 +202,12 @@ func bool XmlParser.parseTag(XmlParser* p, Node* node) {
             lastAttr = attr;
             break;
         }
-        case Value:
-        case Text:
-        case Eof:
+        case TokenKind.Value:
+        case TokenKind.Text:
+        case TokenKind.Eof:
             p.fatal("unexpected eof");
             break;
-        case Error:
+        case TokenKind.Error:
             break;
         }
     }
@@ -217,44 +217,44 @@ func bool XmlParser.parseTag(XmlParser* p, Node* node) {
 func void XmlParser.parseEndTag(XmlParser* p, const Node* node) {
     // Syntax: </name>
     p.consumeToken();
-    p.expect(Name);
+    p.expect(TokenKind.Name);
     const char* begin_name = &p.blocks.node_names[node.name_off];
     const char* end_name = p.token.getText();
     if (strcmp(begin_name, end_name) != 0) p.fatal("unmatched tag");
 
     p.consumeToken();
-    p.expectAndConsume(ElemEnd);
+    p.expectAndConsume(TokenKind.ElemEnd);
 }
 
 func void XmlParser.parseXml(XmlParser* p) {
-    p.expectAndConsume(XmlBegin);
+    p.expectAndConsume(TokenKind.XmlBegin);
     while (1) {
         switch (p.token.getKind()) {
-        case XmlBegin:
+        case TokenKind.XmlBegin:
             p.fatal("unexpected xml tag");
             break;
-        case XmlEnd:
+        case TokenKind.XmlEnd:
             p.consumeToken();
             return;
-        case CdataBegin:
-        case CdataEnd:
-        case DtdBegin:
-        case ElemBegin:
-        case ElemEnd:
-        case ElemBeginClose:
-        case ElemEndClose:
-        case Equals:
+        case TokenKind.CdataBegin:
+        case TokenKind.CdataEnd:
+        case TokenKind.DtdBegin:
+        case TokenKind.ElemBegin:
+        case TokenKind.ElemEnd:
+        case TokenKind.ElemBeginClose:
+        case TokenKind.ElemEndClose:
+        case TokenKind.Equals:
             p.fatal("syntax error");
             break;
-        case Name:
+        case TokenKind.Name:
             p.parseAttribute();
             break;
-        case Value:
-        case Text:
-        case Eof:
+        case TokenKind.Value:
+        case TokenKind.Text:
+        case TokenKind.Eof:
             p.fatal("unexpected eof");
             break;
-        case Error:
+        case TokenKind.Error:
             break;
         }
     }
@@ -265,8 +265,8 @@ func u32 XmlParser.parseAttribute(XmlParser* p) {
     u32 off = p.blocks.addAttr(p.token.getText());
     Attr* attr = &p.blocks.attrs[off];
     p.consumeToken();
-    p.expectAndConsume(Equals);
-    p.expect(Value);
+    p.expectAndConsume(TokenKind.Equals);
+    p.expect(TokenKind.Value);
     attr.value_off = p.blocks.addValue(p.token.getText());
     p.consumeToken();
     return off;
@@ -277,12 +277,12 @@ func Location XmlParser.consumeToken(XmlParser* p) {
     p.tokenizer.lex(&p.token);
 #if 0
     printf("  %s%8s%s %s", color.Yellow, p.token.getName(), color.Normal, p.diagLoc());
-    if (p.token.is(Text) || p.token.is(Value) || p.token.is(Name)) {
+    if (p.token.is(TokenKind.Text) || p.token.is(TokenKind.Value) || p.token.is(TokenKind.Name)) {
         printf("  %s%s%s", color.Green, p.token.getText(), color.Normal);
     }
     printf("\n");
 #endif
-    if (p.token.is(Error)) {
+    if (p.token.is(TokenKind.Error)) {
         strcpy(p.msg, p.token.getText());
         longjmp(p.jmp_err, 1);
     }
@@ -335,7 +335,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
             switch (t.current[0]) {
             case 0:
                 result.setLocation(t.loc);
-                result.setKind(Eof);
+                result.setKind(TokenKind.Eof);
                 return;
             case ' ':
             case '\t':
@@ -345,7 +345,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
                 t.current++;
                 if (t.current[0] != '\n') {
                     sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());
-                    result.setKind(Error);
+                    result.setKind(TokenKind.Error);
                     result.setData(t.msg);
                     return;
                 }
@@ -371,7 +371,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
             t.msg[len] = 0;
 
             result.setLocation(textLoc);
-            result.setKind(Text);
+            result.setKind(TokenKind.Text);
             result.setData(t.msg);
             t.loc.col += len;
             return;
@@ -382,7 +382,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
         switch (t.current[0]) {
         case 0:
             sprintf(t.msg, "unexpected eof %s", t.loc.str());
-            result.setKind(Error);
+            result.setKind(TokenKind.Error);
             result.setData(t.msg);
             return;
         case ' ':
@@ -393,7 +393,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
             t.current++;
             if (t.current[0] != '\n') {
                 sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());
-                result.setKind(Error);
+                result.setKind(TokenKind.Error);
                 result.setData(t.msg);
                 return;
             }
@@ -408,31 +408,31 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
             break;
         case '>':
             result.setLocation(t.loc);
-            result.setKind(ElemEnd);
+            result.setKind(TokenKind.ElemEnd);
             t.advance(1);
             t.inElement = false;
             return;
         case '/':       // expect '/>'
             if (t.current[1] != '>') {
                 sprintf(t.msg, "expected '/>' %s", t.loc.str());
-                result.setKind(Error);
+                result.setKind(TokenKind.Error);
                 result.setData(t.msg);
                 return;
             }
             result.setLocation(t.loc);
-            result.setKind(ElemEndClose);
+            result.setKind(TokenKind.ElemEndClose);
             t.advance(2);
             t.inElement = false;
             return;
         case '?':   // expect '?>'
             if (t.current[1] != '>') {
                 sprintf(t.msg, "expected '?>' %s", t.loc.str());
-                result.setKind(Error);
+                result.setKind(TokenKind.Error);
                 result.setData(t.msg);
                 return;
             }
             result.setLocation(t.loc);
-            result.setKind(XmlEnd);
+            result.setKind(TokenKind.XmlEnd);
             t.advance(2);
             t.inElement = false;
             return;
@@ -442,18 +442,18 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
             return;
         case '=':
             result.setLocation(t.loc);
-            result.setKind(Equals);
+            result.setKind(TokenKind.Equals);
             t.advance(1);
             return;
         case ']':   // expect ']]>'
             if (t.current[1] != ']' || t.current[2] != '>') {
                 sprintf(t.msg, "expected ']]>' %s", t.loc.str());
-                result.setKind(Error);
+                result.setKind(TokenKind.Error);
                 result.setData(t.msg);
                 return;
             }
             result.setLocation(t.loc);
-            result.setKind(CdataEnd);
+            result.setKind(TokenKind.CdataEnd);
             t.advance(3);
             return;
         default:
@@ -461,7 +461,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
                 t.parseName(result);
             } else {
                 sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());
-                result.setKind(Error);
+                result.setKind(TokenKind.Error);
                 result.setData(t.msg);
 
             }
@@ -473,7 +473,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
 func bool Tokenizer.readLtToken(Tokenizer* t, Token* result) {
     if (t.current[1] == '/') {
         result.setLocation(t.loc);
-        result.setKind(ElemBeginClose);
+        result.setKind(TokenKind.ElemBeginClose);
         t.advance(2);
         t.inElement = true;
         return true;
@@ -482,17 +482,17 @@ func bool Tokenizer.readLtToken(Tokenizer* t, Token* result) {
         switch (t.current[2]) {
         case 0:
             sprintf(t.msg, "unexpected eof %s", t.loc.str());
-            result.setKind(Error);
+            result.setKind(TokenKind.Error);
             result.setData(t.msg);
             break;
         case '[':
             if (strncmp(t.current, "<![CDATA[", 9) == 0) {
                 result.setLocation(t.loc);
-                result.setKind(CdataBegin);
+                result.setKind(TokenKind.CdataBegin);
                 t.advance(9);
             } else {
                 sprintf(t.msg, "expected '<!CDATA[' %s", t.loc.str());
-                result.setKind(Error);
+                result.setKind(TokenKind.Error);
                 result.setData(t.msg);
             }
             break;
@@ -502,13 +502,13 @@ func bool Tokenizer.readLtToken(Tokenizer* t, Token* result) {
                 return false;
             } else {
                 sprintf(t.msg, "expected '<!--' %s", t.loc.str());
-                result.setKind(Error);
+                result.setKind(TokenKind.Error);
                 result.setData(t.msg);
             }
             break;
         default:
             result.setLocation(t.loc);
-            result.setKind(DtdBegin);
+            result.setKind(TokenKind.DtdBegin);
             t.advance(2);
             break;
         }
@@ -517,18 +517,18 @@ func bool Tokenizer.readLtToken(Tokenizer* t, Token* result) {
     if (t.current[1] == '?') {
         if (strncmp(t.current, "<?xml", 5) == 0) {
             result.setLocation(t.loc);
-            result.setKind(XmlBegin);
+            result.setKind(TokenKind.XmlBegin);
             t.advance(5);
             t.inElement = true;
         } else {
             sprintf(t.msg, "expected '<?xml' %s", t.loc.str());
-            result.setKind(Error);
+            result.setKind(TokenKind.Error);
             result.setData(t.msg);
         }
         return true;
     }
     result.setLocation(t.loc);
-    result.setKind(ElemBegin);
+    result.setKind(TokenKind.ElemBegin);
     t.advance(1);
     t.inElement = true;
     return true;
@@ -541,7 +541,7 @@ func bool Tokenizer.readComments(Tokenizer* t, Token* result) {
         switch (t.current[0]) {
         case 0:
             sprintf(t.msg, "unexpected eof %s", t.loc.str());
-            result.setKind(Error);
+            result.setKind(TokenKind.Error);
             result.setData(t.msg);
             return false;
         case ' ':
@@ -552,7 +552,7 @@ func bool Tokenizer.readComments(Tokenizer* t, Token* result) {
             t.current++;
             if (t.current[0] != '\n') {
                 sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());
-                result.setKind(Error);
+                result.setKind(TokenKind.Error);
                 result.setData(t.msg);
                 return false;
             }
@@ -585,7 +585,7 @@ func void Tokenizer.parseValue(Tokenizer* t, Token* result, char delimiter) {
     while (true) {
         if (t.current[0] == 0) {
             sprintf(t.msg, "unexpected eof %s", t.loc.str());
-            result.setKind(Error);
+            result.setKind(TokenKind.Error);
             result.setData(t.msg);
             return;
         }
@@ -598,7 +598,7 @@ func void Tokenizer.parseValue(Tokenizer* t, Token* result, char delimiter) {
     t.msg[len] = 0;
 
     result.setLocation(t.loc);
-    result.setKind(Value);
+    result.setKind(TokenKind.Value);
     result.setData(t.msg);
     t.current++;
     t.loc.col += len+1;
@@ -613,7 +613,7 @@ func void Tokenizer.parseName(Tokenizer* t, Token* result) {
     t.msg[len] = 0;
 
     result.setLocation(t.loc);
-    result.setKind(Name);
+    result.setKind(TokenKind.Name);
     result.setData(t.msg);
     // NOTE: dont use advance() since current is already moved
     t.loc.col += len;
@@ -645,21 +645,21 @@ type TokenKind enum u8 {
 
 func const char* getTokenName(TokenKind k) {
     switch (k) {
-    case XmlBegin:      return "<?xml";
-    case XmlEnd:        return "?>";
-    case CdataBegin:    return "<![CDATA[";
-    case CdataEnd:      return "]]>";
-    case DtdBegin:      return "<!";
-    case ElemBegin:     return "<";
-    case ElemEnd:       return ">";
-    case ElemBeginClose:    return "</";
-    case ElemEndClose:  return "/>";
-    case Equals:        return "=";
-    case Name:          return "name";
-    case Value:         return "value";
-    case Text:          return "text";
-    case Eof:           return "eof";
-    case Error:         return "error";
+    case TokenKind.XmlBegin:      return "<?xml";
+    case TokenKind.XmlEnd:        return "?>";
+    case TokenKind.CdataBegin:    return "<![CDATA[";
+    case TokenKind.CdataEnd:      return "]]>";
+    case TokenKind.DtdBegin:      return "<!";
+    case TokenKind.ElemBegin:     return "<";
+    case TokenKind.ElemEnd:       return ">";
+    case TokenKind.ElemBeginClose:    return "</";
+    case TokenKind.ElemEndClose:  return "/>";
+    case TokenKind.Equals:        return "=";
+    case TokenKind.Name:          return "name";
+    case TokenKind.Value:         return "value";
+    case TokenKind.Text:          return "text";
+    case TokenKind.Eof:           return "eof";
+    case TokenKind.Error:         return "error";
     }
     return "?";
 }
@@ -673,7 +673,7 @@ type Token struct {
 
 func void Token.init(Token* t) {
     t.loc.set(0, 0);
-    t.kind = Eof;
+    t.kind = TokenKind.Eof;
     t.text = nil;
 }
 
