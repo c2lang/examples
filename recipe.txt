@@ -38,6 +38,12 @@ executable file_ops
     file_ops/main.c2
 end
 
+executable inline_asm
+#    $warnings no-unused
+	$generate-c single-module
+    inline_asm/main.c2
+end
+
 executable json_parser
     $warnings no-unused
 	$generate-c single-module
