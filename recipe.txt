@@ -56,6 +56,16 @@ executable json_parser
     json_parser/main.c2
 end
 
+executable list
+    $warnings no-unused
+	$generate-c single-module
+    $refs
+    common/logger.c2
+    common/color.c2
+    list/list.c2
+    list/main.c2
+end
+
 executable log
     $warnings no-unused
 	$generate-c single-module
