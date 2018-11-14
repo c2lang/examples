@@ -1,0 +1,334 @@
+module toml;
+
+import stdio local;
+import string local;
+import ctype local;
+import stdlib local;
+
+const u32 MaxText = 1024;
+
+type TokenKind enum u8 {
+    Word,           // abc
+    Text,           // ".." or ' ..'
+    Number,         // 1234
+    Kw_true,        // true
+    Kw_false,       // false
+    Lbrace,         // [
+    Lbrace2,        // [[
+    Rbrace,         // ]
+    Rbrace2,        // ]]
+    Equals,
+    Dot,
+    Comma,
+    Eof,
+    Error,
+}
+
+func const char* token2str(TokenKind k) {
+    switch (k) {
+    case TokenKind.Word    : return "word";
+    case TokenKind.Text    : return "text";
+    case TokenKind.Number  : return "number";
+    case TokenKind.Kw_true : return "true";
+    case TokenKind.Kw_false: return "false";
+    case TokenKind.Lbrace  : return "[";
+    case TokenKind.Lbrace2 : return "[[";
+    case TokenKind.Rbrace  : return "]";
+    case TokenKind.Rbrace2 : return "]]";
+    case TokenKind.Equals  : return "=";
+    case TokenKind.Dot     : return ".";
+    case TokenKind.Comma   : return ",";
+    case TokenKind.Eof     : return "eof";
+    case TokenKind.Error   : return "error";
+    }
+    return "?";
+}
+
+type Location struct {
+    u32 line;
+    u32 column;
+}
+
+func void Location.init(Location* l, u32 line = 0, u32 col = 0) {
+    l.line = line;
+    l.column = col;
+}
+
+func const char* Location.str(Location* l) {
+    local char[32] msg;
+    sprintf(msg, "line %u:%u", l.line, l.column);
+    return msg;
+}
+
+type Token struct {
+    Location loc;
+    TokenKind kind;
+    // TODO union?
+    const char* text;
+    u32 number;
+}
+
+func void Token.init(Token* t) {
+    t.loc.init(0, 0);
+    t.kind = TokenKind.Eof;
+    t.text = nil;
+    t.number = 0;
+}
+
+func void Token.clear(Token* t) {
+    t.text = nil;
+    t.number = 0;
+}
+
+func void Token.setLocation(Token* t, Location l) {
+    t.loc = l;
+}
+
+func bool Token.is(const Token* t, TokenKind k) {
+    return t.kind == k;
+}
+
+func bool Token.isNot(const Token* t, TokenKind k) {
+    return t.kind != k;
+}
+
+func const char* Token.getName(const Token* t) {
+    return token2str(t.kind);
+}
+
+type Tokenizer struct {
+    const char* dataStart;
+    const char* current;
+    Location loc;
+    char[MaxText] text;
+    Token nextToken;
+    bool haveNext;
+}
+
+func void Tokenizer.init(Tokenizer* t, const char* input) {
+    t.dataStart = input;
+    t.current = input;
+    t.loc.init(1, 1);
+    t.haveNext = false;
+    t.text[0] = 0;
+}
+
+func void Tokenizer.lex(Tokenizer* t, Token* result) {
+    if (t.haveNext) {
+       // Q: ptr assign or copy?
+       *result = t.nextToken;
+       t.haveNext = false;
+       return;
+    }
+    result.clear();
+    while (1) {
+        switch (t.current[0]) {
+        case 0:
+            result.loc = t.loc;
+            result.kind = TokenKind.Eof;
+            return;
+        case '#':
+            if (t.loc.column != 1) {
+                sprintf(t.text, "unexpected '#' after line start at %s", t.loc.str());
+                result.kind = TokenKind.Error;
+                result.text = t.text;
+                return;
+            }
+            t.parseComment();
+            break;
+        case ' ':
+        case '\t':
+            t.advance(1);
+            break;
+        case '\n':
+            t.current++;
+            t.loc.line++;
+            t.loc.column = 1;
+            break;
+        case '=':
+            result.loc = t.loc;
+            result.kind = TokenKind.Equals;
+            t.advance(1);
+            return;
+        case '.':
+            result.loc = t.loc;
+            result.kind = TokenKind.Dot;
+            t.advance(1);
+            return;
+        case ',':
+            result.loc = t.loc;
+            result.kind = TokenKind.Comma;
+            t.advance(1);
+            return;
+        case '[':
+            result.loc = t.loc;
+            if (t.current[1] == '[') {
+                t.advance(2);
+                result.kind = TokenKind.Lbrace2;
+            } else {
+                t.advance(1);
+                result.kind = TokenKind.Lbrace;
+            }
+            return;
+        case ']':
+            result.loc = t.loc;
+            if (t.current[1] == ']') {
+                t.advance(2);
+                result.kind = TokenKind.Rbrace2;
+            } else {
+                t.advance(1);
+                result.kind = TokenKind.Rbrace;
+            }
+            return;
+        case '"':
+            if (t.current[1] == '"' && t.current[2] == '"') t.parseMultiText(result);
+            else t.parseText(result);
+            return;
+        default:
+            // key or number
+            result.loc = t.loc;
+            if (isdigit(t.current[0])) {
+                t.parseNumber(result);
+                return;
+            }
+            if (t.current[0] == 'f' && strncmp("false", t.current, 5) == 0) {
+                t.advance(5);
+                result.kind = TokenKind.Kw_false;
+                return;
+            }
+            if (t.current[0] == 't' && strncmp("true", t.current, 4) == 0) {
+                t.advance(4);
+                result.kind = TokenKind.Kw_true;
+                return;
+            }
+            if (isalpha(t.current[0])) {
+                t.parseKey(result);
+                return;
+            }
+            sprintf(t.text, "unexpected char '%c' at %s", t.current[0], t.loc.str());
+            result.kind = TokenKind.Error;
+            result.text = t.text;
+            return;
+        }
+    }
+}
+
+func Token* Tokenizer.lookahead(Tokenizer* t) {
+    if (!t.haveNext) {
+        t.lex(&t.nextToken);
+        t.haveNext = true;
+    }
+    return &t.nextToken;
+}
+
+func void Tokenizer.advance(Tokenizer* t, u32 amount) {
+    t.loc.column += amount;
+    t.current += amount;
+}
+
+func void Tokenizer.parseComment(Tokenizer* t) {
+    while (1) {
+        switch (t.current[0]) {
+        case 0:
+            return;
+        case '\n':
+            t.current++;
+            t.loc.line++;
+            t.loc.column = 1;
+            return;
+        default:
+            t.current++;
+            t.loc.column++;
+            break;
+        }
+    }
+}
+
+func void Tokenizer.parseText(Tokenizer* t, Token* result) {
+    // TODO handle literal strings ' .. ' -> no escaping
+    // TODO handle escape chars for normal strings " .. \" \r \n "
+    t.advance(1);
+    result.loc = t.loc;
+    const char* start = t.current;
+    while (t.current[0] && t.current[0] != '"') t.current++;
+
+    u32 len = cast<u32>(t.current - start);
+    // assert(len < MaxText);
+    memcpy(t.text, start, len);
+    t.text[len] = 0;
+    result.kind = TokenKind.Text;
+    result.text = t.text;
+    t.loc.column += len;
+    t.advance(1);
+}
+
+func void Tokenizer.parseMultiText(Tokenizer* t, Token* result) {
+    t.advance(3);
+    if (t.current[0] == '\n') {
+        t.current++;
+        t.loc.line++;
+        t.loc.column = 1;
+    }
+    result.loc = t.loc;
+    const char* start = t.current;
+    while (1) {
+        if (t.current[0] == 0) {
+            sprintf(t.text, "missing end \"\"\" %s", t.loc.str());
+            result.kind = TokenKind.Error;
+            result.text = t.text;
+            return;
+        }
+        if (t.current[0] == '\n') {
+            t.loc.line++;
+            t.loc.column = 1;
+        } else {
+            t.loc.column++;
+        }
+        if (t.current[0] == '"' && t.current[1] == '"' && t.current[2] == '"') break;
+        t.current++;
+    }
+
+    u32 len = cast<u32>(t.current - start);
+    // assert(len < MaxText);
+    memcpy(t.text, start, len);
+    t.text[len] = 0;
+    result.kind = TokenKind.Text;
+    result.text = t.text;
+    t.advance(3);
+}
+
+func void Tokenizer.parseNumber(Tokenizer* t, Token* result) {
+    // TODO handle prefix +/-
+    // handle hexadecimal/ocal/binary number
+    // handle '_', like 1_000_000
+
+    u32 number = cast<u32>(atoi(t.current));
+    result.kind = TokenKind.Number;
+    result.number = number;
+    while (t.current[0] && isdigit(t.current[0])) {
+        t.current++;
+        t.loc.column++;
+    }
+}
+
+func bool isKeyChar(u8 c) {
+    if (c >= 128) return true;
+    if (isalpha(c)) return true;
+    if (isdigit(c)) return true;
+    if (c == '_' || c == '-') return true;
+    return false;
+}
+
+func void Tokenizer.parseKey(Tokenizer* t, Token* result) {
+    const char* start = t.current;
+    while (t.current[0] && isKeyChar(cast<u8>(t.current[0]))) t.current++;
+
+    u32 len = cast<u32>(t.current - start);
+    // assert(len < MaxText);
+    memcpy(t.text, start, len);
+    t.text[len] = 0;
+    result.kind = TokenKind.Word;
+    result.text = t.text;
+    t.loc.column += len;
+}
+

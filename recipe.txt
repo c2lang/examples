@@ -116,6 +116,16 @@ executable string
     string_buffer/main.c2
 end
 
+executable toml_parser
+    $warnings no-unused
+	$generate-c
+    $refs
+    common/file/reader.c2
+    toml_parser/toml_tokenizer.c2
+    toml_parser/toml_parser.c2
+    toml_parser/main.c2
+end
+
 executable xml_parser
     $warnings no-unused
 	$generate-c

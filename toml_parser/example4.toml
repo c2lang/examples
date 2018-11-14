@@ -1,0 +1,20 @@
+[library]
+language = "C"
+type = [ "static", "dynamic" ]
+linkname = "mylink"
+
+[[deps]]
+name = "math"
+type = "dynamic"
+
+[[module]]
+name = "stdio"
+
+[[module]]
+name = "c_errno"
+
+[[module]]
+name = "libc_poll"
+
+type2 = [ "a", "b", "", "d", "a", "e" ]
+type-2_a = "3"

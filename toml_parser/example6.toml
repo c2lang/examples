@@ -1,0 +1,26 @@
+# Created by developer X
+
+[room]
+public = true
+number = 1234
+name = "My First Room"
+domains = [ "Coders", "Goblins" ]
+descr = """
+A very long
+multiline
+
+string
+"""
+
+[[obj]]
+spawn_id = "area1/chest_key"
+spawn_reset = "20m"
+spawn_msg = "A key falls out of the sky"
+
+[[exit]]
+name = "north"
+filter = "my_level_filter"
+
+[[exit]]
+name = "east"
+

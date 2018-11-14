@@ -1,0 +1,10 @@
+[[deps]]
+name = "math"
+type = "dynamic"
+
+[[deps]]
+name = "bar"
+type = "static"
+
+[table]
+bla = "foo"
