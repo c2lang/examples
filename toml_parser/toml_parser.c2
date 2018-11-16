@@ -373,10 +373,30 @@ public func const char* Reader.getMsg(const Reader* r) {
     return r.message;
 }
 
+//#define USE_DEFER
+
+#ifdef USE_DEFER
 public func bool Reader.parse(Reader* r, const char* filename) {
     file_utils.Reader file;
     file.open(filename);
+    defer file.close();
 
+    if (file.isEmpty()) {
+        printf("file %s is empty\n", filename);
+        return false;
+    }
+    Parser parser;
+    bool status = parser.parse(cast<const char*>(file.data()), r.message, r.blocks);
+
+#ifdef DEBUG_NODES
+    r.blocks.dump();
+#endif
+    return status;
+}
+#else
+public func bool Reader.parse(Reader* r, const char* filename) {
+    file_utils.Reader file;
+    file.open(filename);
     if (file.isEmpty()) {
         printf("file %s is empty\n", filename);
         file.close();
@@ -391,6 +411,7 @@ public func bool Reader.parse(Reader* r, const char* filename) {
 #endif
     return status;
 }
+#endif
 
 // --------------------------------------------------------------
 // Getters+iters
