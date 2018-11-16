@@ -3,6 +3,51 @@ module test;
 import stdio local;
 import toml;
 
+//#define USE_DEFER
+
+#ifdef USE_DEFER
+public func i32 main(i32 argc, char*[] argv) {
+    if (argc != 2) {
+        printf("Usage: parser [toml-file]\n");
+        return 0;
+    }
+    const char* filename = argv[1];
+
+    toml.Reader* reader = toml.Reader.create();
+    defer reader.destroy();
+
+    if (!reader.parse(filename)) {
+        printf("Error parsing %s: %s\n", filename, reader.getMsg());
+        return -1;
+    }
+
+    // getValue
+    const char* key = "room.name";
+    printf("Value %s = %s\n", key, reader.getValue(key));
+    key = "room.descr";
+    printf("Value %s = %s\n", key, reader.getValue(key));
+
+    // ValueIter
+    toml.ValueIter vi = reader.getValueIter("room.domains");
+    printf("Domains:\n");
+    while (!vi.done()) {
+        printf("  %s\n", vi.getValue());
+        vi.next();
+    }
+
+    // NodeIter
+    printf("Exits:\n");
+    toml.NodeIter iter = reader.getNodeIter("exit");
+    while (!iter.done()) {
+        const char* name = iter.getValue("name");
+        printf("  name=%s\n", name);
+        iter.next();
+    }
+
+    return 0;
+}
+
+#else
 public func i32 main(i32 argc, char*[] argv) {
     if (argc != 2) {
         printf("Usage: parser [toml-file]\n");
@@ -37,8 +82,8 @@ public func i32 main(i32 argc, char*[] argv) {
         printf("  name=%s\n", name);
         iter.next();
     }
-
     reader.destroy();
     return 0;
 }
+#endif
 
