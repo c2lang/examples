@@ -456,17 +456,23 @@ public func const char* Reader.getValue(const Reader* r, const char* key) {
     return &r.blocks.values[getRawValue(node.rawValue)];
 }
 
-public func bool Reader.getNumber(const Reader* r, const char* key, i32* result) {
+public func bool Reader.getNumber(const Reader* r, const char* key, u32* result) {
     const Node* node = r.findNode(key);
     if (!node) return false;
-    // TODO
-    *result = 0;
+    if (getKind(node.nameOffset) != NodeKind.Value) return false;
+    ValueType t = getRawType(node.rawValue);
+    if (t != ValueType.Number) return false;
+    *result = getRawValue(node.rawValue);
     return true;
 }
 
 public func bool Reader.getBool(const Reader* r, const char* key, bool* result) {
-    // TODO
-    *result = true;
+    const Node* node = r.findNode(key);
+    if (!node) return false;
+    if (getKind(node.nameOffset) != NodeKind.Value) return false;
+    ValueType t = getRawType(node.rawValue);
+    if (t != ValueType.Boolean) return false;
+    *result = getRawValue(node.rawValue);
     return true;
 }
 
