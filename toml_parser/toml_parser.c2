@@ -12,7 +12,7 @@ const u32 MaxNames = 4096;
 const u32 MaxValues = 4096*128;
 const u32 MaxDepth = 8;
 
-#define DEBUG_NODES
+//#define DEBUG_NODES
 
 #ifdef DEBUG_NODES
 func const char* node2str(NodeKind k) {
