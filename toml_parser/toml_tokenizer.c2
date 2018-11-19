@@ -193,11 +193,13 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
             }
             if (t.current[0] == 'f' && strncmp("false", t.current, 5) == 0) {
                 t.advance(5);
+                result.number = 0;
                 result.kind = TokenKind.Kw_false;
                 return;
             }
             if (t.current[0] == 't' && strncmp("true", t.current, 4) == 0) {
                 t.advance(4);
+                result.number = 1;
                 result.kind = TokenKind.Kw_true;
                 return;
             }

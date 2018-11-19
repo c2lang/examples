@@ -38,6 +38,12 @@ public func i32 main(i32 argc, char*[] argv) {
         iter.next();
     }
 
+    
+    i32 number;
+    if (reader.getNumber("room.number", &number)) printf("Number %d\n", number);
+    bool isPublic;
+    if (reader.getBool("room.public", &isPublic)) printf("Bool %d\n", isPublic);
+
     reader.destroy();
     return 0;
 }

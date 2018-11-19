@@ -12,7 +12,7 @@ const u32 MaxNames = 4096;
 const u32 MaxValues = 4096*128;
 const u32 MaxDepth = 8;
 
-//#define DEBUG_NODES
+#define DEBUG_NODES
 
 #ifdef DEBUG_NODES
 func const char* node2str(NodeKind k) {
@@ -40,9 +40,13 @@ func void Blocks.dump(const Blocks* b) {
             break;
         case NodeKind.ValueArray:
         case NodeKind.Value:
-            printf("  [%3u]  %s name %3u   next %3u   value %3u  (%s)\n",
-                i, node2str(kind), nameOffset, n.nextNode, n.value, &b.names[nameOffset]);
+        {
+            ValueType t = getRawType(n.rawValue);
+            u32 offset = getRawValue(n.rawValue);
+            printf("  [%3u]  %s name %3u   next %3u   value %5u(%s)  (%s)\n",
+                i, node2str(kind), nameOffset, n.nextNode, offset, type2str(t), &b.names[nameOffset]);
             break;
+        }
         case NodeKind.ArrayChild:
             printf("  [%3u]  %s name ---   next %3u   child %3u\n",
                 i, node2str(kind), n.nextNode, n.child);
@@ -154,6 +158,18 @@ func void Parser.parseTopLevel(Parser* p) {
     }
 }
 
+func u32 getRawValue(u32 raw) @(inline) {
+     return raw & ~RawValueMask;
+}
+
+func ValueType getRawType(u32 raw) @(inline) {
+    return cast<ValueType>((raw >> ValueTypeOffset) & 0x3);
+}
+
+func u32 addType(u32 raw, ValueType t) @(inline) {
+    return raw | (t << ValueTypeOffset);
+}
+
 func void Parser.parseKeyValue(Parser* p) {
     //printf("parseKeyValue()\n");
     char[MaxText] key;
@@ -164,7 +180,7 @@ func void Parser.parseKeyValue(Parser* p) {
     bool isArray = ((value & ValueIsArray) != 0);
     u32 off = p.blocks.addNode(key, isArray ? NodeKind.ValueArray : NodeKind.Value);
     Node* node = &p.blocks.nodes[off];
-    node.value = value & ~ValueIsArray;
+    node.rawValue = value;
     if (p.lastChild[p.numParents]) {
         p.lastChild[p.numParents].nextNode = off;
     } else {
@@ -227,12 +243,17 @@ func u32 Parser.parseValue(Parser* p) {
         break;
     case TokenKind.Text:
         value = p.blocks.addValue(p.tok.text);
+        value = addType(value, ValueType.Text);
         p.consumeToken();
         break;
     case TokenKind.Number:
+        // TODO negative numbers
+        value = addType(p.tok.number, ValueType.Number);
+        p.consumeToken();
+        break;
     case TokenKind.Kw_true:
     case TokenKind.Kw_false:
-        // TODO keep number, true/false as text
+        value = addType(p.tok.number, ValueType.Boolean);
         p.consumeToken();
         break;
     case TokenKind.Lbrace:
@@ -430,7 +451,23 @@ public func const char* Reader.getValue(const Reader* r, const char* key) {
     const Node* node = r.findNode(key);
     if (!node) return nil;
     if (getKind(node.nameOffset) != NodeKind.Value) return nil;
-    return &r.blocks.values[node.value];
+    ValueType t = getRawType(node.rawValue);
+    if (t != ValueType.Text) return nil;
+    return &r.blocks.values[getRawValue(node.rawValue)];
+}
+
+public func bool Reader.getNumber(const Reader* r, const char* key, i32* result) {
+    const Node* node = r.findNode(key);
+    if (!node) return false;
+    // TODO
+    *result = 0;
+    return true;
+}
+
+public func bool Reader.getBool(const Reader* r, const char* key, bool* result) {
+    // TODO
+    *result = true;
+    return true;
 }
 
 public type NodeIter struct {
@@ -453,7 +490,9 @@ public func const char* NodeIter.getValue(const NodeIter* i, const char* key) {
     const Node* child = i.blocks.findNode(key, i.node);
     if (!child) return nil;
     if (getKind(child.nameOffset) != NodeKind.Value) return nil;
-    return &i.blocks.values[child.value];
+    ValueType t = getRawType(child.rawValue);
+    if (t != ValueType.Text) return nil;
+    return &i.blocks.values[getRawValue(child.rawValue)];
 }
 
 public func NodeIter Reader.getNodeIter(const Reader* r, const char* key) {
@@ -499,9 +538,10 @@ public func ValueIter Reader.getValueIter(const Reader* r, const char* key) {
         case NodeKind.TableArray:
             break;
         case NodeKind.ValueArray:
-            return ValueIter.create(&r.blocks.values[node.value], true);
+            // TODO support arrays of Numbers/Booleans as well
+            return ValueIter.create(&r.blocks.values[getRawValue(node.rawValue)], true);
         case NodeKind.Value:
-            return ValueIter.create(&r.blocks.values[node.value], false);
+            return ValueIter.create(&r.blocks.values[getRawValue(node.rawValue)], false);
         case NodeKind.ArrayChild:
             // TODO
             break;
@@ -522,14 +562,31 @@ type NodeKind enum u8 {
     ArrayChild,
 }
 
+type ValueType enum u8 {
+    Text = 0,
+    Number,
+    Boolean,
+}
 const u32 ValueIsArray = (1 << 31);
+const u32 ValueTypeOffset = 29;
+const u32 RawValueMask = (0x7 << 29);
+
+func const char* type2str(ValueType t) {
+    switch (t) {
+    case ValueType.Text:    return "T";
+    case ValueType.Number:  return "N";
+    case ValueType.Boolean: return "B";
+    }
+    return "";
+}
+
 
 public type Node struct {
     u32 nameOffset;
     u32 nextNode;
     union {
         u32 child;
-        u32 value;
+        u32 rawValue;      // bit 31 isArray, bit 29-30 ValueType
     }
 } @(opaque, packed)
 
