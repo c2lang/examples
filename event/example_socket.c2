@@ -105,7 +105,7 @@ public func Socket* Socket.create(events.Base* base, logger.Base* logbase, const
         fatal("opening TCP socket");
     }
 
-	sockaddr_in my_addr;
+	Sockaddr_in my_addr;
 	my_addr.sin_family = AF_INET;
     my_addr.sin_port = htons(port);
     my_addr.sin_addr.s_addr = INADDR_ANY;
@@ -116,7 +116,7 @@ public func Socket* Socket.create(events.Base* base, logger.Base* logbase, const
         fatal("setsockopt(SO_REUSEADDR)");
     }
 
-    if (bind(s.fd, &my_addr, sizeof(sockaddr)) != 0) fatal("bind() failed");
+    if (bind(s.fd, &my_addr, sizeof(Sockaddr)) != 0) fatal("bind() failed");
 
     if (listen(s.fd, 1) != 0) fatal("listen() failed");
 
@@ -164,8 +164,8 @@ func void Socket.removeConnection(Socket* s, Connection* c)
 
 func void Socket.onConnection(Socket* s)
 {
-    u32 sin_size = sizeof(sockaddr_in);
-    sockaddr_in remote;
+    u32 sin_size = sizeof(Sockaddr_in);
+    Sockaddr_in remote;
     i32 new_fd = accept4(s.fd, &remote, &sin_size, __socket_type.SOCK_CLOEXEC);
     if (new_fd == -1) fatal("accept4");
 

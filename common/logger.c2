@@ -29,7 +29,7 @@ func const char* level2str(Level lvl) {
 }
 
 func u64 current_time() {
-   timeval tv;
+   Timeval tv;
    gettimeofday(&tv, nil);
    u64 tv64 = cast<u64>(tv.tv_sec);
    tv64 *= 1000000;
@@ -83,7 +83,7 @@ public func void Log.setLevel(Log* log, Level lvl) {
 
 public func void Log.debug(Log* log, const char* format, ...) {
     if (Level.Debug > log.level) return;
-    va_list args;
+    Va_list args;
     va_start(args, format);
     log.internal(Level.Debug, color.Blue, format, args);
     va_end(args);
@@ -91,7 +91,7 @@ public func void Log.debug(Log* log, const char* format, ...) {
 
 public func void Log.info(Log* log, const char* format, ...) {
     if (Level.Info > log.level) return;
-    va_list args;
+    Va_list args;
     va_start(args, format);
     log.internal(Level.Info, color.White, format, args);
     va_end(args);
@@ -99,7 +99,7 @@ public func void Log.info(Log* log, const char* format, ...) {
 
 public func void Log.warn(Log* log, const char* format, ...) {
     if (Level.Warn > log.level) return;
-    va_list args;
+    Va_list args;
     va_start(args, format);
     log.internal(Level.Warn, color.Yellow, format, args);
     va_end(args);
@@ -107,21 +107,21 @@ public func void Log.warn(Log* log, const char* format, ...) {
 
 public func void Log.error(Log* log, const char* format, ...) {
     if (Level.Error > log.level) return;
-    va_list args;
+    Va_list args;
     va_start(args, format);
     log.internal(Level.Error, color.Red, format, args);
     va_end(args);
 }
 
 public func void Log.fatal(Log* log, const char* format, ...) {
-    va_list args;
+    Va_list args;
     va_start(args, format);
     log.internal(Level.Fatal, color.Red, format, args);
     va_end(args);
     exit(EXIT_FAILURE);
 }
 
-func void Log.internal(Log* log, Level level, const char* color_, const char* format, va_list args) {
+func void Log.internal(Log* log, Level level, const char* color_, const char* format, Va_list args) {
     char[256] buffer;
     char* cp = buffer;
 
@@ -133,10 +133,10 @@ func void Log.internal(Log* log, Level level, const char* color_, const char* fo
         u64 subsec = now % 1000000;
         cp += sprintf(cp, "%04ld.%06ld", now / 1000000, subsec);
     } else {
-        timeval tv;
+        Timeval tv;
         gettimeofday(&tv, nil);
         time_t now = tv.tv_sec;
-        time.tm* now2 = time.localtime(&now);
+        time.Tm* now2 = time.localtime(&now);
         cp += sprintf(cp, "%02d/%02d/%02d %02d:%02d:%02d.%lu",
             now2.tm_year % 100, now2.tm_mon + 1, now2.tm_mday,
             now2.tm_hour, now2.tm_min, now2.tm_sec, tv.tv_usec / 1000);

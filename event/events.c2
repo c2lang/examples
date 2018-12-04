@@ -9,7 +9,7 @@ import libc_poll local;
 import libc_fcntl local;
 
 public func u64 current_time() {
-    sys_time.timeval tv;
+    sys_time.Timeval tv;
     sys_time.gettimeofday(&tv, nil);
     u64 now64 = cast<u64>(tv.tv_sec);
     now64 *= 1000000;
@@ -48,7 +48,7 @@ public type Base struct {
     Event* event_head;
     Event* event_tail;
     Timer* timers;
-    pollfd[MaxEvents] fds;
+    Pollfd[MaxEvents] fds;
     Event*[MaxEvents] events;
     Event selfpipe;
     i32 read_pipe;
@@ -177,7 +177,7 @@ func void Base.internal_loop(Base* base) {
         // interrupted (by signal, etc)
     } else { // events
         for (u32 i=0; i<base.numfds; i++) {
-            pollfd* current = &base.fds[i];
+            Pollfd* current = &base.fds[i];
             if (current.revents) {
                 // TODO check POLLIN/POLLOUT
                 Event* ev = base.events[i];

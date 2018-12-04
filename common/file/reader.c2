@@ -21,7 +21,7 @@ public func void Reader.open(Reader* file, const char* filename) {
         exit(EXIT_FAILURE);
     }
 
-    stat statbuf;
+    Stat statbuf;
     i32 err = fstat(fd, &statbuf);
     if (err) {
         perror("fstat");
