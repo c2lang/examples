@@ -92,7 +92,7 @@ func bool same(const char* a, const char* b) {
 type Parser struct {
     Tokenizer tokenizer;
     Token tok;
-    jmp_buf jump_err;
+    JmpBuf jump_err;
     char* errorMsg;
 
     Blocks* blocks;

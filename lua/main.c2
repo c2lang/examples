@@ -5,7 +5,7 @@ import stdio local;
 import lua local;
 
 // TODO wrap in own type so lua remains hidden
-func i32 atpanic(lua_State* l) {
+func i32 atpanic(lua.State* l) {
     printf("lua panic\n");
     return 0;
 }
@@ -14,7 +14,7 @@ public func i32 main(i32 argc, char*[] argv) {
     const char* scriptName = "lua/script1.lua";
     if (argc == 2) scriptName = argv[1];
 
-    script.State ls;
+    script.LuaState ls;
     ls.init();
 
     lua_atpanic(ls.l, atpanic);

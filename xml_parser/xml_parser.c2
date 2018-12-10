@@ -65,7 +65,7 @@ type XmlParser struct {
     Tokenizer tokenizer;
     Token token;
     Location prev;
-    jmp_buf jmp_err;
+    JmpBuf jmp_err;
     char* msg;
     Blocks* blocks;
 }

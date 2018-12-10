@@ -17,7 +17,7 @@ const char[] ColorYellow = "\033[0;33m";
 
 char[4096] error_buffer;
 char* error_msg;
-jmp_buf c2test_err;
+JmpBuf c2test_err;
 
 u32 num_ok;
 u32 num_failed;

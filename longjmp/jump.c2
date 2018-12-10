@@ -4,8 +4,8 @@ import stdio local;
 import unistd local;
 import csetjmp local;
 
-jmp_buf env1;
-jmp_buf env2;
+JmpBuf env1;
+JmpBuf env2;
 
 func i32 function2(char n)
 {
@@ -37,7 +37,7 @@ func void function1()
 }
 
 public func i32 main() {
-    printf("size=%zu\n", sizeof(jmp_buf));
+    printf("size=%zu\n", sizeof(JmpBuf));
     function1();
     return 0;
 }

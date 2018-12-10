@@ -100,7 +100,7 @@ public func Socket* Socket.create(events.Base* base, logger.Base* logbase, const
     s.log.init(logbase, name);
     s.log.setLevel(logger.Level.Debug);
 
-    s.fd = socket(AF_INET, __socket_type.SOCK_STREAM | __socket_type.SOCK_CLOEXEC, IPPROTO_TCP);
+    s.fd = socket(AF_INET, SocketType.SOCK_STREAM | SocketType.SOCK_CLOEXEC, IPPROTO_TCP);
     if (s.fd == -1) {
         fatal("opening TCP socket");
     }
@@ -166,7 +166,7 @@ func void Socket.onConnection(Socket* s)
 {
     u32 sin_size = sizeof(Sockaddr_in);
     Sockaddr_in remote;
-    i32 new_fd = accept4(s.fd, &remote, &sin_size, __socket_type.SOCK_CLOEXEC);
+    i32 new_fd = accept4(s.fd, &remote, &sin_size, SocketType.SOCK_CLOEXEC);
     if (new_fd == -1) fatal("accept4");
 
     char* src_ipnr = inet_ntoa(remote.sin_addr);
