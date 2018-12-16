@@ -13,6 +13,8 @@ public func i32 main(i32 argc, char*[] argv) {
     toml.Reader* reader = toml.Reader.create();
     if (!reader.parse(filename)) {
         printf("Error parsing %s: %s\n", filename, reader.getMsg());
+        reader.destroy();
+        return -1;
     }
 
     // getValue
@@ -38,7 +40,6 @@ public func i32 main(i32 argc, char*[] argv) {
         iter.next();
     }
 
-    
     i32 number;
     if (reader.getNumber("room.number", &number)) printf("Number %d\n", number);
     bool isPublic;
