@@ -12,6 +12,8 @@ type TestItem struct {
 func void dump(const list.Element* src) {
     const list.Element* node = src.next;
     printf("list:\n");
+    // macro usage example
+    // list.foreach!(src, node) { body }
     while (node != src) {
         printf("  %p\n", node);
         // TODO use to_container and offsetof (or make builtin function?)
