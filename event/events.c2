@@ -98,7 +98,6 @@ public func void Base.loopbreak(Base* base, u8 return_value) {
 }
 
 func void Base.writeCmd(Base* base, Cmd* cmd) {
-    printf("Write\n");
     i64 written = write(base.write_pipe, cmd, sizeof(Cmd));
     if (written != sizeof(Cmd)) {
         fprintf(stderr, "Error writing to pipe\n");
@@ -108,7 +107,6 @@ func void Base.writeCmd(Base* base, Cmd* cmd) {
 
 func void handlePipe(i32 fd, void* arg, u16 flags) {
     Base* base = cast<Base*>(arg);
-    printf("HandlePipe\n");
     Cmd cmd;
     i64 numread = read(base.read_pipe, &cmd, sizeof(Cmd));
     // TODO assert numread
