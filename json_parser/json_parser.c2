@@ -4,7 +4,7 @@ import stdio local;
 import string local;
 import csetjmp local;
 
-const u32 MAX_DIAG = 256;
+public const u32 MAX_DIAG = 256;
 
 public type Parser struct {
     char[MAX_DIAG] message;
