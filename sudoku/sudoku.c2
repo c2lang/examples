@@ -12,33 +12,49 @@ type Field struct {
 
 type Board struct {
     Field[9*9] fields;
+    bool inSetup;
+    u32 todo;
 }
 
-type Check enum u8 {
-    Column,
-    Row,
-    Square,
+const i8[] SquareOffsets = {
+       1,   2,   9,  10,  11, 18, 19, 20 , // top left
+      -1,   1,   8,   9,  10, 17, 18, 19 , // top middle
+      -2,  -1,   7,   8,   9, 16, 17, 18 , // top right
+      -9,  -8,  -7,   1,   2,  9, 10, 11 , // middle left
+     -10,  -9,  -8,  -1,   1,  8,  9, 10 , // middle
+     -11, -10,  -9,  -2,  -1,  7,  8,  9 , // middle right
+     -18, -17, -16,  -9,  -8, -7,  1,  2 , // bottom left
+     -19, -18, -17, -10,  -9, -8, -1,  1 , // bottom middle
+     -20, -19, -18, -11, -10, -9, -2, -1 , // bottom right
 }
 
 func void Board.set(Board* board, u8 x, u8 y, u8 value) {
-    //printf("set %u,%u -> %u\n", y, x, value);
+    if (!board.inSetup) printf("set %u,%u -> %u\n", y, x, value);
     u32 idx = 9*y + x;
     board.fields[idx].value = value;
     board.fields[idx].options = 0;
+    board.todo--;
     //board.fields[idx].options = (1<<value);
 
+    u32 clear = ~(1<<value);
     // clear row
     for (u32 i=0; i<9; ++i) {
         if (i==x) continue;
-        board.fields[9*y + i].options &= ~(1<<value);
+        board.fields[9*y + i].options &= clear;
     }
     // clear column
     for (u32 i=0; i<9; ++i) {
         if (i==y) continue;
-        board.fields[9*i + x].options &= ~(1<<value);
+        board.fields[9*i + x].options &= clear;
     }
     // clear square
-    // TODO
+    i32 offs = x%3 + (y%3)*3;
+    //printf("OFFS %d\n", offs);
+    for (u32 i=0; i<8; i++) {
+        //printf("  offset %d -> \n", SquareOffsets[offs*8 + i]);
+        board.fields[idx + SquareOffsets[offs*8 + i]].options &= clear;
+    }
+    if (!board.inSetup) board.print(false, x, y);
 }
 
 func void Board.init(Board* board) {
@@ -49,9 +65,10 @@ func void Board.init(Board* board) {
             board.fields[idx].options = 0x3FE;  // set bits 1-9
         }
     }
+    board.todo = 9*9;
 }
 
-func void Board.print(const Board* board) {
+func void Board.print(const Board* board, bool showOptions, u8 xx, u8 yy) {
     char[2048] buffer;
     memset(buffer, 0, sizeof(buffer));
     char* cp = buffer;
@@ -62,7 +79,9 @@ func void Board.print(const Board* board) {
             u32 idx = 9*y + x;
             const Field* f = &board.fields[idx];
             if (f.value) {
-                cp += sprintf(cp, " %s%u%s", color.Green, f.value, color.Normal);
+                const char* col = color.Green;
+                if (x == xx && y == yy) col = color.Byellow;
+                cp += sprintf(cp, " %s%u%s", col, f.value, color.Normal);
             } else {
                 cp += sprintf(cp, "  ");
             }
@@ -76,6 +95,7 @@ func void Board.print(const Board* board) {
     }
     *cp = 0;
     puts(buffer);
+    if (showOptions) board.printOptions();
 }
 
 func void Board.printOptions(const Board* board) {
@@ -117,10 +137,138 @@ func void Board.printOptions(const Board* board) {
 }
 
 func void Board.setup(Board* board, Setup* setup, u32 size) {
+    board.inSetup = true;
     for (u32 i=0; i<size; i++) {
         Setup* s = &setup[i];
         board.set(s.x, s.y, s.value);
     }
+    board.inSetup = false;
+    printf("setup\n");
+    board.print(false, 10, 0);
+}
+
+func bool Board.checkFields(Board* board) {
+    printf("checking fields\n");
+    bool found = false;
+    for (u8 y=0; y<9; y++) {
+        for (u8 x=0; x<9; x++) {
+            Field* f = &board.fields[y*9 + x];
+            // check for single bit
+            u16 options = f.options;
+            switch (options) {
+            case 2:
+                board.set(x, y, 1);
+                found = true;
+                break;
+            case 4:
+                board.set(x, y, 2);
+                found = true;
+                break;
+            case 8:
+                board.set(x, y, 3);
+                found = true;
+                break;
+            case 16:
+                board.set(x, y, 4);
+                found = true;
+                break;
+            case 32:
+                board.set(x, y, 5);
+                found = true;
+                break;
+            case 64:
+                board.set(x, y, 6);
+                found = true;
+                break;
+            case 128:
+                board.set(x, y, 7);
+                found = true;
+                break;
+            case 256:
+                board.set(x, y, 8);
+                found = true;
+                break;
+            case 512:
+                board.set(x, y, 9);
+                found = true;
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    return found;
+}
+
+func bool Board.checkRow(Board* board, u8 row) {
+    printf("checking row %u\n", row);
+    bool found = false;
+    u8[10] count = { 0 }
+    u8[10] pos = { 0 }
+    for (u8 x=0; x<9; x++) {
+        u32 idx = 9*row + x;
+        const Field* f = &board.fields[idx];
+        for (u32 o=1; o<10; o++) {
+            if ((f.options >> o) & 1) {
+                count[o]++;
+                pos[o] = x;
+            }
+        }
+    }
+    for (u8 o=1; o<10; o++) {
+        //printf("%u = %u [%u]\n", o, count[o], pos[o]);
+        if (count[o] == 1) {
+            board.set(pos[o], row, o);
+            found = true;
+        }
+    }
+
+    return found;
+}
+
+func bool Board.checkColumn(Board* board, u8 col) {
+    printf("checking column %u\n", col);
+    bool found = false;
+    u8[10] count = { 0 }
+    u8[10] pos = { 0 }
+    for (u8 y=0; y<9; y++) {
+        u32 idx = 9*y + col;
+        const Field* f = &board.fields[idx];
+        for (u32 o=1; o<10; o++) {
+            if ((f.options >> o) & 1) {
+                count[o]++;
+                pos[o] = y;
+            }
+        }
+    }
+    for (u8 o=1; o<10; o++) {
+        //printf("COL %u = %u [%u]\n", o, count[o], pos[o]);
+        if (count[o] == 1) {
+            board.set(col, pos[o], o);
+            found = true;
+        }
+    }
+
+    return found;
+}
+
+func void Board.solve(Board* board) {
+    printf("solving Sudoku\n");
+    u32 loops = 0;
+    while (1) {
+        bool found = false;
+        for (u8 i=0; i<9; i++) {
+            found |= board.checkRow(i);
+        }
+        for (u8 i=0; i<9; i++) {
+            found |= board.checkColumn(i);
+        }
+        found |= board.checkFields();
+        loops++;
+        if (!found) break;
+        if (board.todo == 0) break;
+    }
+    printf("%u loops\n", loops);
 }
 
 type Setup struct {
@@ -129,7 +277,8 @@ type Setup struct {
     u8 value;
 } @(packed)
 
-Setup[] setup1 = {
+#if 1
+Setup[] setup_pg4 = {
     { 0, 5, 6 }, { 0, 8, 3 },
     { 1, 0, 2 }, { 1, 2, 5 }, { 1, 5, 8 },
     { 2, 2, 8 }, { 2, 5, 4 }, { 2, 6, 7 },
@@ -140,15 +289,20 @@ Setup[] setup1 = {
     { 7, 1, 2 }, { 7, 3, 3 }, { 7, 5, 9 }, { 7, 6, 8 }, { 7, 7, 6 }, { 7, 8, 1 },
     { 8, 0, 7 }, { 8, 5, 1 }, { 8, 7, 2 },
 }
+#else
+Setup[] setup_pg4 = {
+    { 2, 2, 8 },
+}
+#endif
 
 public func i32 main() {
     Board board;
     board.init();
 
-    //board.setup(setup1, 1);
-    board.setup(setup1, elemsof(setup1));
-    board.print();
-    board.printOptions();
+    board.setup(setup_pg4, elemsof(setup_pg4));
+
+    board.solve();
+    board.print(true, 10, 0);
     return 0;
 }
 
