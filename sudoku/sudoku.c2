@@ -95,7 +95,7 @@ func void Board.print(const Board* board, bool showOptions, u8 xx, u8 yy) {
     }
     *cp = 0;
     puts(buffer);
-    if (showOptions) board.printOptions();
+    if (showOptions && board.todo != 0) board.printOptions();
 }
 
 func void Board.printOptions(const Board* board) {
@@ -143,12 +143,12 @@ func void Board.setup(Board* board, Setup* setup, u32 size) {
         board.set(s.x, s.y, s.value);
     }
     board.inSetup = false;
-    printf("setup\n");
+    printf("setup (%u given)\n", size);
     board.print(false, 10, 0);
 }
 
 func bool Board.checkFields(Board* board) {
-    printf("checking fields\n");
+    //printf("checking fields\n");
     bool found = false;
     for (u8 y=0; y<9; y++) {
         for (u8 x=0; x<9; x++) {
@@ -201,7 +201,7 @@ func bool Board.checkFields(Board* board) {
 }
 
 func bool Board.checkRow(Board* board, u8 row) {
-    printf("checking row %u\n", row);
+    //printf("checking row %u\n", row);
     bool found = false;
     u8[10] count = { 0 }
     u8[10] pos = { 0 }
@@ -227,7 +227,7 @@ func bool Board.checkRow(Board* board, u8 row) {
 }
 
 func bool Board.checkColumn(Board* board, u8 col) {
-    printf("checking column %u\n", col);
+    //printf("checking column %u\n", col);
     bool found = false;
     u8[10] count = { 0 }
     u8[10] pos = { 0 }
@@ -257,12 +257,15 @@ func void Board.solve(Board* board) {
     u32 loops = 0;
     while (1) {
         bool found = false;
+        printf("checking rows (%u todo)\n", board.todo);
         for (u8 i=0; i<9; i++) {
             found |= board.checkRow(i);
         }
+        printf("checking columns (%u todo)\n", board.todo);
         for (u8 i=0; i<9; i++) {
             found |= board.checkColumn(i);
         }
+        printf("checking columns (%u todo)\n", board.todo);
         found |= board.checkFields();
         loops++;
         if (!found) break;
@@ -289,6 +292,17 @@ Setup[] setup_pg4 = {
     { 7, 1, 2 }, { 7, 3, 3 }, { 7, 5, 9 }, { 7, 6, 8 }, { 7, 7, 6 }, { 7, 8, 1 },
     { 8, 0, 7 }, { 8, 5, 1 }, { 8, 7, 2 },
 }
+Setup[] setup_pg5 = {
+    { 0, 2, 5 }, { 0, 8, 2 },
+    { 1, 1, 9 },
+    { 2, 0, 2 }, { 2, 4, 4 }, { 2, 6, 5 }, { 2, 8, 7 },
+    { 3, 2, 8 }, { 3, 4, 6 }, { 3, 5, 7 }, { 3, 8, 3 },
+    { 4, 0, 5 }, { 4, 4, 8 }, { 4, 6, 4 },
+    { 5, 0, 1 }, { 5, 5, 9 }, { 5, 7, 2 },
+    { 6, 1, 5 }, { 6, 3, 6 }, { 6, 4, 9 }, { 6, 7, 4 },
+    { 7, 2, 1 }, { 7, 4, 2 },
+    { 8, 7, 8 }, { 8, 8, 9 },
+}
 #else
 Setup[] setup_pg4 = {
     { 2, 2, 8 },
@@ -299,7 +313,8 @@ public func i32 main() {
     Board board;
     board.init();
 
-    board.setup(setup_pg4, elemsof(setup_pg4));
+    //board.setup(setup_pg4, elemsof(setup_pg4));
+    board.setup(setup_pg5, elemsof(setup_pg5));
 
     board.solve();
     board.print(true, 10, 0);
