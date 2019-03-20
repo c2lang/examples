@@ -152,5 +152,6 @@ executable sudoku
     $refs
     common/color.c2
     sudoku/sudoku.c2
+    sudoku/boards.c2
 end
 
