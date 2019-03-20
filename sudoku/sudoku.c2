@@ -1,0 +1,154 @@
+module sukodu;
+
+import stdio local;
+import color;
+import string local;
+
+
+type Field struct {
+    u8 value;       // !0 if known
+    u16 options;    // bitbise if still valid TODO 0 is option, 1 is crossed out
+}
+
+type Board struct {
+    Field[9*9] fields;
+}
+
+type Check enum u8 {
+    Column,
+    Row,
+    Square,
+}
+
+func void Board.set(Board* board, u8 x, u8 y, u8 value) {
+    //printf("set %u,%u -> %u\n", y, x, value);
+    u32 idx = 9*y + x;
+    board.fields[idx].value = value;
+    board.fields[idx].options = 0;
+    //board.fields[idx].options = (1<<value);
+
+    // clear row
+    for (u32 i=0; i<9; ++i) {
+        if (i==x) continue;
+        board.fields[9*y + i].options &= ~(1<<value);
+    }
+    // clear column
+    for (u32 i=0; i<9; ++i) {
+        if (i==y) continue;
+        board.fields[9*i + x].options &= ~(1<<value);
+    }
+    // clear square
+    // TODO
+}
+
+func void Board.init(Board* board) {
+    memset(board, 0, sizeof(Board));
+    for (u32 y=0; y<9; y++) {
+        for (u32 x=0; x<9; x++) {
+            u32 idx = 9*y + x;
+            board.fields[idx].options = 0x3FE;  // set bits 1-9
+        }
+    }
+}
+
+func void Board.print(const Board* board) {
+    char[2048] buffer;
+    memset(buffer, 0, sizeof(buffer));
+    char* cp = buffer;
+    cp += sprintf(cp, "-------------------------\n");
+    for (u32 y=0; y<9; y++) {
+        *cp++ = '|';
+        for (u32 x=0; x<9; x++) {
+            u32 idx = 9*y + x;
+            const Field* f = &board.fields[idx];
+            if (f.value) {
+                cp += sprintf(cp, " %s%u%s", color.Green, f.value, color.Normal);
+            } else {
+                cp += sprintf(cp, "  ");
+            }
+            if (x % 3 == 2) {
+                *cp++ = ' ';
+                *cp++ = '|';
+            }
+        }
+        *cp++ = '\n';
+        if (y % 3 == 2) cp += sprintf(cp, "-------------------------\n");
+    }
+    *cp = 0;
+    puts(buffer);
+}
+
+func void Board.printOptions(const Board* board) {
+    u32 height = 9 * 4 + 1;
+    u32 width =  9 * 8 + 2;
+    char[width * height + 1] buffer;
+    memset(buffer, ' ', sizeof(buffer));
+    buffer[width * height] = 0;
+    // horizontal + vertical lines
+    for (u32 y=0; y<height; y++) {
+        char* line = &buffer[y*width];
+        if (y % 12 == 0) for (u32 x=0; x<width-1; x++) line[x] = '=';
+        else if (y % 4 == 0) for (u32 x=0; x<width-1; x++) line[x] = '-';
+        else {
+            for (u32 x=0; x<width-1; x++) {
+                if (x % 8 == 0) line[x] = '|';
+            }
+        }
+        line[width-1] = '\n';
+    }
+
+    // option values
+    for (u8 y=0; y<9; y++) {
+        for (u8 x=0; x<9; x++) {
+            const Field* f = &board.fields[y*9 + x];
+            u32 offset = (1 + 4 * y) * width + (1 + 8 * x);
+            u8* square = &buffer[offset];
+            for (u8 o=1; o<10; o++) {
+                if (f.options & (1<<o)) {
+                    u32 h = (o-1) % 3;
+                    u32 w = (o-1) / 3;
+                    square[(width * w) + (2 * h) + 1] = o + '0';
+                }
+            }
+        }
+    }
+
+    puts(buffer);
+}
+
+func void Board.setup(Board* board, Setup* setup, u32 size) {
+    for (u32 i=0; i<size; i++) {
+        Setup* s = &setup[i];
+        board.set(s.x, s.y, s.value);
+    }
+}
+
+type Setup struct {
+    u8 y;
+    u8 x;
+    u8 value;
+} @(packed)
+
+Setup[] setup1 = {
+    { 0, 5, 6 }, { 0, 8, 3 },
+    { 1, 0, 2 }, { 1, 2, 5 }, { 1, 5, 8 },
+    { 2, 2, 8 }, { 2, 5, 4 }, { 2, 6, 7 },
+    { 3, 1, 7 }, { 3, 8, 8 },
+    { 4, 3, 1 }, { 4, 4, 9 }, { 4, 6, 6 },
+    { 5, 1, 6 }, { 5, 6, 9 },
+    { 6, 6, 3 }, { 6, 8, 5 },
+    { 7, 1, 2 }, { 7, 3, 3 }, { 7, 5, 9 }, { 7, 6, 8 }, { 7, 7, 6 }, { 7, 8, 1 },
+    { 8, 0, 7 }, { 8, 5, 1 }, { 8, 7, 2 },
+}
+
+public func i32 main() {
+    Board board;
+    board.init();
+
+    //board.setup(setup1, 1);
+    board.setup(setup1, elemsof(setup1));
+    board.print();
+    board.printOptions();
+    return 0;
+}
+
