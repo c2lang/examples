@@ -21,7 +21,8 @@ Example showing how to open and mmap a file
 A fast minimalistic JSON parser
 
 ## list
-Implementation of the Linux kernel list. Still missing is the conversion 'macro'
+Implementation of the Linux kernel (embedded, doubly-linked) list. It
+also uses the *to_container* builtin function.
 
 ## logger
 Basic logging framework

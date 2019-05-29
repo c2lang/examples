@@ -1,64 +1,103 @@
 module test;
-import logger;
 import stdio local;
-import unistd;
-import list;
+import stdlib local;
+import list as ll local;
 
-type TestItem struct {
-    u32 value;
-    list.Element entry;
+type Module struct {
+    const char* name;
+    i32 depth;
+    Element list;
+    Module*[4] deps;
+    u32 numDeps;
 }
 
-func void dump(const list.Element* src) {
-    const list.Element* node = src.next;
-    printf("list:\n");
-    // macro usage example
-    // list.foreach!(src, node) { body }
-    while (node != src) {
-        printf("  %p\n", node);
-        // TODO use to_container and offsetof (or make builtin function?)
-        //const TestItem* ti = to_container(TestItem, entry, node);
-        //printf("   -> value %u\n", ti.value);
+func void printList(const char* name, const Element* list, bool printDeps = false) {
+    printf("%s:\n", name);
+    Element* node = list.next;
+    while (node != list) {
+        const Module* m = to_container(Module, list, node);
+        printf(" %-4s  %d\n", m.name, m.depth);
+        if (printDeps) {
+            for (u32 i=0; i<m.numDeps; i++) {
+                printf("  -> %s\n", m.deps[i].name);
+            }
+        }
         node = node.next;
     }
 }
 
-public func i32 main(i32 argc, char*[] argv) {
-    logger.Base logbase;
-    logbase.init(logger.Level.Debug, unistd.isatty(1), argc == 2);
+func Module* createModule(Element* list, const char* name) {
+    Module* m = calloc(1, sizeof(Module));
+    m.name = name;
+    m.depth = -1;
+    list.addTail(&m.list);
+    return m;
+}
 
-    logger.Log log;
-    log.init(&logbase, "list");
+func void Module.addDep(Module* m, Module* dep) {
+    m.deps[m.numDeps] = dep;
+    m.numDeps++;
+}
 
-    list.Element l;
-    l.init();
-    log.debug("size %d  empty %d", l.size(), l.isEmpty());
+func void check(Element* all, Module* top) {
+    Element todo;
+    Element done;
+    todo.init();
+    done.init();
 
-    TestItem i1 = { .value = 1 }
-    TestItem i2 = { .value = 2 }
-    TestItem i3 = { .value = 3 }
-    TestItem i4 = { .value = 4 }
+    i32 max_depth = cast<i32>(all.size());
+    top.list.remove();
+    todo.addFront(&top.list);
+    top.depth = 0;
 
-    log.info("adding 1");
-    l.addTail(&i1.entry);
-    log.debug("size %d  empty %d", l.size(), l.isEmpty());
 
-    log.info("adding 2");
-    l.addTail(&i2.entry);
-    log.debug("size %d  empty %d", l.size(), l.isEmpty());
-    dump(&l);
+    while (!todo.isEmpty()) {
+        Element* node = todo.popFront();
+        Module* m = to_container(Module, list, node);
+        if (m.depth > max_depth) {
+            printf("LOOP found\n");
+            break;
+        }
+        done.addTail(node);
+        for (u32 i=0; i<m.numDeps; i++) {
+            Module* d = m.deps[i];
+            d.depth = m.depth + 1;
+            d.list.remove();
+            todo.addTail(&d.list);
+        }
+    }
+    done.move(all);
+}
 
-    log.info("removing 1");
-    i1.entry.remove();
-    log.debug("size %d  empty %d", l.size(), l.isEmpty());
 
-    log.info("removing 2");
-    i2.entry.remove();
-    log.debug("size %d  empty %d", l.size(), l.isEmpty());
-    dump(&l);
+public func i32 main() {
+    printf("this program orders a DAG by depth, using List\n");
 
-    logbase.destroy();
+    Element modules;
+    modules.init();
 
+    Module* a = createModule(&modules, "A");
+    Module* b = createModule(&modules, "B");
+    Module* c = createModule(&modules, "C");
+    Module* d = createModule(&modules, "D");
+    Module* e = createModule(&modules, "E");
+    Module* f = createModule(&modules, "F");
+    Module* g = createModule(&modules, "G");
+
+    a.addDep(b);
+    a.addDep(c);
+    a.addDep(d);
+    a.addDep(f);
+    b.addDep(d);
+    c.addDep(b);
+    c.addDep(e);
+    d.addDep(e);
+
+    printList("all", &modules, true);
+    check(&modules, a);
+
+    printf("Ordered list\n");
+    printList("all", &modules, false);
     return 0;
 }
 

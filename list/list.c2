@@ -26,6 +26,12 @@ public func void Element.addFront(Element* src, Element* item) {
     src.next = item;
 }
 
+public func Element* Element.popFront(Element* item) {
+    Element* node = item.next;
+    node.remove();
+    return node;
+}
+
 public func void Element.remove(Element* item) {
     Element* prev = item.prev;
     Element* next = item.next;
@@ -46,3 +52,15 @@ public func u64 Element.size(const Element* src) {
 public func bool Element.isEmpty(const Element* src) {
     return src.next == src;
 }
+
+public func void Element.move(Element* src, Element* dest) {
+    Element* node = src.next;
+
+    while (node != src) {
+        Element* tmp = node;
+        node = node.next;
+        tmp.remove();
+        dest.addTail(tmp);
+    }
+}
+

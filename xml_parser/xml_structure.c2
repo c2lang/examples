@@ -65,7 +65,7 @@ public func NodeIter Node2.getIter(const Node2* node) {
 }
 public type NodeIter struct {
     Node* current;
-    Blocks* blocks;
+    const Blocks* blocks;
 }
 
 public func bool NodeIter.done(const NodeIter* iter) {
