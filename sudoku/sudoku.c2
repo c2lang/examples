@@ -4,6 +4,11 @@ import stdio local;
 import color;
 import string local;
 
+/*
+    2 extra algorithms:
+    - if 2 fields have options like: 1,2,4 and 1,2 (and 1/2 only appear there), then eliminate 4
+    - a col/row must have all numbers, so we sometimes know that a certain number must be in that square col/row
+*/
 
 type Field struct {
     u8 value;       // !0 if known
@@ -26,6 +31,18 @@ const i8[] SquareOffsets = {
      -18, -17, -16,  -9,  -8, -7,  1,  2, // bottom left
      -19, -18, -17, -10,  -9, -8, -1,  1, // bottom middle
      -20, -19, -18, -11, -10, -9, -2, -1, // bottom right
+}
+
+const i8[] RowOffsets = { // from top row element in Square
+    27, 36, 45, 54, 63, 70,      // top square row
+    -27, -18, -9, 27, 36, 45,    // middle square row
+    -54, -45, -36, -27, -18, -9, // bottom square row
+}
+
+const i8[] ColOffsets = { // from left column element in Square
+    3, 4, 5, 6, 7, 8,       // left square column
+    -3, -2, -1, 3, 4, 5,    // middle square column
+    -6, -5, -4, -3, -2, -1, // right square column
 }
 
 func void Board.set(Board* board, u8 x, u8 y, u8 value) {
@@ -223,18 +240,27 @@ func void Board.checkColumn(Board* board, u8 col) {
     }
 }
 
-func void Board.checkSquares(Board* board) {
+func bool Board.checkSquares(Board* board, bool extra) {
+    u32 cleared = 0;
     for (u8 y=0; y<3; y++) {
         for (u8 x=0; x<3; x++) {
             // check square
             u8 topleft = (y*9 + x) *3;
             u8[10] count = { 0 }
             u8[10] pos = { 0 }
+            u8[10] localRows = { 0 }
+            u8[10] localCols = { 0 }
             const Field* f = &board.fields[topleft + 0];
             for (u32 o=1; o<10; o++) {
+                // TODO refactor with block below
                 if ((f.options >> o) & 1) {
                     count[o]++;
                     pos[o] = topleft;
+                    // NOTE: lcol,lrow should be 0,0
+                    u8 lcol = (topleft % 9) % 3;    // TODO simplify
+                    u8 lrow = (topleft / 9) % 3;    // TODO simplify
+                    localRows[o] |= (1 << lrow);
+                    localCols[o] |= (1 << lcol);
                 }
             }
             for (u8 i=0; i<8; i++) {
@@ -245,6 +271,11 @@ func void Board.checkSquares(Board* board) {
                     if ((f.options >> o) & 1) {
                         count[o]++;
                         pos[o] = off;
+
+                        u8 lcol = (off % 9) % 3;    // TODO simplify
+                        u8 lrow = (off / 9) % 3;    // TODO simplify
+                        localRows[o] |= (1 << lrow);
+                        localCols[o] |= (1 << lcol);
                     }
                 }
             }
@@ -252,10 +283,40 @@ func void Board.checkSquares(Board* board) {
                 if (count[o] == 1) {
                     board.set(pos[o] % 9, pos[o] / 9, o);
                     //printf("  FOUND %u   count %u  pos %u -> %u,%u\n", o, count[o], pos[o], pos[o] % 9, pos[o] / 9);
+                    continue;
+                }
+                if (extra) {
+                    // NOTE: HAS ISSUES
+                    u32 clear = ~(1<<o);
+                    if (localRows[o] == 1 || localRows[o] == 2 || localRows[o] == 4) {
+                        printf("  FOUND  %u,%u  num %u  ROW %u\n", y, x, o, localRows[o] >> 1);
+                        u8 leftCol = topleft + (localRows[o] >> 1) * 9; // NOTE: rshift 1 does 1-> 0, 2 -> 1, 4 -> 2
+                        // clear row outside current square
+                        for (i8 i=0; i<6; i++) {
+                            i8 idx = leftCol + ColOffsets[x*6 + i];
+                            u16 before = board.fields[idx].options;
+                            board.fields[idx].options &= clear;
+                            u16 after = board.fields[idx].options;
+                            if (before != after) cleared++;
+                        }
+                    }
+                    if (localCols[o] == 1 || localCols[o] == 2 || localCols[o] == 4) {
+                        printf("  FOUND  %u,%u  num %u  COL %u\n", y, x, o, localCols[o] >> 1);
+                        u8 topRow = topleft + (localCols[o] >> 1); // NOTE: rshift 1 does 1 -> 0, 2 -> 1, 4 -> 2
+                        // clear column outside current square
+                        for (i8 i=0; i<6; i++) {
+                            i8 idx = topRow + RowOffsets[y*6 + i];
+                            u16 before = board.fields[idx].options;
+                            board.fields[idx].options &= clear;
+                            u16 after = board.fields[idx].options;
+                            if (before != after) cleared++;
+                        }
+                    }
                 }
             }
         }
     }
+    return (cleared != 0);
 }
 
 func void Board.solve(Board* board) {
@@ -274,10 +335,11 @@ func void Board.solve(Board* board) {
         board.checkFields();
 
         printf("checking squares (%u todo)\n", board.todo);
-        board.checkSquares();
+        bool cleared = board.checkSquares(false);
 
         loops++;
-        if (board.todo == 0 || board.todo == before) break;
+        if (board.todo == 0) break;
+        if (!cleared && board.todo == before) break;
     }
     printf("%u loops\n", loops);
 }
@@ -288,16 +350,49 @@ type Setup struct {
     u8 value;
 } @(packed)
 
-public func i32 main() {
+type Puzzle struct {
+     const char* name;
+    Setup* setup;
+    u32 setup_count;
+}
+
+func const Puzzle* find(const Puzzle* puzzles, u32 count, const char* name) {
+    for (u32 i=0; i<count; i++) {
+        if (strcmp(puzzles[i].name, name) == 0) {
+            return &puzzles[i];
+        }
+    }
+    return nil;
+}
+
+public func i32 main(i32 argc, char*[] argv) {
+    // NOTE: cannot be global due to issue with functions not being CTC yet
+    Puzzle[] puzzles = {
+        { "h4", Hard_pg4,  elemsof(Hard_pg4) },
+        { "h5", Hard_pg5,  elemsof(Hard_pg5) },
+        { "u3", Ultra_pg3, elemsof(Ultra_pg3) },
+        { "u5", Ultra_pg5, elemsof(Ultra_pg5) },
+    }
+
+    if (argc != 2) {
+        printf("usage: %s [puzzle]\n", argv[0]);
+        for (u32 i=0; i<elemsof(puzzles); i++) {
+            printf("  %s\n", puzzles[i].name);
+        }
+        return 0;
+    }
+
+    const Puzzle* p = find(puzzles, elemsof(puzzles), argv[1]);
+    if (!p) {
+        printf("Unknown puzzle\n");
+        return -1;
+    }
+
     Board board;
-
-    //board.setup(Hard_pg4, elemsof(Hard_pg4));
-    //board.setup(Hard_pg5, elemsof(Hard_pg5));
-    //board.setup(Ultra_pg3, elemsof(Ultra_pg3));
-    board.setup(Ultra_pg5, elemsof(Ultra_pg5));
-
+    board.setup(p.setup, p.setup_count);
     board.solve();
     board.print(true, 10, 0);
+
     return 0;
 }
 
