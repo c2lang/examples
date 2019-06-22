@@ -57,11 +57,9 @@ executable json_parser
 end
 
 executable list
-    $warnings no-unused
+    $warnings no-unused-function no-unused-variable no-unused-parameter
 	$generate-c single-module
     $refs
-    common/logger.c2
-    common/color.c2
     list/list.c2
     list/main.c2
 end

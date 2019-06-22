@@ -6,7 +6,6 @@ import string local;
 import stdio local;
 import stdlib local;
 import sys_time local;
-import unistd;
 import time;
 
 public type Level enum u8 {
