@@ -53,13 +53,16 @@ executable json_parser
     common/file/reader.c2
     common/color.c2
     json_parser/json_parser.c2
+    json_parser/json_data.c2
     json_parser/main.c2
 end
 
 executable list
-    $warnings no-unused-function no-unused-variable no-unused-parameter
+    $warnings no-unused
 	$generate-c single-module
     $refs
+    common/logger.c2
+    common/color.c2
     list/list.c2
     list/main.c2
 end

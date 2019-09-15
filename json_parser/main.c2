@@ -2,13 +2,23 @@ module test;
 
 import unistd;
 import stdio local;
+import sys_time;
 
 import logger;
 import file_utils;
 import json;
 
+public func u64 current_time() {
+    sys_time.Timeval tv;
+    sys_time.gettimeofday(&tv, nil);
+    u64 now64 = cast<u64>(tv.tv_sec);
+    now64 *= 1000000;
+    now64 += tv.tv_usec;
+    return now64;
+}
+
 public func i32 main(i32 argc, char*[] argv) {
-    if (argc != 2) {
+    if (argc < 2) {
         printf("Usage: parser [json-file]\n");
         return 0;
     }
@@ -28,11 +38,33 @@ public func i32 main(i32 argc, char*[] argv) {
         log.error("file %s is empty", argv[1]);
         return 0;
     }
+    u64 t1 = current_time();
     json.Parser parser;
     if (!parser.parse(cast<const char*>(file.data()))) {
         log.error("error parsing %s: %s", argv[1], parser.getDiag());
     }
-    //parser.destroy();
+    u64 t2 = current_time();
+    printf("parsing took %lu usec\n", t2 - t1);
+
+    if (argc >= 3) parser.dump(argc > 3);
+
+    const char* search = "platform.checksum";
+    const char* value = parser.find_text(search);
+    if (value) {
+        printf("%s = [%s]\n", search, value);
+    } else {
+        printf("cannot find %s\n", search);
+    }
+
+    json.TextIter iter = parser.getTextIter("cars");
+    while (!iter.done()) {
+        printf("  %s\n", iter.getValue());
+        iter.next();
+    }
+
+    // TODO NodeIterator
+
+    parser.destroy();
 
     file.close();
     logbase.destroy();
