@@ -40,6 +40,7 @@ public func i32 main(i32 argc, char*[] argv) {
     }
     u64 t1 = current_time();
     json.Parser parser;
+    parser.init();
     if (!parser.parse(cast<const char*>(file.data()))) {
         log.error("error parsing %s: %s", argv[1], parser.getDiag());
     }
@@ -48,6 +49,7 @@ public func i32 main(i32 argc, char*[] argv) {
 
     if (argc >= 3) parser.dump(argc > 3);
 
+    // json_parser/example1.json
     const char* search = "platform.checksum";
     const char* value = parser.find_text(search);
     if (value) {
@@ -56,13 +58,36 @@ public func i32 main(i32 argc, char*[] argv) {
         printf("cannot find %s\n", search);
     }
 
-    json.TextIter iter = parser.getTextIter("cars");
-    while (!iter.done()) {
-        printf("  %s\n", iter.getValue());
-        iter.next();
+    // json_parser/example4.json
+    {
+        printf("top level:\n");
+        json.Iter iter = parser.getObjectIter(nil);
+        while (!iter.done()) {
+            const char* k = iter.getKey();
+            const char* v = iter.getValue();
+            printf("  %s: %s\n", k, v);
+            iter.next();
+        }
     }
 
-    // TODO NodeIterator
+
+    // json_parser/example3.json
+    {
+        printf("Items:\n");
+        json.Iter iter = parser.getArrayIter("items");
+        if (iter.done()) printf("  No items found\n");
+        while (!iter.done()) {
+            printf("  item:\n");
+            json.Iter iter2 = iter.getObjectIter();
+            while (!iter2.done()) {
+                const char* k = iter2.getKey();
+                const char* v = iter2.getValue();
+                printf("    %s -> %s\n", k, v);
+                iter2.next();
+            }
+            iter.next();
+        }
+    }
 
     parser.destroy();
 

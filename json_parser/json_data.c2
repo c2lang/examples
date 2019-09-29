@@ -56,14 +56,14 @@ func void TextBuffer.dump(const TextBuffer* b, const char* text) {
 
 
 type NodeKind enum u8 {
-    Struct = 0,
+    Object = 0,
     Value = 1,
     Array = 2,
 }
 
 func const char* kind2str(NodeKind k) {
     switch (k) {
-    case NodeKind.Struct:   return "<struct>";
+    case NodeKind.Object:   return "<object>";
     case NodeKind.Value:    return " <value>";
     case NodeKind.Array:    return " <array>";
     }
@@ -127,7 +127,7 @@ func void NodeBuffer.dump(const NodeBuffer* b) {
         NodeKind kind = GET_KIND(n.next_kind);
         printf("  [%3u] %s %3u  [next %3u]", idx, kind2str(kind), n.name_idx, GET_NEXT(n.next_kind));
         switch (kind) {
-        case NodeKind.Struct:
+        case NodeKind.Object:
             printf(" %3u\n", n.child_idx);
             break;
         case NodeKind.Value:
@@ -199,26 +199,26 @@ func void Data.dump(const Data* d, bool verbose) {
     d.dumpNode(1, 0);
 }
 
-func void Data.dumpNode(const Data* d, u32 idx, u32 indent) {
+func void Data.dumpNode(const Data* d, u32 idx, u32 indent_) {
     const Node* n = &d.nodes.data[idx];
 
     switch (GET_KIND(n.next_kind)) {
-    case NodeKind.Struct:
-        printf("%*s %s\n", indent*3, "", &d.names.data[n.name_idx]);
-        if (n.child_idx != 0) d.dumpNode(n.child_idx, indent+1);
+    case NodeKind.Object:
+        printf("%s%s\n", indent(indent_), "", &d.names.data[n.name_idx]);
+        if (n.child_idx != 0) d.dumpNode(n.child_idx, indent_+1);
         break;
     case NodeKind.Value:
-        printf("%*s %s = '%s'\n", indent*3, "", &d.names.data[n.name_idx], &d.values.data[n.value_idx]);
+        printf("%s%s = '%s'\n", indent(indent_), "", &d.names.data[n.name_idx], &d.values.data[n.value_idx]);
         break;
     case NodeKind.Array:
-        printf("%*s %s\n", indent*3, "", &d.names.data[n.name_idx]);
-        if (n.child_idx != 0) d.dumpNode(n.child_idx, indent+1);
+        printf("%s %s\n", indent(indent_), "", &d.names.data[n.name_idx]);
+        if (n.child_idx != 0) d.dumpNode(n.child_idx, indent_+1);
         break;
     }
 
     // TODO use loop
     u32 next = GET_NEXT(n.next_kind);
-    if (next != 0) d.dumpNode(next, indent);
+    if (next != 0) d.dumpNode(next, indent_);
 }
 
 
@@ -274,36 +274,70 @@ func u32 Parser.find_child(const Parser* p, u32 parent_idx, const char* name) {
     return 0;
 }
 
+public func Iter Parser.getArrayIter(const Parser* p, const char* key) {
+    Iter iter = { p.data, 0 }
 
-public type TextIter struct {
+    u32 node_idx = p.find_node(key);
+    if (node_idx == 0) return iter;
+    const Node* n = &p.data.nodes.data[node_idx];
+    if (GET_KIND(n.next_kind) != NodeKind.Array) return iter;
+    iter.cur_idx = n.child_idx;
+    return iter;
+}
+
+public func Iter Parser.getObjectIter(const Parser* p, const char* key) {
+    Iter iter = { p.data, 0 }
+
+    u32 node_idx = 0;
+    if (key == nil) {
+        // TODO we don't store toplevel as object, fix!
+        // TODO check that it exists
+        //node_idx = 1;
+        iter.cur_idx = 1;
+        return iter;
+    } else {
+        node_idx = p.find_node(key);
+    }
+    if (node_idx == 0) return iter;
+    const Node* n = &p.data.nodes.data[node_idx];
+    if (GET_KIND(n.next_kind) != NodeKind.Object) return iter;
+    iter.cur_idx = n.child_idx;
+    return iter;
+}
+
+
+public type Iter struct {
     const Data* data;
     u32 cur_idx;
 }
 
-public func bool TextIter.done(const TextIter* i) {
+public func bool Iter.done(const Iter* i) {
     return i.cur_idx == 0;
 }
 
-public func void TextIter.next(TextIter* i) {
+public func void Iter.next(Iter* i) {
     if (i.cur_idx == 0) return;
 
     const Node* n = &i.data.nodes.data[i.cur_idx];
     i.cur_idx = GET_NEXT(n.next_kind);
 }
 
-public func const char* TextIter.getValue(const TextIter* i) {
+public func const char* Iter.getKey(const Iter* i) {
+    const Node* n = &i.data.nodes.data[i.cur_idx];
+    if (GET_KIND(n.next_kind) != NodeKind.Value) return nil;    // TODO other kinds?
+    return &i.data.names.data[n.name_idx];
+}
+
+public func const char* Iter.getValue(const Iter* i) {
     const Node* n = &i.data.nodes.data[i.cur_idx];
     if (GET_KIND(n.next_kind) != NodeKind.Value) return nil;
     return &i.data.values.data[n.value_idx];
 }
 
-public func TextIter Parser.getTextIter(const Parser* p, const char* key) {
-    TextIter iter = { p.data, 0 }
-
-    u32 node_idx = p.find_node(key);
-    if (node_idx == 0) return iter;
-    const Node* n = &p.data.nodes.data[node_idx];
-    if (GET_KIND(n.next_kind) != NodeKind.Array) return iter;
+public func Iter Iter.getObjectIter(const Iter* i) {
+    Iter iter = { i.data, 0 }
+    const Node* n = &i.data.nodes.data[i.cur_idx];
+    if (GET_KIND(n.next_kind) != NodeKind.Object) return iter;
     iter.cur_idx = n.child_idx;
     return iter;
 }

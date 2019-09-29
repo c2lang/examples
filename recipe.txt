@@ -54,6 +54,7 @@ executable json_parser
     common/color.c2
     json_parser/json_parser.c2
     json_parser/json_data.c2
+    json_parser/json_builder.c2
     json_parser/main.c2
 end
 

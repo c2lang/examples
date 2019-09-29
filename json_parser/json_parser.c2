@@ -13,17 +13,22 @@ public type Parser struct {
     Data* data;
 }
 
-public func bool Parser.parse(Parser* p, const char* text) {
+public func void Parser.init(Parser* p) {
     p.message[0] = 0;
-    // TODO free old data?
-    p.data = Data.create();
-
-    JParser parser;
-    return parser.parse(text, p.message, p.data);
+    p.data = 0;
 }
 
 public func void Parser.destroy(Parser* p) {
-    p.data.destroy();
+    if (p.data) p.data.destroy();
+}
+
+public func bool Parser.parse(Parser* p, const char* text) {
+    if (p.data) p.data.destroy();
+    p.data = Data.create();
+    p.message[0] = 0;
+
+    JParser parser;
+    return parser.parse(text, p.message, p.data);
 }
 
 public func void Parser.dump(const Parser* p, bool verbose) {
@@ -41,6 +46,10 @@ type JParser struct {
     Location prev;
     Data* data;
 
+    // TEST for name-cache
+    bool inArray;
+    u32[16] name_cache;
+
     JmpBuf jmp_err;
     char* msg;
 }
@@ -51,6 +60,9 @@ func bool JParser.parse(JParser* p, const char* text, char* diagMsg, Data* data)
     p.prev.set(0, 0);
     p.msg = diagMsg;
     p.data = data;
+    p.inArray = false;
+    memset(p.name_cache, 0, sizeof(p.name_cache));
+
 
     i32 res = setjmp(p.jmp_err);
     if (res == 0) {
@@ -77,7 +89,7 @@ func Location JParser.consumeToken(JParser* p) {
 }
 
 func void JParser.parseFile(JParser* p) {
-    p.parseEntry(0);
+    p.parseObject(0);
     p.expect(TokenKind.Eof);
 }
 
@@ -101,7 +113,13 @@ func void JParser.expectAndConsume(JParser* p, TokenKind k) {
 func void JParser.parseArray(JParser* p, u32 parent_idx) {
     p.expectAndConsume(TokenKind.L_sbracket);
 
+    // TODO check names already present in array
+    // TODO multi-level, currently single level
+/*
+    For each entry in array, reset table index to new
+*/
     u32 prev_idx = 0;
+    p.inArray = true;   // TODO levels
     while (1) {
         u32 node_idx = 0;
         switch (p.token.getKind()) {
@@ -113,15 +131,16 @@ func void JParser.parseArray(JParser* p, u32 parent_idx) {
             node_idx = p.data.addNode(NodeKind.Value, 0, value_idx);
             break;
         case TokenKind.L_brace:
-            node_idx = p.data.addNode(NodeKind.Struct, 0, 0);
-            p.parseEntry(node_idx);
+            node_idx = p.data.addNode(NodeKind.Object, 0, 0);
+            p.parseObject(node_idx);
             break;
         case TokenKind.L_sbracket:
             node_idx = p.data.addNode(NodeKind.Array, 0, 0);
             p.parseArray(node_idx);
             break;
-        case TokenKind.R_brace:
         case TokenKind.R_sbracket:
+            break;
+        case TokenKind.R_brace:
         case TokenKind.Colon:
         case TokenKind.Comma:
         case TokenKind.Eof:
@@ -142,18 +161,35 @@ func void JParser.parseArray(JParser* p, u32 parent_idx) {
         p.consumeToken();
     }
     p.expectAndConsume(TokenKind.R_sbracket);
+    p.inArray = false;
 }
 
-func void JParser.parseEntry(JParser* p, u32 parent_idx) {
+func u32 JParser.addName(JParser* p, u32 entry_idx, const char* name) {
+    if (!p.inArray || entry_idx >= elemsof(p.name_cache)) {
+        return p.data.addName(name, cast<u32>(strlen(name)));
+    }
+    u32 name_idx = 0;
+    u32 cache_idx = p.name_cache[entry_idx];
+    if (cache_idx != 0) {
+        const char* cached = &p.data.names.data[cache_idx];
+        if (strcmp(cached, name) == 0) return cache_idx;
+    }
+    name_idx = p.data.addName(name, cast<u32>(strlen(name)));
+    p.name_cache[entry_idx] = name_idx;
+    return name_idx;
+}
+
+func void JParser.parseObject(JParser* p, u32 parent_idx) {
     p.expectAndConsume(TokenKind.L_brace);
     u32 prev_idx = 0;
+    u32 entry_idx = 0;
     while (1) {
         p.expect(TokenKind.Text);
         char [MAX_TEXT] name;
         strcpy(name, p.token.getText());
         p.consumeToken();
 
-        u32 name_idx = p.data.addName(name, cast<u32>(strlen(name)));
+        u32 name_idx = p.addName(entry_idx, name);
 
         p.expectAndConsume(TokenKind.Colon);
         u32 node_idx = 0;
@@ -166,8 +202,8 @@ func void JParser.parseEntry(JParser* p, u32 parent_idx) {
             node_idx = p.data.addNode(NodeKind.Value, name_idx, value_idx);
             break;
         case TokenKind.L_brace:
-            node_idx = p.data.addNode(NodeKind.Struct, name_idx, 0);
-            p.parseEntry(node_idx);
+            node_idx = p.data.addNode(NodeKind.Object, name_idx, 0);
+            p.parseObject(node_idx);
             break;
         case TokenKind.L_sbracket:
             node_idx = p.data.addNode(NodeKind.Array, name_idx, 0);
@@ -198,6 +234,7 @@ func void JParser.parseEntry(JParser* p, u32 parent_idx) {
             sprintf(p.msg, "superfluous comma %s", commaLoc.str());
             longjmp(p.jmp_err, 1);
         }
+        entry_idx++;
     }
     p.expectAndConsume(TokenKind.R_brace);
 }
