@@ -1,7 +1,16 @@
 executable base64
     $refs
+	$generate-c single-module
     base64/base64.c2
     base64/main.c2
+end
+
+executable sha1
+    $warnings no-unused
+    $refs
+	$generate-c single-module
+    sha1/sha1.c2
+    sha1/main.c2
 end
 
 executable cstrip

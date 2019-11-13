@@ -1,0 +1,34 @@
+module sha1_test;
+
+import sha1;
+import string local;
+import stdio local;
+
+func void test(const char* name, const char* input, const char* expect) {
+    char[21] result;
+    char[41] hexresult;
+    sha1.hash(result, input, cast<u32>(strlen(input)));
+    for (u32 i=0; i<20; i++) {
+        sprintf(&hexresult[2*i], "%02x", result[i] & 0xFF);
+    }
+    //printf("expect %s\n", expect);
+    //printf("got    %s\n", hexresult);
+    if (strcmp(expect, hexresult) != 0) printf("FAIL %s\n", name);
+}
+
+public func i32 main() {
+    const char[] Input1 = "abc";
+    const char[] Expect1 = "a9993e364706816aba3e25717850c26c9cd0d89d";
+    test("test1", Input1, Expect1);
+
+    const char[] Input2 = "";
+    const char[] Expect2 = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
+    test("test2", Input2, Expect2);
+
+    const char[] Input3 = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+    const char[] Expect3 = "84983e441c3bd26ebaae4aa1f95129e5e54670f1";
+    test("test3", Input3, Expect3);
+
+    return 0;
+}
+
