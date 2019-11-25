@@ -33,20 +33,18 @@ func void Blocks.dump(const Blocks* b) {
         u32 nameOffset = getValue(n.nameOffset);
         NodeKind kind = getKind(n.nameOffset);
         switch (kind) {
-        case NodeKind.Table:
+        case NodeKind.Table: fallthrough;
         case NodeKind.TableArray:
             printf("  [%3u]  %s name %3u   next %3u   child %3u  (%s)\n",
                 i, node2str(kind), nameOffset, n.nextNode, n.child, &b.names[nameOffset]);
             break;
-        case NodeKind.ValueArray:
+        case NodeKind.ValueArray: fallthrough;
         case NodeKind.Value:
-        {
             ValueType t = getRawType(n.rawValue);
             u32 offset = getRawValue(n.rawValue);
             printf("  [%3u]  %s name %3u   next %3u   value %5u(%s)  (%s)\n",
                 i, node2str(kind), nameOffset, n.nextNode, offset, type2str(t), &b.names[nameOffset]);
             break;
-        }
         case NodeKind.ArrayChild:
             printf("  [%3u]  %s name ---   next %3u   child %3u\n",
                 i, node2str(kind), n.nextNode, n.child);
@@ -251,7 +249,7 @@ func u32 Parser.parseValue(Parser* p) {
         value = addType(p.tok.number, ValueType.Number);
         p.consumeToken();
         break;
-    case TokenKind.Kw_true:
+    case TokenKind.Kw_true: fallthrough;
     case TokenKind.Kw_false:
         value = addType(p.tok.number, ValueType.Boolean);
         p.consumeToken();
@@ -540,7 +538,7 @@ public func ValueIter Reader.getValueIter(const Reader* r, const char* key) {
     ValueIter iter;
     if (node) {
         switch (getKind(node.nameOffset)) {
-        case NodeKind.Table:
+        case NodeKind.Table: fallthrough;
         case NodeKind.TableArray:
             break;
         case NodeKind.ValueArray:

@@ -112,17 +112,16 @@ func u32 XmlParser.parseNode(XmlParser* p) {
 
     while (1) {
         switch (p.token.getKind()) {
-        case TokenKind.XmlBegin:
+        case TokenKind.XmlBegin: fallthrough;
         case TokenKind.XmlEnd:
             p.fatal("unexpected xml tag");
             break;
-        case TokenKind.CdataBegin:
-        case TokenKind.CdataEnd:
+        case TokenKind.CdataBegin: fallthrough;
+        case TokenKind.CdataEnd: fallthrough;
         case TokenKind.DtdBegin:
             p.fatal("TODO Cdata/Dtd");
             break;
         case TokenKind.ElemBegin:
-        {
             if (hasText) p.fatal("node with text cannot have children");
             u32 child = p.parseNode();
             Node* childNode = &p.blocks.nodes[child];
@@ -130,28 +129,25 @@ func u32 XmlParser.parseNode(XmlParser* p) {
             else node.children = child;
             lastChild = childNode;
             break;
-        }
         case TokenKind.ElemEnd:
             p.fatal("syntax error");
             break;
         case TokenKind.ElemBeginClose:
             p.parseEndTag(node);
             return off;
-        case TokenKind.ElemEndClose:
-        case TokenKind.Equals:
-        case TokenKind.Name:
+        case TokenKind.ElemEndClose: fallthrough;
+        case TokenKind.Equals: fallthrough;
+        case TokenKind.Name: fallthrough;
         case TokenKind.Value:
             p.fatal("syntax error");
             break;
         case TokenKind.Text:
-        {
             if (lastChild) p.fatal("node with children cannot have text");
             u32 value_off = p.blocks.addValue(p.token.getText());
             node.children = (value_off | CHILD_TEXT);
             p.consumeToken();
             hasText = true;
             break;
-        }
         case TokenKind.Eof:
             p.fatal("unexpected eof");
             break;
@@ -169,12 +165,12 @@ func bool XmlParser.parseTag(XmlParser* p, Node* node) {
     // <name has been parsed already
     while (1) {
         switch (p.token.getKind()) {
-        case TokenKind.XmlBegin:
+        case TokenKind.XmlBegin: fallthrough;
         case TokenKind.XmlEnd:
             p.fatal("unexpected xml tag");
             break;
-        case TokenKind.CdataBegin:
-        case TokenKind.CdataEnd:
+        case TokenKind.CdataBegin: fallthrough;
+        case TokenKind.CdataEnd:   fallthrough;
         case TokenKind.DtdBegin:
             p.fatal("TODO");
             break;
@@ -194,16 +190,14 @@ func bool XmlParser.parseTag(XmlParser* p, Node* node) {
             p.fatal("syntax error");
             break;
         case TokenKind.Name:
-        {
             u32 off = p.parseAttribute();
             Attr* attr = &p.blocks.attrs[off];
             if (lastAttr) lastAttr.next_attr = off;
             else node.attr_off = off;
             lastAttr = attr;
             break;
-        }
-        case TokenKind.Value:
-        case TokenKind.Text:
+        case TokenKind.Value: fallthrough;
+        case TokenKind.Text:  fallthrough;
         case TokenKind.Eof:
             p.fatal("unexpected eof");
             break;
@@ -236,21 +230,21 @@ func void XmlParser.parseXml(XmlParser* p) {
         case TokenKind.XmlEnd:
             p.consumeToken();
             return;
-        case TokenKind.CdataBegin:
-        case TokenKind.CdataEnd:
-        case TokenKind.DtdBegin:
-        case TokenKind.ElemBegin:
-        case TokenKind.ElemEnd:
-        case TokenKind.ElemBeginClose:
-        case TokenKind.ElemEndClose:
+        case TokenKind.CdataBegin: fallthrough;
+        case TokenKind.CdataEnd: fallthrough;
+        case TokenKind.DtdBegin: fallthrough;
+        case TokenKind.ElemBegin: fallthrough;
+        case TokenKind.ElemEnd: fallthrough;
+        case TokenKind.ElemBeginClose: fallthrough;
+        case TokenKind.ElemEndClose: fallthrough;
         case TokenKind.Equals:
             p.fatal("syntax error");
             break;
         case TokenKind.Name:
             p.parseAttribute();
             break;
-        case TokenKind.Value:
-        case TokenKind.Text:
+        case TokenKind.Value: fallthrough;
+        case TokenKind.Text: fallthrough;
         case TokenKind.Eof:
             p.fatal("unexpected eof");
             break;
@@ -337,7 +331,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
                 result.setLocation(t.loc);
                 result.setKind(TokenKind.Eof);
                 return;
-            case ' ':
+            case ' ': fallthrough;
             case '\t':
                 t.advance(1);
                 break;
@@ -349,7 +343,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
                     result.setData(t.msg);
                     return;
                 }
-                // else fallthrough
+                fallthrough;
             case '\n':
                 t.current++;
                 t.loc.line++;
@@ -385,7 +379,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
             result.setKind(TokenKind.Error);
             result.setData(t.msg);
             return;
-        case ' ':
+        case ' ': fallthrough;
         case '\t':
             t.advance(1);
             break;
@@ -397,7 +391,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
                 result.setData(t.msg);
                 return;
             }
-            // else fallthrough
+            fallthrough;
         case '\n':
             t.current++;
             t.loc.line++;
@@ -436,7 +430,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
             t.advance(2);
             t.inElement = false;
             return;
-        case '\'':
+        case '\'': fallthrough;
         case '"':
             t.parseValue(result, t.current[0]);
             return;
@@ -544,7 +538,7 @@ func bool Tokenizer.readComments(Tokenizer* t, Token* result) {
             result.setKind(TokenKind.Error);
             result.setData(t.msg);
             return false;
-        case ' ':
+        case ' ': fallthrough;
         case '\t':
             t.advance(1);
             break;
@@ -556,7 +550,7 @@ func bool Tokenizer.readComments(Tokenizer* t, Token* result) {
                 result.setData(t.msg);
                 return false;
             }
-            // else fallthrough
+            fallthrough;
         case '\n':
             t.current++;
             t.loc.line++;

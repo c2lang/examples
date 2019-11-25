@@ -36,7 +36,7 @@ func void strip_comments(const char* input, container.StringBuffer* out)
             lines++;
         } else {
             switch (*cp) {
-            case ' ':
+            case ' ': fallthrough;
             case '\t':
                 break;
             case '/':
@@ -53,6 +53,7 @@ func void strip_comments(const char* input, container.StringBuffer* out)
                     if (white) skip = true;
                     continue;
                 }
+                fallthrough;
             default:
                 white = false;
                 break;

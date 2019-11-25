@@ -136,7 +136,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
             }
             t.parseComment();
             break;
-        case ' ':
+        case ' ': fallthrough;
         case '\t':
             t.advance(1);
             break;
