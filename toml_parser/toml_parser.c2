@@ -355,7 +355,7 @@ func Token* Parser.nextToken(Parser* p) {
 
 func void Parser.expectAndConsume(Parser* p, TokenKind k) {
     if (p.tok.isNot(k)) {
-        sprintf(p.errorMsg, "expected '%s' at %s", p.tok.getName(), p.tok.loc.str());
+        sprintf(p.errorMsg, "expected '%s' at %s", token2str(k), p.tok.loc.str());
         longjmp(p.jump_err, 1);
     }
     p.consumeToken();
@@ -363,7 +363,7 @@ func void Parser.expectAndConsume(Parser* p, TokenKind k) {
 
 func void Parser.expect(Parser* p, TokenKind k) {
     if (p.tok.isNot(k)) {
-        sprintf(p.errorMsg, "expected '%s' at %s", p.tok.getName(), p.tok.loc.str());
+        sprintf(p.errorMsg, "expected '%s' at %s", token2str(k), p.tok.loc.str());
         longjmp(p.jump_err, 1);
     }
 }
@@ -497,6 +497,16 @@ public func const char* NodeIter.getValue(const NodeIter* i, const char* key) {
     ValueType t = getRawType(child.rawValue);
     if (t != ValueType.Text) return nil;
     return &i.blocks.values[getRawValue(child.rawValue)];
+}
+
+public func bool NodeIter.getBool(const NodeIter* i, const char* key, bool* result) {
+    const Node* child = i.blocks.findNode(key, i.node);
+    if (!child) return false;
+    if (getKind(child.nameOffset) != NodeKind.Value) return false;
+    ValueType t = getRawType(child.rawValue);
+    if (t != ValueType.Boolean) return false;
+    *result = getRawValue(child.rawValue);
+    return true;
 }
 
 public func NodeIter Reader.getNodeIter(const Reader* r, const char* key) {
