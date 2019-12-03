@@ -12,30 +12,38 @@ import unistd local;
 public type Reader struct {
     void* region;
     u32 size;
+    i32 errno;
 }
 
-public func void Reader.open(Reader* file, const char* filename) {
+public func bool Reader.open(Reader* file, const char* filename) {
     i32 fd = open(filename, O_RDONLY);
     if (fd == -1) {
+        file.errno = *errno2();
         perror("open");
         exit(EXIT_FAILURE);
+        return false;
     }
 
     Stat statbuf;
     i32 err = fstat(fd, &statbuf);
     if (err) {
+        file.errno = *errno2();
         perror("fstat");
         //printf("error opening %s: %s\n", filename, strerror(errno));
         exit(EXIT_FAILURE);
+        return false;
     }
     file.size = cast<u32>(statbuf.st_size);
 
 	file.region = mmap(0, file.size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_POPULATE, fd, 0);
 	if (file.region == MAP_FAILED) {
+        file.errno = *errno2();
 		perror("mmap");
 		exit(EXIT_FAILURE);
+        return false;
 	}
 	close(fd);
+    return true;
 }
 
 public func void Reader.close(Reader* file) {

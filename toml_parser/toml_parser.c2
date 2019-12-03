@@ -368,7 +368,7 @@ func void Parser.expect(Parser* p, TokenKind k) {
     }
 }
 
-public const u32 MaxDiag = 128;
+const u32 MaxDiag = 128;
 
 public type Reader struct {
     char[MaxDiag] message;
@@ -394,7 +394,11 @@ public func const char* Reader.getMsg(const Reader* r) {
 
 public func bool Reader.parse(Reader* r, const char* filename) {
     file_utils.Reader file;
-    file.open(filename);
+    if (!file.open(filename)) {
+        sprintf(r.message, "%s", strerror(file.errno));
+        return false;
+
+    }
 
     if (file.isEmpty()) {
         printf("file %s is empty\n", filename);
@@ -499,6 +503,16 @@ public func const char* NodeIter.getValue(const NodeIter* i, const char* key) {
     return &i.blocks.values[getRawValue(child.rawValue)];
 }
 
+public func bool NodeIter.getNumber(const NodeIter* i, const char* key, u32* result) {
+    const Node* child = i.blocks.findNode(key, i.node);
+    if (!child) return false;
+    if (getKind(child.nameOffset) != NodeKind.Value) return false;
+    ValueType t = getRawType(child.rawValue);
+    if (t != ValueType.Number) return false;
+    *result = getRawValue(child.rawValue);
+    return true;
+}
+
 public func bool NodeIter.getBool(const NodeIter* i, const char* key, bool* result) {
     const Node* child = i.blocks.findNode(key, i.node);
     if (!child) return false;
@@ -545,7 +559,6 @@ public func const char* ValueIter.getValue(const ValueIter* i) {
 
 public func ValueIter Reader.getValueIter(const Reader* r, const char* key) {
     const Node* node = r.findNode(key);
-    ValueIter iter;
     if (node) {
         switch (getKind(node.nameOffset)) {
         case NodeKind.Table: fallthrough;
@@ -607,7 +620,6 @@ public type Node struct {
 public type Blocks struct {
     Node* nodes;
     u32 nodeCount;
-    u32 maxNodes;
 
     char* names;
     u32 namesOffset;
@@ -624,7 +636,6 @@ public type Blocks struct {
 func void Blocks.init(Blocks* b) {
     memset(b, 0, sizeof(Blocks));
     b.nodes = calloc(MaxNodes, sizeof(Node));
-    b.maxNodes = MaxNodes;
 
     b.namesSize = MaxNames;
     b.names = calloc(1, b.namesSize);

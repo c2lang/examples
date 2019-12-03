@@ -1,12 +1,13 @@
 module tester;
 
 import stdio local;
-import container;
+import utils;
 
-type Callback func void (container.StringBuffer* buf, const char* text);
+type Callback func void (utils.StringBuffer* buf, const char* text);
 
 public func i32 main() {
-    container.StringBuffer* buf = container.StringBuffer.create(100);
+    utils.StringBuffer* buf = utils.StringBuffer.create(8);
+    //utils.StringBuffer* buf = utils.StringBuffer.create(100);
 
     buf.add("hello ");
     buf.add("this ");
@@ -17,7 +18,7 @@ public func i32 main() {
     printf("size = %d\n", buf.size());
     printf("data = '%s'\n", buf.data());
 
-    Callback cb = container.StringBuffer.add;
+    Callback cb = utils.StringBuffer.add;
 
     buf.clear();
     buf.destroy();

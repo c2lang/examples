@@ -7,7 +7,7 @@ import libc_fcntl local;
 import stdlib local;
 
 import file_utils;
-import container;
+import utils;
 
 const char NEWLINE = 0x0A;
 
@@ -15,7 +15,7 @@ const char NEWLINE = 0x0A;
     strip all lines startin with '//'
     TODO also handle multi-line comments
 */
-func void strip_comments(const char* input, container.StringBuffer* out)
+func void strip_comments(const char* input, utils.StringBuffer* out)
 {
     const char* cp = input;
     const char* linestart = cp;
@@ -78,7 +78,7 @@ public func i32 main(i32 argc, char*[] argv) {
         return 0;
     }
 
-    container.StringBuffer* buffer = container.StringBuffer.create(infile.size);
+    utils.StringBuffer* buffer = utils.StringBuffer.create(infile.size);
 
     strip_comments(cast<const i8*>(infile.data()), buffer);
     infile.close();
