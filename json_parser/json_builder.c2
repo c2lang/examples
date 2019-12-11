@@ -61,7 +61,7 @@ public func void Builder.addObject(Builder* b, const char* key) {
     char* cp = orig;
     if (b.hasEntry[b.indent]) cp += sprintf(cp, ",\n");
     if (b.inArray[b.indent]) {
-        cp += sprintf(cp, "%s{\n", indent(b.indent), indent(b.indent));
+        cp += sprintf(cp, "%s{\n", indent(b.indent));
     } else {
         cp += sprintf(cp, "%s\"%s\":\n%s{\n", indent(b.indent), key, indent(b.indent));
     }

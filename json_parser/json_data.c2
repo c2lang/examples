@@ -204,14 +204,14 @@ func void Data.dumpNode(const Data* d, u32 idx, u32 indent_) {
 
     switch (GET_KIND(n.next_kind)) {
     case NodeKind.Object:
-        printf("%s%s\n", indent(indent_), "", &d.names.data[n.name_idx]);
+        printf("%s%s\n", indent(indent_), &d.names.data[n.name_idx]);
         if (n.child_idx != 0) d.dumpNode(n.child_idx, indent_+1);
         break;
     case NodeKind.Value:
-        printf("%s%s = '%s'\n", indent(indent_), "", &d.names.data[n.name_idx], &d.values.data[n.value_idx]);
+        printf("%s%s = '%s'\n", indent(indent_), &d.names.data[n.name_idx], &d.values.data[n.value_idx]);
         break;
     case NodeKind.Array:
-        printf("%s %s\n", indent(indent_), "", &d.names.data[n.name_idx]);
+        printf("%s %s\n", indent(indent_), &d.names.data[n.name_idx]);
         if (n.child_idx != 0) d.dumpNode(n.child_idx, indent_+1);
         break;
     }
@@ -320,6 +320,31 @@ public func void Iter.next(Iter* i) {
 
     const Node* n = &i.data.nodes.data[i.cur_idx];
     i.cur_idx = GET_NEXT(n.next_kind);
+}
+
+public func const char* Iter.find_text(const Iter* i, const char* key) {
+    const Node* n = &i.data.nodes.data[i.cur_idx];
+    if (GET_KIND(n.next_kind) != NodeKind.Object) return nil;
+
+    u32 node_idx = i.find_child(n.child_idx, key);
+    if (node_idx == 0) return nil;
+
+    const Node* child = &i.data.nodes.data[node_idx];
+    if (GET_KIND(child.next_kind) != NodeKind.Value) return nil;
+    return &i.data.values.data[child.value_idx];
+}
+
+func u32 Iter.find_child(const Iter* i, u32 idx, const char* name) {
+    u32 next = idx;
+    while (next != 0) {
+        const Node* n = &i.data.nodes.data[next];
+        const char* nname  = &i.data.names.data[n.name_idx];
+        //printf("  compare %s\n", nname);
+        if (strcmp(nname, name) == 0) return next;
+
+        next = GET_NEXT(n.next_kind);
+    }
+    return 0;
 }
 
 public func const char* Iter.getKey(const Iter* i) {
