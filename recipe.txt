@@ -1,3 +1,4 @@
+
 executable base64
     $refs
 	$generate-c single-module
@@ -58,12 +59,11 @@ executable json_parser
 	$generate-c single-module
     $refs
     $deps
-    common/logger.c2
     common/file/reader.c2
-    common/color.c2
     json_parser/json_parser.c2
     json_parser/json_data.c2
     json_parser/json_builder.c2
+    json_parser/json_serialize.c2
     json_parser/main.c2
 end
 

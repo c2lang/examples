@@ -3,7 +3,6 @@ module file_utils;
 import stdio local;
 import stdlib local;
 import libc_fcntl local;
-import string local;
 import c_errno local;
 import sys_stat local;
 import sys_mman local;
