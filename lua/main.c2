@@ -2,7 +2,7 @@ module test;
 
 import script;
 import stdio local;
-import lua local;
+import lua;
 
 // TODO wrap in own type so lua remains hidden
 func i32 atpanic(lua.State* l) {
@@ -17,7 +17,7 @@ public func i32 main(i32 argc, char*[] argv) {
     script.LuaState ls;
     ls.init();
 
-    lua_atpanic(ls.l, atpanic);
+    lua.atpanic(ls.l, atpanic);
     ls.registerFunc("startScript", script.startScript);
     ls.registerFunc("stopScript", script.stopScript);
 
