@@ -115,7 +115,7 @@ executable socket
 	$generate-c single-module
     $refs
     $deps
-    socket/main.c2
+    socket/server.c2
 end
 
 executable string
