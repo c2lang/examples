@@ -1,0 +1,13 @@
+
+[library]
+language = "C2"
+type = [ "source" ]
+
+[[module]]
+name = "foo"
+files = [ "file1.c2", "file2.c2", "file3.c2" ]
+
+[[module]]
+name = "bar"
+files = [ "file4.c2", "file5.c2", "file6.c2" ]
+

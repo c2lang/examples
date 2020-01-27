@@ -1,7 +1,15 @@
 module test;
 
 import stdio local;
+import string local;
 import toml;
+
+/*
+    3 kinds of nodes:
+    - value
+    - table         -> root node
+    - value-list
+*/
 
 public func i32 main(i32 argc, char*[] argv) {
     if (argc != 2) {
@@ -17,33 +25,35 @@ public func i32 main(i32 argc, char*[] argv) {
         return -1;
     }
 
-    // getValue
-    const char* key = "room.name";
-    printf("Value %s = %s\n", key, reader.getValue(key));
-    key = "room.descr";
-    printf("Value %s = %s\n", key, reader.getValue(key));
+    if (strcmp(filename, "toml_parser/example6.toml") == 0) {
+        // getValue
+        const char* key = "room.name";
+        printf("Value %s = %s\n", key, reader.getValue(key));
+        key = "room.descr";
+        printf("Value %s = %s\n", key, reader.getValue(key));
 
-    // ValueIter
-    toml.ValueIter vi = reader.getValueIter("room.domains");
-    printf("Domains:\n");
-    while (!vi.done()) {
-        printf("  %s\n", vi.getValue());
-        vi.next();
+        // ValueIter
+        toml.ValueIter vi = reader.getValueIter("room.domains");
+        printf("Domains:\n");
+        while (!vi.done()) {
+            printf("  %s\n", vi.getValue());
+            vi.next();
+        }
+
+        // NodeIter
+        printf("Exits:\n");
+        toml.NodeIter iter = reader.getNodeIter("exit");
+        while (!iter.done()) {
+            const char* name = iter.getValue("name");
+            printf("  name=%s\n", name);
+            iter.next();
+        }
+
+        i32 number;
+        if (reader.getNumber("room.number", &number)) printf("Number %d\n", number);
+        bool isPublic;
+        if (reader.getBool("room.public", &isPublic)) printf("Bool %d\n", isPublic);
     }
-
-    // NodeIter
-    printf("Exits:\n");
-    toml.NodeIter iter = reader.getNodeIter("exit");
-    while (!iter.done()) {
-        const char* name = iter.getValue("name");
-        printf("  name=%s\n", name);
-        iter.next();
-    }
-
-    i32 number;
-    if (reader.getNumber("room.number", &number)) printf("Number %d\n", number);
-    bool isPublic;
-    if (reader.getBool("room.public", &isPublic)) printf("Bool %d\n", isPublic);
 
     reader.destroy();
     return 0;
