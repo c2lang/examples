@@ -33,8 +33,6 @@ executable event
     common/color.c2
     common/logger.c2
     event/events.c2
-    event/events_timer.c2
-    event/events_event.c2
     event/example_socket.c2
     event/main.c2
 end
