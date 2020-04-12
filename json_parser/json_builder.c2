@@ -31,7 +31,7 @@ public func void Builder.free(Builder* b) {
 
 public func void Builder.finalize(Builder* b) {
     char* orig = &b.buffer[b.size];
-    i32 len = sprintf(orig, "\n}\n");
+    i32 len = sprintf(orig, "\n");
     b.size += len;
 }
 
@@ -86,7 +86,11 @@ public func void Builder.addArray(Builder* b, const char* key) {
     char* orig = &b.buffer[b.size];
     char* cp = orig;
     if (b.hasEntry[b.indent]) cp += sprintf(cp, ",\n");
-    cp += sprintf(cp, "%s\"%s\":\n%s[\n", indent(b.indent), key, indent(b.indent));
+    if (key) {
+        cp += sprintf(cp, "%s\"%s\":\n%s[\n", indent(b.indent), key, indent(b.indent));
+    } else {
+        cp += sprintf(cp, "%s[\n", indent(b.indent));
+    }
     b.size += (cp - orig);
     b.hasEntry[b.indent] = true;
     b.indent++;
@@ -108,7 +112,7 @@ public func void Builder.reset(Builder* b) {
     b.size = 0;
     for (u32 i=0; i<elemsof(b.hasEntry); i++) b.hasEntry[i] = false;
     for (u32 i=0; i<elemsof(b.inArray); i++) b.inArray[i] = false;
-    b.indent = 1;
-    b.size = cast<u32>(sprintf(b.buffer, "{\n"));
+    b.indent = 0;
+    b.size = 0;
 }
 
