@@ -388,13 +388,15 @@ public func Iter Iter.getObjectIter(const Iter* i) {
     return iter;
 }
 
-// schema: s = string, a = array, o = object, . = more coming (dont care)
-public func bool Iter.check_schema(const Iter* i, const char* schema) {
+func bool Iter.check_schema_priv(const Iter* i, const char** schema) {
     u32 cur_idx = i.cur_idx;
-    while (*schema != 0) {
-        if (cur_idx == 0) return false;
+    while (**schema != 0) {
+        if (cur_idx == 0) {
+            if (**schema == ')') return true;
+            return false;
+        }
         const Node* n = &i.data.nodes.data[cur_idx];
-        switch (*schema) {
+        switch (**schema) {
         case 's':
             if (GET_KIND(n.next_kind) != NodeKind.Value) return false;
             break;
@@ -403,6 +405,11 @@ public func bool Iter.check_schema(const Iter* i, const char* schema) {
             break;
         case 'o':
             if (GET_KIND(n.next_kind) != NodeKind.Object) return false;
+            if ((*schema)[1] == '(') {
+                *schema += 2;
+                Iter obj = { i.data, n.child_idx }
+                if (!obj.check_schema_priv(schema)) return false;
+            }
             break;
         case '.':
             return true;
@@ -410,8 +417,13 @@ public func bool Iter.check_schema(const Iter* i, const char* schema) {
             return false;
         }
         cur_idx = GET_NEXT(n.next_kind);
-        schema++;
+        (*schema)++;
     }
     return (cur_idx == 0);
+}
+
+// schema: s = string, a = array, o = object, o(..) = object children, . = more coming (dont care)
+public func bool Iter.check_schema(const Iter* i, const char* schema) {
+    return i.check_schema_priv(&schema);
 }
 

@@ -110,7 +110,7 @@ public func i32 main(i32 argc, char*[] argv) {
 
     if (strcmp(filename, "json_parser/example5.json") == 0) {
         json.Iter iter = parser.getArrayIter(nil);
-        if (iter.check_schema("ssso")) {
+        if (iter.check_schema("ssso(ss)")) {
             i32 id = stdlib.atoi(iter.getValue());
             iter.next();
             const char* uid = iter.getValue();
