@@ -226,7 +226,9 @@ func void Data.dumpNode(const Data* d, u32 idx, u32 indent_) {
 }
 
 func u32 Parser.find_node(const Parser* p, const char* key) {
-    u32 node_idx = 0;
+    if (key[0] == 0) return 0;
+    u32 node_idx = 1;
+    // TODO check if top-level is object
     const char* cp = key;
     while (*cp) {
         const char* start = cp;
@@ -240,10 +242,10 @@ func u32 Parser.find_node(const Parser* p, const char* key) {
         memcpy(node_name, start, len);
         node_name[len] = 0;
 
-        //printf("searching %s\n", node_name);
+        //printf("searching '%s'  idx %u\n", node_name, node_idx);
         node_idx = p.find_child(node_idx, node_name);
         if (node_idx == 0) return 0;
-        //printf("found %s\n", node_name);
+        //printf("found %s  idx %u\n", node_name, node_idx);
     }
     return node_idx;
 }
@@ -267,7 +269,7 @@ func u32 Parser.find_child(const Parser* p, u32 parent_idx, const char* name) {
     while (next != 0) {
         const Node* n = &p.data.nodes.data[next];
         const char* nname  = &p.data.names.data[n.name_idx];
-        //printf("  compare %s\n", nname);
+        //printf("  compare [%u] %s\n", n.name_idx, nname);
         if (strcmp(nname, name) == 0) return next;
 
         next = GET_NEXT(n.next_kind);
@@ -346,7 +348,7 @@ func u32 Iter.find_child(const Iter* i, u32 idx, const char* name) {
     while (next != 0) {
         const Node* n = &i.data.nodes.data[next];
         const char* nname  = &i.data.names.data[n.name_idx];
-        //printf("  compare %s\n", nname);
+        //printf("  compare (next %u) %s\n", next, nname);
         if (strcmp(nname, name) == 0) return next;
 
         next = GET_NEXT(n.next_kind);
