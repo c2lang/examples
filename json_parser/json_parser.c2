@@ -94,7 +94,20 @@ func Location JParser.consumeToken(JParser* p) {
 }
 
 func void JParser.parseFile(JParser* p) {
-    p.parseObject(0);
+    switch (p.token.getKind()) {
+    case TokenKind.L_brace:
+        u32 node_idx = p.data.addNode(NodeKind.Object, 0, 0);
+        p.parseObject(node_idx);
+        break;
+    case TokenKind.L_sbracket:
+        u32 node_idx = p.data.addNode(NodeKind.Array, 0, 0);
+        p.parseArray(node_idx);
+        break;
+    default:
+        sprintf(p.msg, "unexpected '%s' %s", getTokenName(p.token.getKind()), p.diagLoc());
+        longjmp(p.jmp_err, 1);
+        break;
+    }
     p.expect(TokenKind.Eof);
 }
 

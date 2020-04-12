@@ -33,10 +33,11 @@ public func i32 main(i32 argc, char*[] argv) {
     }
     const char* filename = argv[1];
 
+    bool use_cache = false;
     json.Parser parser;
     parser.init();
 
-    if (!isCache(filename)) {
+    if (!use_cache || !isCache(filename)) {
         u64 t1 = current_time();
         file_utils.Reader file;
         file.open(filename);
@@ -106,7 +107,7 @@ public func i32 main(i32 argc, char*[] argv) {
         }
     }
 
-    if (!isCache(filename)) {
+    if (use_cache && !isCache(filename)) {
         u64 t3 = current_time();
         char[128] cache_file;
         sprintf(cache_file, "%s%s", filename, Cache_suffix);
