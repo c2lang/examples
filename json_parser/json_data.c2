@@ -278,11 +278,17 @@ func u32 Parser.find_child(const Parser* p, u32 parent_idx, const char* name) {
 public func Iter Parser.getArrayIter(const Parser* p, const char* key) {
     Iter iter = { p.data, 0 }
 
-    u32 node_idx = p.find_node(key);
-    if (node_idx == 0) return iter;
-    const Node* n = &p.data.nodes.data[node_idx];
-    if (GET_KIND(n.next_kind) != NodeKind.Array) return iter;
-    iter.cur_idx = n.child_idx;
+    if (key == nil) {
+        const Node* n = &p.data.nodes.data[1];
+        if (GET_KIND(n.next_kind) != NodeKind.Array) return iter;
+        iter.cur_idx = n.child_idx;
+    } else {
+        u32 node_idx = p.find_node(key);
+        if (node_idx == 0) return iter;
+        const Node* n = &p.data.nodes.data[node_idx];
+        if (GET_KIND(n.next_kind) != NodeKind.Array) return iter;
+        iter.cur_idx = n.child_idx;
+    }
     return iter;
 }
 
@@ -360,11 +366,50 @@ public func const char* Iter.getValue(const Iter* i) {
     return &i.data.values.data[n.value_idx];
 }
 
+public func const char* Iter.isValue(const Iter* i) {
+    const Node* n = &i.data.nodes.data[i.cur_idx];
+    if (GET_KIND(n.next_kind) == NodeKind.Value) return true;
+    return false;
+}
+
+public func const char* Iter.isObject(const Iter* i) {
+    const Node* n = &i.data.nodes.data[i.cur_idx];
+    if (GET_KIND(n.next_kind) == NodeKind.Object) return true;
+    return false;
+}
+
 public func Iter Iter.getObjectIter(const Iter* i) {
     Iter iter = { i.data, 0 }
     const Node* n = &i.data.nodes.data[i.cur_idx];
     if (GET_KIND(n.next_kind) != NodeKind.Object) return iter;
     iter.cur_idx = n.child_idx;
     return iter;
+}
+
+// schema: s = string, a = array, o = object, . = more coming (dont care)
+public func bool Iter.check_schema(const Iter* i, const char* schema) {
+    u32 cur_idx = i.cur_idx;
+    while (*schema != 0) {
+        if (cur_idx == 0) return false;
+        const Node* n = &i.data.nodes.data[cur_idx];
+        switch (*schema) {
+        case 's':
+            if (GET_KIND(n.next_kind) != NodeKind.Value) return false;
+            break;
+        case 'a':
+            if (GET_KIND(n.next_kind) != NodeKind.Array) return false;
+            break;
+        case 'o':
+            if (GET_KIND(n.next_kind) != NodeKind.Object) return false;
+            break;
+        case '.':
+            return true;
+        default:
+            return false;
+        }
+        cur_idx = GET_NEXT(n.next_kind);
+        schema++;
+    }
+    return (cur_idx == 0);
 }
 

@@ -33,7 +33,7 @@ public func bool Parser.parse(Parser* p, const char* text) {
 }
 
 public func void Parser.report(const Parser* p) {
-    printf("JSON: %u nodes, %u names, %u values\n", p.data.nodes.cur, p.data.names.cur, p.data.values.cur);
+    printf("JSON: %u nodes, names: %u bytes, values: %u bytes\n", p.data.nodes.cur, p.data.names.cur, p.data.values.cur);
 }
 
 public func void Parser.dump(const Parser* p, bool verbose) {
@@ -358,15 +358,15 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
         case '"':
             t.parseText(result);
             return;
-        case '0':   fallthrough;
-        case '1':   fallthrough;
-        case '2':   fallthrough;
-        case '3':   fallthrough;
-        case '4':   fallthrough;
-        case '5':   fallthrough;
-        case '6':   fallthrough;
-        case '7':   fallthrough;
-        case '8':   fallthrough;
+        case '0': fallthrough;
+        case '1': fallthrough;
+        case '2': fallthrough;
+        case '3': fallthrough;
+        case '4': fallthrough;
+        case '5': fallthrough;
+        case '6': fallthrough;
+        case '7': fallthrough;
+        case '8': fallthrough;
         case '9':
             t.parseNumber(result);
             return;
