@@ -358,13 +358,13 @@ public func const char* Iter.getValue(const Iter* i) {
     return &i.data.values.data[n.value_idx];
 }
 
-public func const char* Iter.isValue(const Iter* i) {
+public func bool Iter.isValue(const Iter* i) {
     const Node* n = &i.data.nodes.data[i.cur_idx];
     if (GET_KIND(n.next_kind) == NodeKind.Value) return true;
     return false;
 }
 
-public func const char* Iter.isObject(const Iter* i) {
+public func bool Iter.isObject(const Iter* i) {
     const Node* n = &i.data.nodes.data[i.cur_idx];
     if (GET_KIND(n.next_kind) == NodeKind.Object) return true;
     return false;
