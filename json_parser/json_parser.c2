@@ -175,7 +175,11 @@ func void JParser.parseArray(JParser* p, u32 parent_idx) {
         }
         prev_idx = node_idx;
         if (p.token.isNot(TokenKind.Comma)) break;
-        p.consumeToken();
+        Location commaLoc = p.consumeToken();
+        if (p.token.is(TokenKind.R_sbracket)) {
+            sprintf(p.msg, "superfluous comma %s", commaLoc.str());
+            longjmp(p.jmp_err, 1);
+        }
     }
     p.expectAndConsume(TokenKind.R_sbracket);
     p.inArray = false;
