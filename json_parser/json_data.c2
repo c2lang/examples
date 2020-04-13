@@ -204,31 +204,29 @@ func void Data.dump(const Data* d, bool verbose) {
 }
 
 func void Data.dumpNode(const Data* d, u32 idx, u32 indent_) {
-    const Node* n = &d.nodes.data[idx];
-
-    switch (GET_KIND(n.next_kind)) {
-    case NodeKind.Object:
-        printf("%s%s\n", indent(indent_), &d.names.data[n.name_idx]);
-        if (n.child_idx != 0) d.dumpNode(n.child_idx, indent_+1);
-        break;
-    case NodeKind.Value:
-        printf("%s%s = '%s'\n", indent(indent_), &d.names.data[n.name_idx], &d.values.data[n.value_idx]);
-        break;
-    case NodeKind.Array:
-        printf("%s %s\n", indent(indent_), &d.names.data[n.name_idx]);
-        if (n.child_idx != 0) d.dumpNode(n.child_idx, indent_+1);
-        break;
+    while (idx != 0) {
+        const Node* n = &d.nodes.data[idx];
+        switch (GET_KIND(n.next_kind)) {
+        case NodeKind.Object:
+            printf("%s%s\n", indent(indent_), &d.names.data[n.name_idx]);
+            if (n.child_idx != 0) d.dumpNode(n.child_idx, indent_+1);
+            break;
+        case NodeKind.Value:
+            printf("%s%s = '%s'\n", indent(indent_), &d.names.data[n.name_idx], &d.values.data[n.value_idx]);
+            break;
+        case NodeKind.Array:
+            printf("%s %s\n", indent(indent_), &d.names.data[n.name_idx]);
+            if (n.child_idx != 0) d.dumpNode(n.child_idx, indent_+1);
+            break;
+        }
+        idx = GET_NEXT(n.next_kind);
     }
-
-    // TODO use loop
-    u32 next = GET_NEXT(n.next_kind);
-    if (next != 0) d.dumpNode(next, indent_);
 }
 
 func u32 Parser.find_node(const Parser* p, const char* key) {
     if (key[0] == 0) return 0;
     u32 node_idx = 1;
-    // TODO check if top-level is object
+    // TODO check if top-level is object/array
     const char* cp = key;
     while (*cp) {
         const char* start = cp;
@@ -297,16 +295,8 @@ public func Iter Parser.getArrayIter(const Parser* p, const char* key) {
 public func Iter Parser.getObjectIter(const Parser* p, const char* key) {
     Iter iter = { p.data, 0 }
 
-    u32 node_idx = 0;
-    if (key == nil) {
-        // TODO we don't store toplevel as object, fix!
-        // TODO check that it exists
-        //node_idx = 1;
-        iter.cur_idx = 1;
-        return iter;
-    } else {
-        node_idx = p.find_node(key);
-    }
+    u32 node_idx = 1;
+    if (key != nil) node_idx = p.find_node(key);
     if (node_idx == 0) return iter;
     const Node* n = &p.data.nodes.data[node_idx];
     if (GET_KIND(n.next_kind) != NodeKind.Object) return iter;
@@ -358,7 +348,7 @@ func u32 Iter.find_child(const Iter* i, u32 idx, const char* name) {
 
 public func const char* Iter.getKey(const Iter* i) {
     const Node* n = &i.data.nodes.data[i.cur_idx];
-    if (GET_KIND(n.next_kind) != NodeKind.Value) return nil;    // TODO other kinds?
+    if (GET_KIND(n.next_kind) != NodeKind.Value) return nil;
     return &i.data.names.data[n.name_idx];
 }
 
