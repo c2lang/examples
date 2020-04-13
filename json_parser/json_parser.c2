@@ -395,6 +395,12 @@ func void Tokenizer.parseText(Tokenizer* t, Token* result) {
     const char* start = t.current;
     while (t.current[0] && t.current[0] != '"') t.current++;
     u32 len = cast<u32>(t.current - start);
+    if (len >= MAX_TEXT) {
+        sprintf(t.msg, "text too long %u (max %u) %s", len, MAX_TEXT-1, t.loc.str());
+        result.setKind(TokenKind.Error);
+        result.setData(t.msg);
+        return;
+    }
     memcpy(t.msg, start, len);
     t.msg[len] = 0;
     result.setKind(TokenKind.Text);
