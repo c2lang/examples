@@ -359,6 +359,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
         case '"':
             t.parseText(result);
             return;
+        case '-': fallthrough;
         case '0': fallthrough;
         case '1': fallthrough;
         case '2': fallthrough;
@@ -405,6 +406,7 @@ func void Tokenizer.parseText(Tokenizer* t, Token* result) {
 
 func void Tokenizer.parseNumber(Tokenizer* t, Token* result) {
     const char* start = t.current;
+    if (t.current[0] == '-') t.current++;
     while (t.current[0] >= '0' && t.current[0] <= '9') t.current++;
     u32 len = cast<u32>(t.current - start);
     memcpy(t.msg, start, len);
