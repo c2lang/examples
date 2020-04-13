@@ -140,7 +140,7 @@ public func i32 main(i32 argc, char*[] argv) {
     json.Builder builder;
     builder.init(1024);
     builder.addArray(nil);
-    builder.addValue(nil, "2");
+    builder.addNumber(nil, 2);
     builder.addValue(nil, "19223201");
     builder.addValue(nil, "BootNotification");
     builder.addObject(nil);

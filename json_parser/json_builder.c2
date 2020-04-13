@@ -43,6 +43,19 @@ public func u32 Builder.getSize(const Builder* b) {
     return b.size + 1;  // include 0-termination
 }
 
+public func void Builder.addNumber(Builder* b, const char* key, i64 value) {
+    char* orig = &b.buffer[b.size];
+    char* cp = orig;
+    if (b.hasEntry[b.indent]) cp += sprintf(cp, ",\n");
+    if (b.inArray[b.indent]) {
+        cp += sprintf(cp, "%s%lu", indent(b.indent), value);
+    } else {
+        cp += sprintf(cp, "%s\"%s\": %lu", indent(b.indent), key, value);
+    }
+    b.size += (cp - orig);
+    b.hasEntry[b.indent] = true;
+}
+
 public func void Builder.addValue(Builder* b, const char* key, const char* value) {
     char* orig = &b.buffer[b.size];
     char* cp = orig;
