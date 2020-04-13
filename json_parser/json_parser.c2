@@ -201,6 +201,8 @@ func void JParser.parseObject(JParser* p, u32 parent_idx) {
     u32 prev_idx = 0;
     u32 entry_idx = 0;
     while (1) {
+        if (p.token.getKind() == TokenKind.R_brace) break;
+
         p.expect(TokenKind.Text);
         char [MAX_TEXT] name;
         strcpy(name, p.token.getText());
