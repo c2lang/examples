@@ -51,7 +51,6 @@ type JParser struct {
     Location prev;
     Data* data;
 
-    // TEST for name-cache
     bool inArray;
     u32[16] name_cache;
 
@@ -132,12 +131,12 @@ func void JParser.parseArray(JParser* p, u32 parent_idx) {
     p.expectAndConsume(TokenKind.L_sbracket);
 
     // TODO check names already present in array
-    // TODO multi-level, currently single level
+    // TODO inArray multi-level, currently single level
 /*
     For each entry in array, reset table index to new
 */
     u32 prev_idx = 0;
-    p.inArray = true;   // TODO levels
+    p.inArray = true;
     while (1) {
         u32 node_idx = 0;
         switch (p.token.getKind()) {
