@@ -21,6 +21,11 @@ func void TextBuffer.init(TextBuffer* b, u32 size) {
     b.data[0] = 0;
 }
 
+func void TextBuffer.reset(TextBuffer* b) {
+    b.cur = 1;
+    b.data[0] = 0;
+}
+
 func void TextBuffer.destroy(TextBuffer* b) {
     free(b.data);
 }
@@ -99,6 +104,10 @@ func void NodeBuffer.destroy(NodeBuffer* b) {
     free(b.data);
 }
 
+func void NodeBuffer.reset(NodeBuffer* b) {
+    b.cur = 1;
+}
+
 func u32 NodeBuffer.getSize(const NodeBuffer* b) {
     return b.cur * sizeof(Node);
 }
@@ -165,6 +174,12 @@ func void Data.destroy(Data* d) {
     d.values.destroy();
     d.nodes.destroy();
     free(d);
+}
+
+func void Data.reset(Data* d) {
+    d.names.reset();
+    d.values.reset();
+    d.nodes.reset();
 }
 
 func u32 Data.addName(Data* d, const char* name, u32 len) {
