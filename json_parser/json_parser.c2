@@ -552,7 +552,7 @@ func void Location.set(Location* loc, u32 l, u32 c) {
 
 func const char* Location.str(const Location* loc) {
     local char[32] msg;
-    sprintf(msg, "at line %d:%d", loc.line, loc.col);
+    sprintf(msg, "at line %u:%u", loc.line, loc.col);
     return msg;
 }
 
