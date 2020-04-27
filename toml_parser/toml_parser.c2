@@ -90,7 +90,7 @@ func bool same(const char* a, const char* b) {
 type Parser struct {
     Tokenizer tokenizer;
     Token tok;
-    JmpBuf jump_err;
+    JmpBufTag jump_err;
     char* errorMsg;
 
     Blocks* blocks;
@@ -112,7 +112,7 @@ func bool Parser.parse(Parser* p, const char* input, char* diagMsg, Blocks* bloc
     p.numParents = 0;
     p.topParent = nil;
 
-    i32 res = setjmp(p.jump_err);
+    i32 res = setjmp(&p.jump_err);
     if (res == 0) {
         p.consumeToken();
         p.parseTopLevel();
@@ -150,7 +150,7 @@ func void Parser.parseTopLevel(Parser* p) {
             break;
         default:
             sprintf(p.errorMsg, "syntax error %s", p.tok.loc.str());
-            longjmp(p.jump_err, 1);
+            longjmp(&p.jump_err, 1);
             break;
         }
     }
@@ -237,7 +237,7 @@ func u32 Parser.parseValue(Parser* p) {
     switch (p.tok.kind) {
     case TokenKind.Word:
         sprintf(p.errorMsg, "unexpected word at %s", p.tok.loc.str());
-        longjmp(p.jump_err, 1);
+        longjmp(&p.jump_err, 1);
         break;
     case TokenKind.Text:
         value = p.blocks.addValue(p.tok.text);
@@ -344,7 +344,7 @@ func Location Parser.consumeToken(Parser* p) {
     p.tokenizer.lex(&p.tok);
     if (p.tok.is(TokenKind.Error)) {
         strcpy(p.errorMsg, p.tok.text);
-        longjmp(p.jump_err, 1);
+        longjmp(&p.jump_err, 1);
     }
     return prev;
 }
@@ -356,7 +356,7 @@ func Token* Parser.nextToken(Parser* p) {
 func void Parser.expectAndConsume(Parser* p, TokenKind k) {
     if (p.tok.isNot(k)) {
         sprintf(p.errorMsg, "expected '%s' at %s", token2str(k), p.tok.loc.str());
-        longjmp(p.jump_err, 1);
+        longjmp(&p.jump_err, 1);
     }
     p.consumeToken();
 }
@@ -364,7 +364,7 @@ func void Parser.expectAndConsume(Parser* p, TokenKind k) {
 func void Parser.expect(Parser* p, TokenKind k) {
     if (p.tok.isNot(k)) {
         sprintf(p.errorMsg, "expected '%s' at %s", token2str(k), p.tok.loc.str());
-        longjmp(p.jump_err, 1);
+        longjmp(&p.jump_err, 1);
     }
 }
 

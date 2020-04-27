@@ -27,7 +27,7 @@ func bool isCache(const char* filename) {
     return false;
 }
 
-public func i32 main(i32 argc, char*[] argv) {
+public func i32 main(i32 argc, char** argv) {
     if (argc < 2) {
         printf("Usage: parser [json-file]\n");
         return 0;

@@ -2,7 +2,7 @@ module test;
 import logger;
 import unistd;
 
-public func i32 main(i32 argc, char*[] argv) {
+public func i32 main(i32 argc, char** argv) {
     logger.Base logbase;
     logbase.init(logger.Level.Info, unistd.isatty(1), argc == 2);
 

@@ -17,7 +17,7 @@ const char[] ColorYellow = "\033[0;33m";
 
 char[4096] error_buffer;
 char* error_msg;
-JmpBuf c2test_err;
+JmpBufTag c2test_err;
 
 u32 num_ok;
 u32 num_failed;
@@ -65,7 +65,7 @@ public func void fail(const char* filename, u32 line, char* msg = nil)
 {
     if (msg == nil) msg = "failed";
     color_print(ColorYellow, "ERR", filename, line, msg);
-    longjmp(c2test_err, 1);
+    longjmp(&c2test_err, 1);
 }
 
 public func void assert_equal(i64 exp, i64 real, const char* caller, u32 line)

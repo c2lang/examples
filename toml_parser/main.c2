@@ -11,7 +11,7 @@ import toml;
     - value-list
 */
 
-public func i32 main(i32 argc, char*[] argv) {
+public func i32 main(i32 argc, char** argv) {
     if (argc != 2) {
         printf("Usage: parser [toml-file]\n");
         return 0;

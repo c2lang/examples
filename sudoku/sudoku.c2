@@ -365,7 +365,7 @@ func const Puzzle* find(const Puzzle* puzzles, u32 count, const char* name) {
     return nil;
 }
 
-public func i32 main(i32 argc, char*[] argv) {
+public func i32 main(i32 argc, char** argv) {
     // NOTE: cannot be global due to issue with functions not being CTC yet
     Puzzle[] puzzles = {
         { "h4", Hard_pg4,  elemsof(Hard_pg4) },

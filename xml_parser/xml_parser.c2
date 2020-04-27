@@ -65,7 +65,7 @@ type XmlParser struct {
     Tokenizer tokenizer;
     Token token;
     Location prev;
-    JmpBuf jmp_err;
+    JmpBufTag jmp_err;
     char* msg;
     Blocks* blocks;
 }
@@ -77,7 +77,7 @@ func bool XmlParser.parse(XmlParser* p, const char* text, char* diagMsg, Blocks*
     p.msg = diagMsg;
     p.blocks = blocks_;
 
-    i32 res = setjmp(p.jmp_err);
+    i32 res = setjmp(&p.jmp_err);
     if (res == 0) {
         p.consumeToken();
         p.parseXml();
@@ -95,7 +95,7 @@ func bool XmlParser.parse(XmlParser* p, const char* text, char* diagMsg, Blocks*
 
 func void XmlParser.fatal(XmlParser* p, const char* text) {
     sprintf(p.msg, "error %s %s", text, p.diagLoc());
-    longjmp(p.jmp_err, 1);
+    longjmp(&p.jmp_err, 1);
 }
 
 func u32 XmlParser.parseNode(XmlParser* p) {
@@ -278,7 +278,7 @@ func Location XmlParser.consumeToken(XmlParser* p) {
 #endif
     if (p.token.is(TokenKind.Error)) {
         strcpy(p.msg, p.token.getText());
-        longjmp(p.jmp_err, 1);
+        longjmp(&p.jmp_err, 1);
     }
     return p.prev;
 }
@@ -291,7 +291,7 @@ func const char* XmlParser.diagLoc(const XmlParser* p) {
 func void XmlParser.expect(XmlParser* p, TokenKind k) {
     if (p.token.isNot(k)) {
         sprintf(p.msg, "expected '%s' %s", getTokenName(k), p.diagLoc());
-        longjmp(p.jmp_err, 1);
+        longjmp(&p.jmp_err, 1);
     }
 }
 

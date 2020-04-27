@@ -50,7 +50,7 @@ type JParser struct {
     bool inArray;
     u32[16] name_cache;
 
-    JmpBuf jmp_err;
+    JmpBufTag jmp_err;
     char* msg;
 }
 
@@ -64,7 +64,7 @@ func bool JParser.parse(JParser* p, const char* text, char* diagMsg, Data* data)
     memset(p.name_cache, 0, sizeof(p.name_cache));
 
 
-    i32 res = setjmp(p.jmp_err);
+    i32 res = setjmp(&p.jmp_err);
     if (res == 0) {
         p.consumeToken();
         p.parseFile();
@@ -83,7 +83,7 @@ func Location JParser.consumeToken(JParser* p) {
 #endif
     if (p.token.is(TokenKind.Error)) {
         strcpy(p.msg, p.token.getText());
-        longjmp(p.jmp_err, 1);
+        longjmp(&p.jmp_err, 1);
     }
     return p.prev;
 }
@@ -100,7 +100,7 @@ func void JParser.parseFile(JParser* p) {
         break;
     default:
         sprintf(p.msg, "unexpected '%s' %s", getTokenName(p.token.getKind()), p.diagLoc());
-        longjmp(p.jmp_err, 1);
+        longjmp(&p.jmp_err, 1);
         break;
     }
     p.expect(TokenKind.Eof);
@@ -114,7 +114,7 @@ func const char* JParser.diagLoc(const JParser* p) {
 func void JParser.expect(JParser* p, TokenKind k) {
     if (p.token.isNot(k)) {
         sprintf(p.msg, "expected '%s' %s", getTokenName(k), p.diagLoc());
-        longjmp(p.jmp_err, 1);
+        longjmp(&p.jmp_err, 1);
     }
 }
 
@@ -159,7 +159,7 @@ func void JParser.parseArray(JParser* p, u32 parent_idx) {
         case TokenKind.Eof:     fallthrough;
         case TokenKind.Error:
             sprintf(p.msg, "expected '{', '[' or text %s", p.diagLoc());
-            longjmp(p.jmp_err, 1);
+            longjmp(&p.jmp_err, 1);
             break;
         }
         if (prev_idx) {
@@ -174,7 +174,7 @@ func void JParser.parseArray(JParser* p, u32 parent_idx) {
         Location commaLoc = p.consumeToken();
         if (p.token.is(TokenKind.R_sbracket)) {
             sprintf(p.msg, "superfluous comma %s", commaLoc.str());
-            longjmp(p.jmp_err, 1);
+            longjmp(&p.jmp_err, 1);
         }
     }
     p.expectAndConsume(TokenKind.R_sbracket);
@@ -235,7 +235,7 @@ func void JParser.parseObject(JParser* p, u32 parent_idx) {
         case TokenKind.Eof:        fallthrough;
         case TokenKind.Error:
             sprintf(p.msg, "expected '{', '[' or text %s", p.diagLoc());
-            longjmp(p.jmp_err, 1);
+            longjmp(&p.jmp_err, 1);
             break;
         }
         if (prev_idx) {
@@ -251,7 +251,7 @@ func void JParser.parseObject(JParser* p, u32 parent_idx) {
         Location commaLoc = p.consumeToken();
         if (p.token.is(TokenKind.R_brace)) {
             sprintf(p.msg, "superfluous comma %s", commaLoc.str());
-            longjmp(p.jmp_err, 1);
+            longjmp(&p.jmp_err, 1);
         }
         entry_idx++;
     }
@@ -277,7 +277,7 @@ func u32 JParser.parseValue(JParser* p) {
         break;
     default:
         sprintf(p.msg, "syntax error %s", p.diagLoc());
-        longjmp(p.jmp_err, 1);
+        longjmp(&p.jmp_err, 1);
         break;
     }
     p.consumeToken();
