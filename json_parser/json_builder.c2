@@ -4,9 +4,9 @@ import stdlib local;
 import stdio local;
 
 func const char* indent(u32 i) {
-    local const char[] Indents = "                            ";
-    local const u32 Max = 28;
-    return &Indents[Max - i*2];
+    local const char[] indents = "                            ";
+    local const u32 max = 28;
+    return &indents[max - i*2];
 }
 
 

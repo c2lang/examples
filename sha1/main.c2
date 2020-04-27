@@ -17,17 +17,17 @@ func void test(const char* name, const char* input, const char* expect) {
 }
 
 public func i32 main() {
-    const char[] Input1 = "abc";
-    const char[] Expect1 = "a9993e364706816aba3e25717850c26c9cd0d89d";
-    test("test1", Input1, Expect1);
+    const char[] input1 = "abc";
+    const char[] expect1 = "a9993e364706816aba3e25717850c26c9cd0d89d";
+    test("test1", input1, expect1);
 
-    const char[] Input2 = "";
-    const char[] Expect2 = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
-    test("test2", Input2, Expect2);
+    const char[] input2 = "";
+    const char[] expect2 = "da39a3ee5e6b4b0d3255bfef95601890afd80709";
+    test("test2", input2, expect2);
 
-    const char[] Input3 = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
-    const char[] Expect3 = "84983e441c3bd26ebaae4aa1f95129e5e54670f1";
-    test("test3", Input3, Expect3);
+    const char[] input3 = "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq";
+    const char[] expect3 = "84983e441c3bd26ebaae4aa1f95129e5e54670f1";
+    test("test3", input3, expect3);
 
     return 0;
 }

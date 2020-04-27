@@ -60,9 +60,9 @@ public func i32 main() {
 
     // read until disconnect
     while (1) {
-        const u32 BufSize = 64;
-        u8[BufSize] buffer;
-        i64 numread = read(conn_fd, buffer, BufSize-1);
+        const u32 bufSize = 64;
+        u8[bufSize] buffer;
+        i64 numread = read(conn_fd, buffer, bufSize-1);
         if (numread == 0) {
             printf("client disconnected\n");
             break;
