@@ -40,7 +40,14 @@ func void TextBuffer.resize(TextBuffer* b, u32 cap2) {
 
 func u32 TextBuffer.add(TextBuffer* b, const char* text, u32 len) {
     u32 left = b.cap - b.cur;
-    if (len >= left) b.resize(b.cap * 2);    // assume len < cap
+    if (len >= left) {
+        u32 cap2 = b.cap;
+        while (len >= left) {
+            cap2 *= 2;
+            left = cap2 - b.cur;
+        }
+        b.resize(cap2);
+    }
 
     u32 idx = b.cur;
     memcpy(&b.data[idx], text, len);

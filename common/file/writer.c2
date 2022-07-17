@@ -15,15 +15,13 @@ public func bool Writer.write(Writer* writer, const char* filename, const u8* da
     writer.msg[0] = 0;
     i32 fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0660);
     if (fd == -1) {
-        // TODO to msg
-        perror("open");
+        sprintf(writer.msg, "open failed: %s", strerror(*errno2()));
         return false;
     }
 
     i64 written = write(fd, data, len);
     if (written != len) {
-        perror("write");
-        // TODO to msg
+        sprintf(writer.msg, "write failed: %s", strerror(*errno2()));
         return false;
     }
 

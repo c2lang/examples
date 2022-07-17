@@ -107,8 +107,8 @@ func bool Parser.parse(Parser* p, const char* input, char* diagMsg, Blocks* bloc
     p.errorMsg[0] = 0;
 
     p.blocks = blocks;
-    memset(p.parents, 0, sizeof(Node*)*MaxDepth);
-    memset(p.lastChild, 0, sizeof(Node*)*MaxDepth);
+    memset(cast<void*>(p.parents), 0, sizeof(Node*)*MaxDepth);
+    memset(cast<void*>(p.lastChild), 0, sizeof(Node*)*MaxDepth);
     p.numParents = 0;
     p.topParent = nil;
 

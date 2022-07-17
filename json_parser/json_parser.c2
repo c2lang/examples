@@ -285,7 +285,7 @@ func u32 JParser.parseValue(JParser* p) {
 }
 
 
-const u32 MAX_TEXT = 256;
+const u32 MAX_TEXT = 4096;
 
 type Tokenizer struct {
     const char* dataStart;
@@ -397,6 +397,13 @@ func void Tokenizer.parseText(Tokenizer* t, Token* result) {
         result.setData(t.msg);
         return;
     }
+    if (t.current[0] == 0) {
+        t.loc.col += len;
+        sprintf(t.msg, "expected '\"' %s", t.loc.str());
+        result.setKind(TokenKind.Error);
+        result.setData(t.msg);
+        return;
+    }
     memcpy(t.msg, start, len);
     t.msg[len] = 0;
     result.setKind(TokenKind.Text);
@@ -439,7 +446,7 @@ func void Tokenizer.parseKeyword(Tokenizer* t, Token* result) {
         t.advance(5);
     } else if (strncmp(t.current, "null", 4) == 0) {
         result.setLocation(t.loc);
-        result.setKind(TokenKind.Kw_false);
+        result.setKind(TokenKind.Kw_null);
         t.advance(4);
     } else {
         sprintf(t.msg, "unexpected char '%c' %s", t.current[0], t.loc.str());

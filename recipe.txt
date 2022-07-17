@@ -1,6 +1,7 @@
 
+plugin refs_generator
+
 executable base64
-    $refs
 	$generate-c single-module
     base64/base64.c2
     base64/main.c2
@@ -8,7 +9,6 @@ end
 
 executable sha1
     $warnings no-unused
-    $refs
 	$generate-c single-module
     sha1/sha1.c2
     sha1/main.c2
@@ -17,8 +17,6 @@ end
 executable cstrip
     $warnings no-unused
 	$generate-c single-module
-    $refs
-    $deps
     common/file/reader.c2
     common/file/writer.c2
     common/string_buffer.c2
@@ -28,8 +26,6 @@ end
 executable event
     $warnings no-unused
 	$generate-c single-module
-    $refs
-    $deps
     common/color.c2
     common/logger.c2
     event/events.c2
@@ -40,8 +36,6 @@ end
 executable file_ops
     $warnings no-unused
 	$generate-c single-module
-    $refs
-    $deps
     common/file/reader.c2
     file_ops/main.c2
 end
@@ -55,9 +49,8 @@ end
 executable json_parser
     $warnings no-unused
 	$generate-c single-module
-    $refs
-    $deps
     common/file/reader.c2
+    common/file/writer.c2
     json_parser/json_parser.c2
     json_parser/json_data.c2
     json_parser/json_builder.c2
@@ -68,7 +61,6 @@ end
 executable list
     $warnings no-unused
 	$generate-c single-module
-    $refs
     common/logger.c2
     common/color.c2
     list/list.c2
@@ -78,7 +70,6 @@ end
 executable log
     $warnings no-unused
 	$generate-c single-module
-    $refs
     common/logger.c2
     common/color.c2
     logger/main.c2
@@ -87,7 +78,6 @@ end
 executable jump
     $warnings no-unused
 	$generate-c single-module
-    $refs
     longjmp/jump.c2
 end
 
@@ -95,7 +85,6 @@ executable lua_test
     $warnings no-unused
 	$generate-c single-module
     $use lua static
-    $refs
     common/color.c2
     lua/script.c2
     lua/main.c2
@@ -104,23 +93,17 @@ end
 executable signal_test
     $warnings no-unused
 	$generate-c single-module
-    $refs
-    $deps
     signals/main.c2
 end
 
 executable socket
 	$generate-c single-module
-    $refs
-    $deps
     socket/server.c2
 end
 
 executable string
     $warnings no-unused
 	$generate-c single-module
-    $refs
-    $deps
     common/string_buffer.c2
     string_buffer/main.c2
 end
@@ -128,17 +111,28 @@ end
 executable toml_parser
     $warnings no-unused
 	$generate-c
-    $refs
     common/file/reader.c2
     toml_parser/toml_tokenizer.c2
     toml_parser/toml_parser.c2
     toml_parser/main.c2
 end
 
+executable yaml_parser
+    $warnings no-unused
+	$generate-c
+#    $config YAML_PRINT_TOKENS
+    common/file/reader.c2
+    yaml_parser/yaml_parser.c2
+    yaml_parser/yaml_tokenizer.c2
+    yaml_parser/yaml_data.c2
+    yaml_parser/yaml_iterator.c2
+    yaml_parser/yaml_dump.c2
+    yaml_parser/main.c2
+end
+
 executable xml_parser
     $warnings no-unused
 	$generate-c
-    $refs
     common/color.c2
     common/file/reader.c2
 #    file_utils.c2
@@ -150,7 +144,6 @@ end
 executable unittest
     $warnings no-unused
 	$generate-c single-module
-    $refs
     unit_tests/c2test.c2
     unit_tests/main.c2
 end
@@ -158,7 +151,6 @@ end
 executable sudoku
     $warnings no-unused
 	$generate-c single-module
-    $refs
     common/color.c2
     sudoku/sudoku.c2
     sudoku/boards.c2
