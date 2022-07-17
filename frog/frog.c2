@@ -1,0 +1,201 @@
+module frog;
+import stdio local;
+import string local;
+import list;
+import utils;
+
+/*
+    - vooruit: on eigen plaatje, nogmaals
+    - als op ander: die vorige eigen basis
+    - vooruit: op ander plaatje, dan moet ander 1 stap terug
+*/
+
+const u8 Num_animals = 5;
+const u8 Num_tiles = 40;
+
+type Tile enum u8 {
+    None    = 0,       // also for start
+    Frog    = 1,
+    Goose   = 2,
+    Hare    = 4,
+    Pig     = 8,
+    Rat     = 16,
+    End     = 64,
+}
+
+type Board struct {
+    u8[elemsof(Tiles)] positions;
+    u8 result_count;
+    Tile[Num_animals] results;
+
+    Player[Num_animals] players;
+    list.Element order;
+}
+
+const Tile[] Tiles = {
+    Tile.None,  // 0
+    Tile.Frog,
+    Tile.Pig,
+    Tile.Goose,
+    Tile.Rat,
+    Tile.Frog,  // 5
+    Tile.Goose,
+    Tile.Hare,
+    Tile.Pig,
+    Tile.Rat,
+    Tile.Hare,  // 10
+    Tile.Frog,
+    Tile.Pig,
+    Tile.Rat,
+    Tile.Goose,
+    Tile.Frog,  // 15
+    Tile.Pig,
+    Tile.Hare,
+    Tile.Goose,
+    Tile.Frog,
+    Tile.Rat,   // 20
+    Tile.Pig,
+    Tile.Rat,
+    Tile.Goose,
+    Tile.Hare,
+    Tile.Pig,   // 25
+    Tile.Frog,
+    Tile.Hare,
+    Tile.Goose,
+    Tile.Rat,
+    Tile.Hare,  // 30
+    Tile.Pig,
+    Tile.Frog,
+    Tile.Rat,
+    Tile.Goose,
+    Tile.Hare,  // 35
+    Tile.Rat,
+    Tile.Hare,
+    Tile.Goose,
+    Tile.Pig,
+    Tile.Frog,  // 40
+    Tile.End,
+}
+
+func char tile2str(Tile t) {
+    switch (t) {
+    case Tile.Frog:  return 'F';
+    case Tile.Goose: return 'G';
+    case Tile.Hare:  return 'H';
+    case Tile.Pig:   return 'P';
+    case Tile.Rat:   return 'R';
+    case Tile.None:  break;
+    case Tile.End:   return '_';
+    }
+    return ' ';
+}
+
+Board board;
+
+type Player struct {
+    list.Element element;
+    Tile tile;
+    u32 position;
+}
+
+public func void init() {
+    memset(&board, 0, sizeof(Board));
+    board.positions[0] |= Tile.Frog;
+    board.positions[0] |= Tile.Goose;
+    board.positions[0] |= Tile.Hare;
+    board.positions[0] |= Tile.Pig;
+    board.positions[0] |= Tile.Rat;
+
+    board.players[0].tile |= Tile.Frog;
+    board.players[1].tile |= Tile.Goose;
+    board.players[2].tile |= Tile.Hare;
+    board.players[3].tile |= Tile.Pig;
+    board.players[4].tile |= Tile.Rat;
+    board.order.init();
+    for (u8 i=0; i<Num_animals; i++) {
+        board.order.addTail(&board.players[i].element);
+    }
+}
+
+func void do_step(u32 step) {
+    // remove from list
+    list.Element* cur = board.order.popFront();
+    Player* p = to_container(Player, element, cur);
+
+    u32 roll = utils.roll();
+    printf("Step %5u  %c  pos %u  roll %u\n", step, tile2str(p.tile), p.position, roll);
+
+    board.positions[p.position] &= ~p.tile;
+    p.position += roll;
+    if (p.position > Num_tiles + 1) {
+        u32 overshoot = p.position - (Num_tiles + 1);
+        p.position = Num_tiles + 1 - overshoot;
+    }
+    board.positions[p.position] |= p.tile;
+
+    // TODO check
+
+    //printf("  -> %u\n", p.position);
+    // add to list if not done
+    if (p.position != Num_tiles+1) board.order.addTail(cur);
+}
+
+public func void run() {
+    u32 step = 1;
+    while (!board.order.isEmpty()) {
+        do_step(step);
+        step++;
+        dump();
+
+        //if (step > 10) break;
+    }
+}
+
+func void print_pos(Dump* d, u8 pos) {
+    for (u32 i=Tile.Frog; i<= Tile.Rat; i = i*2) {
+        *d.l1++ = ' ';
+        Tile t = pos & i;
+        if (t == Tile.None) *d.l2 = ' ';
+        else *d.l2 = tile2str(t);
+        d.l2++;
+    }
+}
+
+type Dump struct {
+    char[128] line1;
+    char[128] line2;
+    char* l1;
+    char* l2;
+}
+
+func void Dump.init(Dump* d) {
+    memset(d, 0, sizeof(Dump));
+    d.l1 = d.line1;
+    d.l2 = d.line2;
+}
+
+public func void dump() {
+    Dump d;
+    d.init();
+    print_pos(&d, board.positions[0]);
+    for (u32 i=1; i<elemsof(Tiles)-1; i++) {
+        d.l1 += sprintf(d.l1, " %c", tile2str(Tiles[i]));
+        d.l2 += sprintf(d.l2, " %c", tile2str(board.positions[i]));
+    }
+    *d.l1++ = ' ';
+    *d.l2++ = ' ';
+    print_pos(&d, board.positions[elemsof(Tiles)-1]);
+    *d.l1 = 0;
+    *d.l2 = 0;
+    printf("%s\n", d.line1);
+    printf("%s\n", d.line2);
+
+    printf("Order\n");
+    list.Element* cur = board.order.next;
+    while (cur != &board.order) {
+        Player* p = to_container(Player, element, cur);
+        printf(" %c\n", tile2str(p.tile));
+        cur = cur.next;
+    }
+}
+

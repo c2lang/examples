@@ -1,0 +1,11 @@
+
+executable frog
+	$warnings no-unused
+	$refs
+#	$deps
+	$generate-c single-module
+	main.c2
+    frog.c2
+    list.c2
+    utils.c2
+end

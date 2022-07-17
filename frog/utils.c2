@@ -1,0 +1,11 @@
+module utils;
+import stdlib local;
+
+public func void init() {
+    srand(1);
+}
+
+public func u32 roll() {
+    return cast<u32>((rand() % 6) + 1);
+}
+
