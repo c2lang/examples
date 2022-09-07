@@ -112,16 +112,16 @@ func u32 XmlParser.parseNode(XmlParser* p) {
 
     while (1) {
         switch (p.token.getKind()) {
-        case TokenKind.XmlBegin: fallthrough;
-        case TokenKind.XmlEnd:
+        case XmlBegin: fallthrough;
+        case XmlEnd:
             p.fatal("unexpected xml tag");
             break;
-        case TokenKind.CdataBegin: fallthrough;
-        case TokenKind.CdataEnd: fallthrough;
-        case TokenKind.DtdBegin:
+        case CdataBegin: fallthrough;
+        case CdataEnd: fallthrough;
+        case DtdBegin:
             p.fatal("TODO Cdata/Dtd");
             break;
-        case TokenKind.ElemBegin:
+        case ElemBegin:
             if (hasText) p.fatal("node with text cannot have children");
             u32 child = p.parseNode();
             Node* childNode = &p.blocks.nodes[child];
@@ -129,29 +129,29 @@ func u32 XmlParser.parseNode(XmlParser* p) {
             else node.children = child;
             lastChild = childNode;
             break;
-        case TokenKind.ElemEnd:
+        case ElemEnd:
             p.fatal("syntax error");
             break;
-        case TokenKind.ElemBeginClose:
+        case ElemBeginClose:
             p.parseEndTag(node);
             return off;
-        case TokenKind.ElemEndClose: fallthrough;
-        case TokenKind.Equals: fallthrough;
-        case TokenKind.Name: fallthrough;
-        case TokenKind.Value:
+        case ElemEndClose: fallthrough;
+        case Equals: fallthrough;
+        case Name: fallthrough;
+        case Value:
             p.fatal("syntax error");
             break;
-        case TokenKind.Text:
+        case Text:
             if (lastChild) p.fatal("node with children cannot have text");
             u32 value_off = p.blocks.addValue(p.token.getText());
             node.children = (value_off | CHILD_TEXT);
             p.consumeToken();
             hasText = true;
             break;
-        case TokenKind.Eof:
+        case Eof:
             p.fatal("unexpected eof");
             break;
-        case TokenKind.Error:
+        case Error:
             break;
         }
     }
@@ -165,43 +165,43 @@ func bool XmlParser.parseTag(XmlParser* p, Node* node) {
     // <name has been parsed already
     while (1) {
         switch (p.token.getKind()) {
-        case TokenKind.XmlBegin: fallthrough;
-        case TokenKind.XmlEnd:
+        case XmlBegin: fallthrough;
+        case XmlEnd:
             p.fatal("unexpected xml tag");
             break;
-        case TokenKind.CdataBegin: fallthrough;
-        case TokenKind.CdataEnd:   fallthrough;
-        case TokenKind.DtdBegin:
+        case CdataBegin: fallthrough;
+        case CdataEnd:   fallthrough;
+        case DtdBegin:
             p.fatal("TODO");
             break;
-        case TokenKind.ElemBegin:
+        case ElemBegin:
             p.fatal("syntax error");
             break;
-        case TokenKind.ElemEnd:
+        case ElemEnd:
             p.consumeToken();
             return true;
-        case TokenKind.ElemBeginClose:
+        case ElemBeginClose:
             p.fatal("syntax error");
             break;
-        case TokenKind.ElemEndClose:
+        case ElemEndClose:
             p.consumeToken();
             return false;
-        case TokenKind.Equals:
+        case Equals:
             p.fatal("syntax error");
             break;
-        case TokenKind.Name:
+        case Name:
             u32 off = p.parseAttribute();
             Attr* attr = &p.blocks.attrs[off];
             if (lastAttr) lastAttr.next_attr = off;
             else node.attr_off = off;
             lastAttr = attr;
             break;
-        case TokenKind.Value: fallthrough;
-        case TokenKind.Text:  fallthrough;
-        case TokenKind.Eof:
+        case Value: fallthrough;
+        case Text:  fallthrough;
+        case Eof:
             p.fatal("unexpected eof");
             break;
-        case TokenKind.Error:
+        case Error:
             break;
         }
     }
@@ -224,31 +224,31 @@ func void XmlParser.parseXml(XmlParser* p) {
     p.expectAndConsume(TokenKind.XmlBegin);
     while (1) {
         switch (p.token.getKind()) {
-        case TokenKind.XmlBegin:
+        case XmlBegin:
             p.fatal("unexpected xml tag");
             break;
-        case TokenKind.XmlEnd:
+        case XmlEnd:
             p.consumeToken();
             return;
-        case TokenKind.CdataBegin: fallthrough;
-        case TokenKind.CdataEnd: fallthrough;
-        case TokenKind.DtdBegin: fallthrough;
-        case TokenKind.ElemBegin: fallthrough;
-        case TokenKind.ElemEnd: fallthrough;
-        case TokenKind.ElemBeginClose: fallthrough;
-        case TokenKind.ElemEndClose: fallthrough;
-        case TokenKind.Equals:
+        case CdataBegin: fallthrough;
+        case CdataEnd: fallthrough;
+        case DtdBegin: fallthrough;
+        case ElemBegin: fallthrough;
+        case ElemEnd: fallthrough;
+        case ElemBeginClose: fallthrough;
+        case ElemEndClose: fallthrough;
+        case Equals:
             p.fatal("syntax error");
             break;
-        case TokenKind.Name:
+        case Name:
             p.parseAttribute();
             break;
-        case TokenKind.Value: fallthrough;
-        case TokenKind.Text: fallthrough;
-        case TokenKind.Eof:
+        case Value: fallthrough;
+        case Text: fallthrough;
+        case Eof:
             p.fatal("unexpected eof");
             break;
-        case TokenKind.Error:
+        case Error:
             break;
         }
     }
@@ -639,21 +639,21 @@ type TokenKind enum u8 {
 
 func const char* getTokenName(TokenKind k) {
     switch (k) {
-    case TokenKind.XmlBegin:      return "<?xml";
-    case TokenKind.XmlEnd:        return "?>";
-    case TokenKind.CdataBegin:    return "<![CDATA[";
-    case TokenKind.CdataEnd:      return "]]>";
-    case TokenKind.DtdBegin:      return "<!";
-    case TokenKind.ElemBegin:     return "<";
-    case TokenKind.ElemEnd:       return ">";
-    case TokenKind.ElemBeginClose:    return "</";
-    case TokenKind.ElemEndClose:  return "/>";
-    case TokenKind.Equals:        return "=";
-    case TokenKind.Name:          return "name";
-    case TokenKind.Value:         return "value";
-    case TokenKind.Text:          return "text";
-    case TokenKind.Eof:           return "eof";
-    case TokenKind.Error:         return "error";
+    case XmlBegin:      return "<?xml";
+    case XmlEnd:        return "?>";
+    case CdataBegin:    return "<![CDATA[";
+    case CdataEnd:      return "]]>";
+    case DtdBegin:      return "<!";
+    case ElemBegin:     return "<";
+    case ElemEnd:       return ">";
+    case ElemBeginClose:    return "</";
+    case ElemEndClose:  return "/>";
+    case Equals:        return "=";
+    case Name:          return "name";
+    case Value:         return "value";
+    case Text:          return "text";
+    case Eof:           return "eof";
+    case Error:         return "error";
     }
     return "?";
 }

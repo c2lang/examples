@@ -90,11 +90,11 @@ func Location JParser.consumeToken(JParser* p) {
 
 func void JParser.parseFile(JParser* p) {
     switch (p.token.getKind()) {
-    case TokenKind.L_brace:
+    case L_brace:
         u32 node_idx = p.data.addNode(NodeKind.Object, 0, 0);
         p.parseObject(node_idx);
         break;
-    case TokenKind.L_sbracket:
+    case L_sbracket:
         u32 node_idx = p.data.addNode(NodeKind.Array, 0, 0);
         p.parseArray(node_idx);
         break;
@@ -136,28 +136,28 @@ func void JParser.parseArray(JParser* p, u32 parent_idx) {
     while (1) {
         u32 node_idx = 0;
         switch (p.token.getKind()) {
-        case TokenKind.Kw_true:  fallthrough;
-        case TokenKind.Kw_false: fallthrough;
-        case TokenKind.Kw_null:  fallthrough;
-        case TokenKind.Text:
+        case Kw_true:  fallthrough;
+        case Kw_false: fallthrough;
+        case Kw_null:  fallthrough;
+        case Text:
             u32 value_idx = p.parseValue();
             node_idx = p.data.addNode(NodeKind.Value, 0, value_idx);
             break;
-        case TokenKind.L_brace:
+        case L_brace:
             node_idx = p.data.addNode(NodeKind.Object, 0, 0);
             p.parseObject(node_idx);
             break;
-        case TokenKind.L_sbracket:
+        case L_sbracket:
             node_idx = p.data.addNode(NodeKind.Array, 0, 0);
             p.parseArray(node_idx);
             break;
-        case TokenKind.R_sbracket:
+        case R_sbracket:
             break;
-        case TokenKind.R_brace: fallthrough;
-        case TokenKind.Colon:   fallthrough;
-        case TokenKind.Comma:   fallthrough;
-        case TokenKind.Eof:     fallthrough;
-        case TokenKind.Error:
+        case R_brace: fallthrough;
+        case Colon:   fallthrough;
+        case Comma:   fallthrough;
+        case Eof:     fallthrough;
+        case Error:
             sprintf(p.msg, "expected '{', '[' or text %s", p.diagLoc());
             longjmp(&p.jmp_err, 1);
             break;
@@ -213,27 +213,27 @@ func void JParser.parseObject(JParser* p, u32 parent_idx) {
         p.expectAndConsume(TokenKind.Colon);
         u32 node_idx = 0;
         switch (p.token.getKind()) {
-        case TokenKind.Kw_true:  fallthrough;
-        case TokenKind.Kw_false: fallthrough;
-        case TokenKind.Kw_null:  fallthrough;
-        case TokenKind.Text:
+        case Kw_true:  fallthrough;
+        case Kw_false: fallthrough;
+        case Kw_null:  fallthrough;
+        case Text:
             u32 value_idx = p.parseValue();
             node_idx = p.data.addNode(NodeKind.Value, name_idx, value_idx);
             break;
-        case TokenKind.L_brace:
+        case L_brace:
             node_idx = p.data.addNode(NodeKind.Object, name_idx, 0);
             p.parseObject(node_idx);
             break;
-        case TokenKind.L_sbracket:
+        case L_sbracket:
             node_idx = p.data.addNode(NodeKind.Array, name_idx, 0);
             p.parseArray(node_idx);
             break;
-        case TokenKind.R_brace:    fallthrough;
-        case TokenKind.R_sbracket: fallthrough;
-        case TokenKind.Colon:      fallthrough;
-        case TokenKind.Comma:      fallthrough;
-        case TokenKind.Eof:        fallthrough;
-        case TokenKind.Error:
+        case R_brace:    fallthrough;
+        case R_sbracket: fallthrough;
+        case Colon:      fallthrough;
+        case Comma:      fallthrough;
+        case Eof:        fallthrough;
+        case Error:
             sprintf(p.msg, "expected '{', '[' or text %s", p.diagLoc());
             longjmp(&p.jmp_err, 1);
             break;
@@ -261,18 +261,18 @@ func void JParser.parseObject(JParser* p, u32 parent_idx) {
 func u32 JParser.parseValue(JParser* p) {
     char[MAX_TEXT] value;
     switch (p.token.getKind()) {
-    case TokenKind.Kw_true:
+    case Kw_true:
         value[0] = '1';
         value[1] = 0;
         break;
-    case TokenKind.Kw_false:
+    case Kw_false:
         value[0] = '0';
         value[1] = 0;
         break;
-    case TokenKind.Kw_null:
+    case Kw_null:
         value[0] = 0;
         break;
-    case TokenKind.Text:
+    case Text:
         strcpy(value, p.token.getText());
         break;
     default:
@@ -478,18 +478,18 @@ type TokenKind enum u8 {
 
 func const char* getTokenName(TokenKind k) {
     switch (k) {
-    case TokenKind.Kw_true:    return "true";
-    case TokenKind.Kw_false:   return "false";
-    case TokenKind.Kw_null:    return "null";
-    case TokenKind.L_brace:    return "{";
-    case TokenKind.R_brace:    return "}";
-    case TokenKind.L_sbracket: return "[";
-    case TokenKind.R_sbracket: return "]";
-    case TokenKind.Colon:      return ":";
-    case TokenKind.Comma:      return ",";
-    case TokenKind.Text:       return "text";
-    case TokenKind.Eof:        return "eof";
-    case TokenKind.Error:      return "error";
+    case Kw_true:    return "true";
+    case Kw_false:   return "false";
+    case Kw_null:    return "null";
+    case L_brace:    return "{";
+    case R_brace:    return "}";
+    case L_sbracket: return "[";
+    case R_sbracket: return "]";
+    case Colon:      return ":";
+    case Comma:      return ",";
+    case Text:       return "text";
+    case Eof:        return "eof";
+    case Error:      return "error";
     }
     return "?";
 }

@@ -26,20 +26,20 @@ type TokenKind enum u8 {
 
 func const char* token2str(TokenKind k) {
     switch (k) {
-    case TokenKind.Word    : return "word";
-    case TokenKind.Text    : return "text";
-    case TokenKind.Number  : return "number";
-    case TokenKind.Kw_true : return "true";
-    case TokenKind.Kw_false: return "false";
-    case TokenKind.Lbrace  : return "[";
-    case TokenKind.Lbrace2 : return "[[";
-    case TokenKind.Rbrace  : return "]";
-    case TokenKind.Rbrace2 : return "]]";
-    case TokenKind.Equals  : return "=";
-    case TokenKind.Dot     : return ".";
-    case TokenKind.Comma   : return ",";
-    case TokenKind.Eof     : return "eof";
-    case TokenKind.Error   : return "error";
+    case Word    : return "word";
+    case Text    : return "text";
+    case Number  : return "number";
+    case Kw_true : return "true";
+    case Kw_false: return "false";
+    case Lbrace  : return "[";
+    case Lbrace2 : return "[[";
+    case Rbrace  : return "]";
+    case Rbrace2 : return "]]";
+    case Equals  : return "=";
+    case Dot     : return ".";
+    case Comma   : return ",";
+    case Eof     : return "eof";
+    case Error   : return "error";
     }
     return "?";
 }

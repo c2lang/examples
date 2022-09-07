@@ -17,11 +17,11 @@ const u32 MaxDepth = 8;
 #ifdef DEBUG_NODES
 func const char* node2str(NodeKind k) {
     switch (k   ) {
-    case NodeKind.Table:         return "TBL";
-    case NodeKind.TableArray:    return "TAR";
-    case NodeKind.ValueArray:    return "KAR";
-    case NodeKind.Value:         return "KEY";
-    case NodeKind.ArrayChild:    return "CHD";
+    case Table:         return "TBL";
+    case TableArray:    return "TAR";
+    case ValueArray:    return "KAR";
+    case Value:         return "KEY";
+    case ArrayChild:    return "CHD";
     }
     return "";
 }
@@ -33,19 +33,19 @@ func void Blocks.dump(const Blocks* b) {
         u32 nameOffset = getValue(n.nameOffset);
         NodeKind kind = getKind(n.nameOffset);
         switch (kind) {
-        case NodeKind.Table: fallthrough;
-        case NodeKind.TableArray:
+        case Table: fallthrough;
+        case TableArray:
             printf("  [%3u]  %s name %3u   next %3u   child %3u  (%s)\n",
                 i, node2str(kind), nameOffset, n.nextNode, n.child, &b.names[nameOffset]);
             break;
-        case NodeKind.ValueArray: fallthrough;
-        case NodeKind.Value:
+        case ValueArray: fallthrough;
+        case Value:
             ValueType t = getRawType(n.rawValue);
             u32 offset = getRawValue(n.rawValue);
             printf("  [%3u]  %s name %3u   next %3u   value %5u(%s)  (%s)\n",
                 i, node2str(kind), nameOffset, n.nextNode, offset, type2str(t), &b.names[nameOffset]);
             break;
-        case NodeKind.ArrayChild:
+        case ArrayChild:
             printf("  [%3u]  %s name ---   next %3u   child %3u\n",
                 i, node2str(kind), n.nextNode, n.child);
             break;
@@ -139,13 +139,13 @@ func void Parser.parseTopLevel(Parser* p) {
     // | [table]
     while (p.tok.isNot(TokenKind.Eof)) {
         switch (p.tok.kind) {
-        case TokenKind.Word:
+        case Word:
             p.parseKeyValue();
             break;
-        case TokenKind.Lbrace:
+        case Lbrace:
             p.parseTable();
             break;
-        case TokenKind.Lbrace2:
+        case Lbrace2:
             p.parseTableArray();
             break;
         default:
@@ -235,26 +235,26 @@ func u32 Parser.parseValue(Parser* p) {
     //printf("parseValue()\n");
     u32 value = 0;
     switch (p.tok.kind) {
-    case TokenKind.Word:
+    case Word:
         sprintf(p.errorMsg, "unexpected word at %s", p.tok.loc.str());
         longjmp(&p.jump_err, 1);
         break;
-    case TokenKind.Text:
+    case Text:
         value = p.blocks.addValue(p.tok.text);
         value = addType(value, ValueType.Text);
         p.consumeToken();
         break;
-    case TokenKind.Number:
+    case Number:
         // TODO negative numbers
         value = addType(p.tok.number, ValueType.Number);
         p.consumeToken();
         break;
-    case TokenKind.Kw_true: fallthrough;
-    case TokenKind.Kw_false:
+    case Kw_true: fallthrough;
+    case Kw_false:
         value = addType(p.tok.number, ValueType.Boolean);
         p.consumeToken();
         break;
-    case TokenKind.Lbrace:
+    case Lbrace:
         value = p.parseArrayValues();
         break;
     default:
@@ -561,15 +561,15 @@ public func ValueIter Reader.getValueIter(const Reader* r, const char* key) {
     const Node* node = r.findNode(key);
     if (node) {
         switch (getKind(node.nameOffset)) {
-        case NodeKind.Table: fallthrough;
-        case NodeKind.TableArray:
+        case Table: fallthrough;
+        case TableArray:
             break;
-        case NodeKind.ValueArray:
+        case ValueArray:
             // TODO support arrays of Numbers/Booleans as well
             return ValueIter.create(&r.blocks.values[getRawValue(node.rawValue)], true);
-        case NodeKind.Value:
+        case Value:
             return ValueIter.create(&r.blocks.values[getRawValue(node.rawValue)], false);
-        case NodeKind.ArrayChild:
+        case ArrayChild:
             // TODO
             break;
         }
@@ -600,9 +600,9 @@ const u32 RawValueMask = (0x7 << 29);
 
 func const char* type2str(ValueType t) {
     switch (t) {
-    case ValueType.Text:    return "T";
-    case ValueType.Number:  return "N";
-    case ValueType.Boolean: return "B";
+    case Text:    return "T";
+    case Number:  return "N";
+    case Boolean: return "B";
     }
     return "";
 }

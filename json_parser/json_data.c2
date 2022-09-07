@@ -75,9 +75,9 @@ type NodeKind enum u8 {
 
 func const char* kind2str(NodeKind k) {
     switch (k) {
-    case NodeKind.Object:   return "<object>";
-    case NodeKind.Value:    return " <value>";
-    case NodeKind.Array:    return " <array>";
+    case Object:   return "<object>";
+    case Value:    return " <value>";
+    case Array:    return " <array>";
     }
     return nil;
 }
@@ -147,13 +147,13 @@ func void NodeBuffer.dump(const NodeBuffer* b) {
         NodeKind kind = GET_KIND(n.next_kind);
         printf("  [%3u] %s %3u  [next %3u]", idx, kind2str(kind), n.name_idx, GET_NEXT(n.next_kind));
         switch (kind) {
-        case NodeKind.Object:
+        case Object:
             printf(" %3u\n", n.child_idx);
             break;
-        case NodeKind.Value:
+        case Value:
             printf(" %3u\n", n.value_idx);
             break;
-        case NodeKind.Array:
+        case Array:
             printf(" %3u\n", n.child_idx);
             break;
         }
@@ -229,14 +229,14 @@ func void Data.dumpNode(const Data* d, u32 idx, u32 indent_) {
     while (idx != 0) {
         const Node* n = &d.nodes.data[idx];
         switch (GET_KIND(n.next_kind)) {
-        case NodeKind.Object:
+        case Object:
             printf("%s%s\n", indent(indent_), &d.names.data[n.name_idx]);
             if (n.child_idx != 0) d.dumpNode(n.child_idx, indent_+1);
             break;
-        case NodeKind.Value:
+        case Value:
             printf("%s%s = '%s'\n", indent(indent_), &d.names.data[n.name_idx], &d.values.data[n.value_idx]);
             break;
-        case NodeKind.Array:
+        case Array:
             printf("%s %s\n", indent(indent_), &d.names.data[n.name_idx]);
             if (n.child_idx != 0) d.dumpNode(n.child_idx, indent_+1);
             break;

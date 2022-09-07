@@ -111,15 +111,15 @@ func void handlePipe(i32 fd, void* arg, u16 flags) {
     i64 numread = read(base.read_pipe, &cmd, sizeof(Cmd));
     // TODO assert numread
     switch (cmd.kind) {
-    case CmdKind.LoopBreak:
+    case LoopBreak:
         break;
-    case CmdKind.Callback:
+    case Callback:
         cmd.callback.fn(cmd.callback.arg1, cmd.callback.arg2);
         break;
-    case CmdKind.TimerAdd:
+    case TimerAdd:
         cmd.timer.timer.add(cmd.timer.delay_us);
         break;
-    case CmdKind.TimerDel:
+    case TimerDel:
         cmd.timer.timer.del();
         break;
     }
