@@ -156,3 +156,23 @@ executable sudoku
     sudoku/boards.c2
 end
 
+lib plugin1 shared
+    $warnings no-unused
+	$generate-c single-module
+    $export plugin_main
+    plugin/plugin1.c2
+end
+
+lib plugin2 shared
+    $warnings no-unused
+	$generate-c single-module
+    $export plugin_main
+    plugin/plugin2.c2
+end
+
+executable plugin_mgr
+    $warnings no-unused
+	$generate-c single-module
+    plugin/plugin_mgr.c2
+end
+
