@@ -1,0 +1,83 @@
+// ported from Lesson 02 at https://lazyfoo.net/tutorials/SDL/index.php
+// modified to load a GIF instead of a BMP
+
+module sdltest_main;
+
+import stdio local;
+import stdlib local;
+import sdl;
+import sdl_image;
+
+const u32 SCREEN_WIDTH = 640;
+const u32 SCREEN_HEIGHT = 480;
+
+sdl.Window* gWindow = nil;
+sdl.Surface* gScreenSurface = nil;
+sdl.Surface* gHelloWorld = nil;
+
+func void init() {
+    if (sdl.init(sdl.INIT_VIDEO) < 0) {
+        fprintf(stderr, "error initializing SDL2\n");
+        exit(-1);
+    }
+
+    sdl_image.init(0);
+
+    gWindow = sdl.createWindow("SDL Tutorial", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, sdl.WINDOW_SHOWN);
+    if( gWindow == nil ) {
+        fprintf(stderr, "Window could not be created! SDL_Error: %s\n", sdl.getError());
+        exit(-1);
+    }
+
+	gScreenSurface = gWindow.getSurface();
+}
+
+func void loadMedia() {
+    //const char* filename = "hello_world.bmp";
+	//gHelloWorld = sdl.loadBMP_RW(sdl.rwFromFile(filename, "rb"), 1);
+    const char* filename = "c2sdl2.gif";
+	gHelloWorld = sdl_image.load(filename);
+	if (gHelloWorld == nil) {
+		fprintf(stderr, "Unable to load image %s! SDL Error: %s\n", filename, sdl.getError());
+        exit(-1);
+	}
+}
+
+func void mainloop() {
+    sdl.Event e;
+    while (1) {
+        while (e.poll()) {
+            if (e.type_ == sdl.EventType.KEYDOWN) return;
+            if (e.type_ == sdl.EventType.QUIT) return;
+        }
+    }
+}
+
+func void close() {
+    sdl_image.quit();
+
+    gHelloWorld.free();
+	gHelloWorld = nil;
+
+    gWindow.destroy();
+    gWindow = nil;
+
+    sdl.quit();
+}
+
+public func i32 main(i32 argc, char** argv) {
+
+    init();
+
+    loadMedia();
+
+    gHelloWorld.blit(nil, gScreenSurface, nil);
+
+    gWindow.updateSurface();
+
+    mainloop();
+
+    close();
+
+	return 0;
+}
