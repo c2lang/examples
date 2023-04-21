@@ -160,6 +160,7 @@ lib plugin1 shared
     $warnings no-unused
 	$generate-c single-module
     $export plugin_main
+    plugin/other.c2
     plugin/plugin1.c2
 end
 
@@ -173,6 +174,7 @@ end
 executable plugin_mgr
     $warnings no-unused
 	$generate-c single-module
+    plugin/other.c2
     plugin/plugin_mgr.c2
 end
 

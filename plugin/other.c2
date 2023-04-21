@@ -1,0 +1,14 @@
+module other;
+
+import stdio;
+
+i32 counter = 10;
+
+public func i32 test1() {
+    counter++;
+    stdio.printf("counter %d\n", counter);
+
+    return 0;
+}
+
+

@@ -4,6 +4,7 @@ import dlfcn local;
 import stdio local;
 import c_errno local;
 import string local;
+import other;
 
 type LoadFn func void(i32 arg);
 
@@ -12,6 +13,9 @@ public func i32 main(i32 argc, char** argv) {
         printf("Usage: %s [filename]\n", argv[0]);
         return 0;
     }
+
+    printf("other.test1 = %p\n", other.test1);
+    other.test1();
 
     const char* filename = argv[1];
     void* handle = dlopen(filename, RTLD_NOW | RTLD_GLOBAL);
