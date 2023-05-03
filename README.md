@@ -43,6 +43,12 @@ A very simple StringBuffer showing off struct functions
 showing of incremental arrays, used to store unit tests
 
 
+# Graphics examples
+
+There is also a subdirectory with graphics examples, since these need special libraries
+(SDL, Vulkan, etc).
+
+
 # cross-compilation example
 To show working cross-compilation to ARM, install the arm cross toolchain in
 Ubuntu 17.04 with
