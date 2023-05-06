@@ -166,7 +166,7 @@ func void Socket.onConnection(Socket* s)
 {
     u32 sin_size = sizeof(Sockaddr_in);
     Sockaddr_in remote;
-    i32 new_fd = accept4(s.fd, &remote, &sin_size, SocketType.SOCK_CLOEXEC);
+    i32 new_fd = accept4(s.fd, cast<Sockaddr*>(&remote), &sin_size, SocketType.SOCK_CLOEXEC);
     if (new_fd == -1) fatal("accept4");
 
     char* src_ipnr = inet_ntoa(remote.sin_addr);
