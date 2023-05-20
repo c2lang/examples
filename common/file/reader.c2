@@ -34,7 +34,7 @@ public func bool Reader.open(Reader* file, const char* filename) {
     }
     file.size = cast<u32>(statbuf.st_size);
 
-	file.region = mmap(0, file.size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_POPULATE, fd, 0);
+	file.region = mmap(nil, file.size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_POPULATE, fd, 0);
 	if (file.region == cast<void*>(MAP_FAILED)) {
         file.errno = *errno2();
 		perror("mmap");
