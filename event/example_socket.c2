@@ -116,7 +116,7 @@ public func Socket* Socket.create(events.Base* base, logger.Base* logbase, const
         fatal("setsockopt(SO_REUSEADDR)");
     }
 
-    if (bind(s.fd, &my_addr, sizeof(Sockaddr)) != 0) fatal("bind() failed");
+    if (bind(s.fd, cast<Sockaddr*>(&my_addr), sizeof(Sockaddr)) != 0) fatal("bind() failed");
 
     if (listen(s.fd, 1) != 0) fatal("listen() failed");
 

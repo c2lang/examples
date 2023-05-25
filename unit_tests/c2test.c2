@@ -61,7 +61,7 @@ func void color_print(const char* color, const char* title, const char* filename
     error_msg += len;
 }
 
-public func void fail(const char* filename, u32 line, char* msg = nil)
+public func void fail(const char* filename, u32 line, char* msg)
 {
     if (msg == nil) msg = "failed";
     color_print(ColorYellow, "ERR", filename, line, msg);

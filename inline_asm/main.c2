@@ -6,7 +6,7 @@ func u64 rdtsc() @(inline) {
     u32 hi;
     asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
     u64 res = hi;
-    res << 32;
+    res <<= 32;
     res |= lo;
     return res;
 }
