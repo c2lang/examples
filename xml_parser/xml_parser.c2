@@ -11,7 +11,7 @@ const u32 MAX_VALUE = 128;
 const u32 MAX_TEXT = 1024;
 public const u32 MAX_DIAG = 256;
 
-const u32 CHILD_TEXT = (1<<31);
+const u32 CHILD_TEXT = (cast<u32>(1)<<31);
 
 func bool isNameStartChar(i8 ch) {
     if (ch < 0) return true;

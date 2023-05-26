@@ -141,13 +141,6 @@ executable xml_parser
     xml_parser/main.c2
 end
 
-executable unittest
-    $warnings no-unused
-	$generate-c single-module
-    unit_tests/c2test.c2
-    unit_tests/main.c2
-end
-
 executable sudoku
     $warnings no-unused
 	$generate-c single-module

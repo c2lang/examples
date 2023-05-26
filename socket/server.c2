@@ -29,7 +29,7 @@ func i32 open_socket(u16 port)
         fatal("setsockopt(SO_REUSEADDR)");
     }
 
-    if (bind(fd, &my_addr, sizeof(Sockaddr)) != 0) fatal("bind() failed");
+    if (bind(fd, cast<Sockaddr*>(&my_addr), sizeof(Sockaddr)) != 0) fatal("bind() failed");
 
     if (listen(fd, 4) != 0) fatal("listen() failed");
 
@@ -40,7 +40,7 @@ func i32 wait_for_connection(i32 fd, char** src_ipnr)
 {
     u32 sin_size = sizeof(Sockaddr_in);
     Sockaddr_in remote;
-    i32 new_fd = accept4(fd, &remote, &sin_size, SocketType.SOCK_CLOEXEC);
+    i32 new_fd = accept4(fd, cast<Sockaddr*>(&remote), &sin_size, SocketType.SOCK_CLOEXEC);
     if (new_fd == -1) fatal("accept4");
 
     *src_ipnr = inet_ntoa(remote.sin_addr);

@@ -13,7 +13,9 @@ type Char64Long16 union {
     u32[16] l;
 }
 
-#define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
+func u32 rol(u32 value, u32 bits) {
+    return ((value) << (bits)) | ((value) >> (32 - (bits)));
+}
 
 // Little Endian
 #define blk0(i) (block.l[i] = (rol(block.l[i],24)&0xFF00FF00) \
