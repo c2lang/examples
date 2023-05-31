@@ -22,7 +22,7 @@ public func i32 main(i32 argc, char** argv) {
     }
 
     xml.Parser parser;
-    if (!parser.parse(file.data(), verbose)) {
+    if (!parser.parse(file.char_data(), verbose)) {
         printf("error parsing %s: %s\n", filename, parser.getDiag());
     }
 

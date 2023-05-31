@@ -12,9 +12,7 @@ const u32 MaxNames = 4096;
 const u32 MaxValues = 4096*128;
 const u32 MaxDepth = 8;
 
-//#define DEBUG_NODES
-
-#ifdef DEBUG_NODES
+#if DEBUG_NODES
 func const char* node2str(NodeKind k) {
     switch (k   ) {
     case Table:         return "TBL";
@@ -409,7 +407,7 @@ public func bool Reader.parse(Reader* r, const char* filename) {
     bool status = parser.parse(cast<const char*>(file.data()), r.message, r.blocks);
     file.close();
 
-#ifdef DEBUG_NODES
+#if DEBUG_NODES
     r.blocks.dump();
 #endif
     return status;

@@ -11,7 +11,7 @@ type Module struct {
     u32 numDeps;
 }
 
-func void printList(const char* name, const Element* list, bool printDeps = false) {
+func void printList(const char* name, const Element* list, bool printDeps) {
     printf("%s:\n", name);
     Element* node = list.next;
     while (node != list) {

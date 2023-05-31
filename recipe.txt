@@ -111,6 +111,7 @@ end
 executable toml_parser
     $warnings no-unused
 	$generate-c
+#    $config DEBUG_NODES
     common/file/reader.c2
     toml_parser/toml_tokenizer.c2
     toml_parser/toml_parser.c2

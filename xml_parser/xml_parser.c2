@@ -45,7 +45,7 @@ public func bool Parser.parse(Parser* p, const char* text, bool verbose) {
     return status;
 }
 
-public func const Node2 Parser.getRoot(const Parser* p) {
+public func Node2 Parser.getRoot(const Parser* p) {
     Node2 result;
     if (p.blocks.node_count == 0) {
         result.node = nil;

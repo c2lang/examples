@@ -136,7 +136,7 @@ func void Board.printOptions(const Board* board) {
         for (u8 x=0; x<9; x++) {
             const Field* f = &board.fields[y*9 + x];
             u32 offset = (1 + 4 * y) * width + (1 + 8 * x);
-            u8* square = &buffer[offset];
+            u8* square = cast<u8*>(&buffer[offset]);
             for (u8 o=1; o<10; o++) {
                 if (f.options & (1<<o)) {
                     u32 h = (o-1) % 3;
@@ -293,7 +293,7 @@ func bool Board.checkSquares(Board* board, bool extra) {
                         u8 leftCol = topleft + (localRows[o] >> 1) * 9; // NOTE: rshift 1 does 1-> 0, 2 -> 1, 4 -> 2
                         // clear row outside current square
                         for (i8 i=0; i<6; i++) {
-                            i8 idx = leftCol + ColOffsets[x*6 + i];
+                            i8 idx = cast<i8>(leftCol + ColOffsets[x*6 + i]);
                             u16 before = board.fields[idx].options;
                             board.fields[idx].options &= clear;
                             u16 after = board.fields[idx].options;
@@ -305,7 +305,7 @@ func bool Board.checkSquares(Board* board, bool extra) {
                         u8 topRow = topleft + (localCols[o] >> 1); // NOTE: rshift 1 does 1 -> 0, 2 -> 1, 4 -> 2
                         // clear column outside current square
                         for (i8 i=0; i<6; i++) {
-                            i8 idx = topRow + RowOffsets[y*6 + i];
+                            i8 idx = cast<i8>(topRow + RowOffsets[y*6 + i]);
                             u16 before = board.fields[idx].options;
                             board.fields[idx].options &= clear;
                             u16 after = board.fields[idx].options;
