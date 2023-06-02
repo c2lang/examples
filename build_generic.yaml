@@ -1,0 +1,14 @@
+# Generic build file that can be used in combination of ENVIRONMENT variables
+
+target: "$TARGET_PREFIX"
+
+output_dir: "output_arm"
+
+toolchain:
+  cc: "$CC"
+  cflags: "$CFLAGS"
+  ldflags: "$LDFLAGS"
+
+libdir:
+  - "$C2_LIBDIR"
+
