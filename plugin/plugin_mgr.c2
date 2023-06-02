@@ -20,7 +20,7 @@ public func i32 main(i32 argc, char** argv) {
     const char* filename = argv[1];
     void* handle = dlopen(filename, RTLD_NOW | RTLD_GLOBAL);
     if (!handle) {
-        fprintf(stderr, "error opening %s: %s\n", filename, strerror(*errno2()));
+        fprintf(stderr, "error opening %s: %s\n", filename, dlerror());
         return -1;
     }
 
