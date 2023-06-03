@@ -1,11 +1,12 @@
 module plugin_main;
 
-import stdio;
 import other;
+
+import stdio;
 
 public func void load(i32 arg) {
     stdio.printf("Plugin1.load() %d\n", arg);
-    stdio.printf("other.test1 = = %p\n", other.test1);
+    stdio.printf("other.test1 = %p\n", other.test1);
     other.test1();
 }
 

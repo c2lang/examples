@@ -7,12 +7,12 @@ executable base64
     base64/main.c2
 end
 
-executable sha1
-    $warnings no-unused
-	$generate-c single-module
-    sha1/sha1.c2
-    sha1/main.c2
-end
+#executable sha1
+#    $warnings no-unused
+#	$generate-c single-module
+#    sha1/sha1.c2
+#    sha1/main.c2
+#end
 
 executable cstrip
     $warnings no-unused

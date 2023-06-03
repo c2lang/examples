@@ -1,10 +1,11 @@
 module plugin_mgr;
 
+import other;
+
+import c_errno local;
 import dlfcn local;
 import stdio local;
-import c_errno local;
 import string local;
-import other;
 
 type LoadFn func void(i32 arg);
 
@@ -19,7 +20,7 @@ public func i32 main(i32 argc, char** argv) {
 
     const char* filename = argv[1];
     void* handle = dlopen(filename, RTLD_NOW | RTLD_GLOBAL);
-    if (!handle) {
+    if (handle == nil) {
         fprintf(stderr, "error opening %s: %s\n", filename, dlerror());
         return -1;
     }
@@ -27,7 +28,7 @@ public func i32 main(i32 argc, char** argv) {
     // TODO must symbol be in standard module as well? since otherwise we dont know name?
     void* symbol = dlsym(handle, "plugin_main_load");
     if (!symbol) {
-        fprintf(stderr, "invalid plugin\n");
+        fprintf(stderr, "invalid plugin (%s)\n", dlerror());
         dlclose(handle);
         return -1;
     }
@@ -39,7 +40,10 @@ public func i32 main(i32 argc, char** argv) {
 
     load(123);
 
+    printf("unload %s\n", filename);
     dlclose(handle);
+
+    other.test1();
 
     return 0;
 }

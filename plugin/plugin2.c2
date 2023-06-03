@@ -1,6 +1,7 @@
 module plugin_main;
 
 //import plugin;
+
 import stdio;
 
 public func void load(i32 arg) {
