@@ -57,11 +57,11 @@ func u32 TextBuffer.add(TextBuffer* b, const char* text, u32 len) {
 }
 
 func void TextBuffer.dump(const TextBuffer* b, const char* text) {
-    printf("%s:  %u|%u\n", text, b.cur, b.cap);
+    printf("%s:  %d|%d\n", text, b.cur, b.cap);
     u32 idx = 1;
     while (idx < b.cur) {
         const char* name = &b.data[idx];
-        printf("  [%3u] %s\n", idx, name);
+        printf("  [%3d] %s\n", idx, name);
         idx += strlen(name) + 1;
     }
 }
@@ -142,21 +142,21 @@ func u32 NodeBuffer.add(NodeBuffer* b, NodeKind kind, u32 name_idx, u32 value_id
 }
 
 func void NodeBuffer.dump(const NodeBuffer* b) {
-    printf("Nodes:  %u|%u\n", b.cur, b.cap);
+    printf("Nodes:  %d|%d\n", b.cur, b.cap);
     u32 idx = 1;
     while (idx < b.cur) {
         const Node* n = &b.data[idx];
         NodeKind kind = get_kind(n.next_kind);
-        printf("  [%3u] %s %3u  [next %3u]", idx, kind2str(kind), n.name_idx, get_next(n.next_kind));
+        printf("  [%3d] %s %3d  [next %3d]", idx, kind2str(kind), n.name_idx, get_next(n.next_kind));
         switch (kind) {
         case Object:
-            printf(" %3u\n", n.child_idx);
+            printf(" %3d\n", n.child_idx);
             break;
         case Value:
-            printf(" %3u\n", n.value_idx);
+            printf(" %3d\n", n.value_idx);
             break;
         case Array:
-            printf(" %3u\n", n.child_idx);
+            printf(" %3d\n", n.child_idx);
             break;
         }
         idx++;
@@ -216,7 +216,7 @@ func void Data.setNext(Data* d, u32 prev_idx, u32 next_idx) {
 func void Data.dump(const Data* d, bool verbose) {
     u32 used = d.nodes.cur * sizeof(Node) + d.names.cur + d.values.cur;
     u32 cap = d.nodes.cap * sizeof(Node) + d.names.cap + d.values.cap;
-    printf("JSON  (memory: %u|%u)\n", used, cap);
+    printf("JSON  (memory: %d|%d)\n", used, cap);
     if (verbose) {
         d.nodes.dump();
         d.names.dump("Names");
@@ -264,10 +264,10 @@ func u32 Parser.find_node(const Parser* p, const char* key) {
         memcpy(node_name, start, len);
         node_name[len] = 0;
 
-        //printf("searching '%s'  idx %u\n", node_name, node_idx);
+        //printf("searching '%s'  idx %d\n", node_name, node_idx);
         node_idx = p.find_child(node_idx, node_name);
         if (node_idx == 0) return 0;
-        //printf("found %s  idx %u\n", node_name, node_idx);
+        //printf("found %s  idx %d\n", node_name, node_idx);
     }
     return node_idx;
 }
@@ -291,7 +291,7 @@ func u32 Parser.find_child(const Parser* p, u32 parent_idx, const char* name) {
     while (next != 0) {
         const Node* n = &p.data.nodes.data[next];
         const char* nname  = &p.data.names.data[n.name_idx];
-        //printf("  compare [%u] %s\n", n.name_idx, nname);
+        //printf("  compare [%d] %s\n", n.name_idx, nname);
         if (strcmp(nname, name) == 0) return next;
 
         next = get_next(n.next_kind);
@@ -362,7 +362,7 @@ func u32 Iter.find_child(const Iter* i, u32 idx, const char* name) {
     while (next != 0) {
         const Node* n = &i.data.nodes.data[next];
         const char* nname  = &i.data.names.data[n.name_idx];
-        //printf("  compare (next %u) %s\n", next, nname);
+        //printf("  compare (next %d) %s\n", next, nname);
         if (strcmp(nname, name) == 0) return next;
 
         next = get_next(n.next_kind);

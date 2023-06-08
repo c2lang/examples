@@ -48,9 +48,9 @@ public func void Builder.addNumber(Builder* b, const char* key, i64 value) {
     char* cp = orig;
     if (b.hasEntry[b.indent]) cp += sprintf(cp, ",\n");
     if (b.inArray[b.indent]) {
-        cp += sprintf(cp, "%s%lu", indent(b.indent), value);
+        cp += sprintf(cp, "%s%d", indent(b.indent), value);
     } else {
-        cp += sprintf(cp, "%s\"%s\": %lu", indent(b.indent), key, value);
+        cp += sprintf(cp, "%s\"%s\": %d", indent(b.indent), key, value);
     }
     b.size += (cp - orig);
     b.hasEntry[b.indent] = true;

@@ -200,27 +200,27 @@ func void Blocks.dump(const Blocks* b, bool full) {
         used += (b.attr_count * sizeof(Attr));
         used += b.attr_name_off;
         used += b.data_off;
-        printf("blocks: (%u/%u Kb)\n", (used + 1023) / 1024, (size + 1023)/ 1024);
+        printf("blocks: (%d/%d Kb)\n", (used + 1023) / 1024, (size + 1023)/ 1024);
 
-        printf("  nodes %u/%d\n", b.node_count * sizeof(Node), b.max_nodes * sizeof(Node));
+        printf("  nodes %d/%d\n", b.node_count * sizeof(Node), b.max_nodes * sizeof(Node));
         for (u32 i=0; i<b.node_count; ++i) {
             const Node* n = &b.nodes[i];
             if (n.children & CHILD_TEXT) {
-                printf("     [%3u]  name %3u  next %3u      text %3u  attr %3u\n",
+                printf("     [%3d]  name %3d  next %3d      text %3d  attr %3d\n",
                     i, n.name_off, n.next_node, n.children & ~CHILD_TEXT, n.attr_off);
             } else {
-                printf("     [%3u]  name %3u  next %3u  children %3u  attr %3u\n",
+                printf("     [%3d]  name %3d  next %3d  children %3d  attr %3d\n",
                     i, n.name_off, n.next_node, n.children, n.attr_off);
             }
         }
 
-        printf("  node names %u/%u\n", b.node_name_off, b.node_name_size);
+        printf("  node names %d/%d\n", b.node_name_off, b.node_name_size);
         {
             u32 i = 0;
             u32 start = i;
             while (i<b.node_name_off) {
                 if (b.node_names[i] == 0) {
-                    printf("    [%3u] %s\n", start, &b.node_names[start]);
+                    printf("    [%3d] %s\n", start, &b.node_names[start]);
                     i++;
                     start = i;
                 } else {
@@ -229,20 +229,20 @@ func void Blocks.dump(const Blocks* b, bool full) {
             }
         }
 
-        printf("  attributes %u/%u\n", b.attr_count * sizeof(Attr), b.max_attrs * sizeof(Attr));
+        printf("  attributes %d/%d\n", b.attr_count * sizeof(Attr), b.max_attrs * sizeof(Attr));
         for (u32 i=1; i<b.attr_count; ++i) {
             const Attr* a = &b.attrs[i];
-            printf("     [%3u]  name %3u  next %3u  value %3u\n",
+            printf("     [%3d]  name %3d  next %3d  value %3d\n",
                 i, a.name_off, a.next_attr, a.value_off);
         }
 
-        printf("  attr names %u/%u\n", b.attr_name_off, b.attr_name_size);
+        printf("  attr names %d/%d\n", b.attr_name_off, b.attr_name_size);
         {
             u32 i = 0;
             u32 start = i;
             while (i<b.attr_name_off) {
                 if (b.attr_names[i] == 0) {
-                    printf("    [%3u] %s\n", start, &b.attr_names[start]);
+                    printf("    [%3d] %s\n", start, &b.attr_names[start]);
                     i++;
                     start = i;
                 } else {
@@ -251,16 +251,16 @@ func void Blocks.dump(const Blocks* b, bool full) {
             }
         }
 
-        printf("  values %u/%u\n", b.data_off, b.data_size);
+        printf("  values %d/%d\n", b.data_off, b.data_size);
         {
             u32 i = 0;
             u32 start = i;
             while (i<b.data_off) {
                 if (b.data[i] == 0) {
                     if (i - start > 32) {
-                        printf("    [%3u] %.32s..\n", start, &b.data[start]);
+                        printf("    [%3d] %.32s..\n", start, &b.data[start]);
                     } else {
-                        printf("    [%3u] %s\n", start, &b.data[start]);
+                        printf("    [%3d] %s\n", start, &b.data[start]);
                     }
                     i++;
                     start = i;

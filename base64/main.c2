@@ -12,8 +12,8 @@ func void test(const char* input) {
     base64.encode(cast<u8*>(input), cast<u32>(strlen(input)), encoded);
     base64.decode(encoded, cast<u32>(strlen(cast<char*>(encoded))), decoded);
     printf("[%s]\n", input);
-    printf("   encoded: %s\n", encoded);
-    printf("   decoded: %s\n", decoded);
+    printf("   encoded: %s\n", cast<char*>(encoded));
+    printf("   decoded: %s\n", cast<char*>(decoded));
 }
 
 public func i32 main() {

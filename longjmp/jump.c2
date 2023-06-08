@@ -37,7 +37,7 @@ func void function1()
 }
 
 public func i32 main() {
-    printf("size=%u\n", sizeof(JmpBufTag));
+    printf("size=%d\n", sizeof(JmpBufTag));
     function1();
     return 0;
 }

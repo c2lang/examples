@@ -61,7 +61,7 @@ func void strip_comments(const char* input, utils.StringBuffer* out)
             cp++;
         }
     }
-    printf("lines %u -> %u (stripped %d lines)\n", lines, outlines, lines - outlines);
+    printf("lines %d -> %d (stripped %d lines)\n", lines, outlines, lines - outlines);
 }
 
 public func i32 main(i32 argc, char** argv) {

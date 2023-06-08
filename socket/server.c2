@@ -61,7 +61,7 @@ public func i32 main() {
     // read until disconnect
     while (1) {
         const u32 bufSize = 64;
-        u8[bufSize] buffer;
+        char[bufSize] buffer;
         i64 numread = read(conn_fd, buffer, bufSize-1);
         if (numread == 0) {
             printf("client disconnected\n");
@@ -69,7 +69,7 @@ public func i32 main() {
         }
         buffer[numread] = 0;
         if (buffer[numread-1] == '\n') buffer[numread-1] = 0;
-        printf("read %lu bytes: %s\n", numread, buffer);
+        printf("read %d bytes: %s\n", numread, buffer);
     }
 
     // close socket

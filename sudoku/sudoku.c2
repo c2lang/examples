@@ -46,7 +46,7 @@ const i8[] ColOffsets = { // from left column element in Square
 }
 
 func void Board.set(Board* board, u8 x, u8 y, u8 value) {
-    if (!board.inSetup) printf("set %u,%u -> %u\n", y, x, value);
+    if (!board.inSetup) printf("set %d,%d -> %d\n", y, x, value);
     u32 idx = 9*y + x;
     board.fields[idx].value = value;
     board.fields[idx].options = 0;
@@ -95,7 +95,7 @@ func void Board.print(const Board* board, bool showOptions, u8 xx, u8 yy) {
             if (f.value) {
                 const char* col = color.Green;
                 if (x == xx && y == yy) col = color.Byellow;
-                cp += sprintf(cp, " %s%u%s", col, f.value, color.Normal);
+                cp += sprintf(cp, " %s%d%s", col, f.value, color.Normal);
             } else {
                 cp += sprintf(cp, "  ");
             }
@@ -158,7 +158,7 @@ func void Board.setup(Board* board, const Setup* setup, u32 size) {
         board.set(s.x, s.y, s.value);
     }
     board.inSetup = false;
-    printf("setup (%u given)\n", size);
+    printf("setup (%d given)\n", size);
     board.print(false, 10, 0);
 }
 
@@ -282,14 +282,14 @@ func bool Board.checkSquares(Board* board, bool extra) {
             for (u8 o=1; o<10; o++) {
                 if (count[o] == 1) {
                     board.set(pos[o] % 9, pos[o] / 9, o);
-                    //printf("  FOUND %u   count %u  pos %u -> %u,%u\n", o, count[o], pos[o], pos[o] % 9, pos[o] / 9);
+                    //printf("  FOUND %d   count %d  pos %d -> %d,%d\n", o, count[o], pos[o], pos[o] % 9, pos[o] / 9);
                     continue;
                 }
                 if (extra) {
                     // NOTE: HAS ISSUES
                     u32 clear = ~(1<<o);
                     if (localRows[o] == 1 || localRows[o] == 2 || localRows[o] == 4) {
-                        printf("  FOUND  %u,%u  num %u  ROW %u\n", y, x, o, localRows[o] >> 1);
+                        printf("  FOUND  %d,%d  num %d  ROW %d\n", y, x, o, localRows[o] >> 1);
                         u8 leftCol = topleft + (localRows[o] >> 1) * 9; // NOTE: rshift 1 does 1-> 0, 2 -> 1, 4 -> 2
                         // clear row outside current square
                         for (i8 i=0; i<6; i++) {
@@ -301,7 +301,7 @@ func bool Board.checkSquares(Board* board, bool extra) {
                         }
                     }
                     if (localCols[o] == 1 || localCols[o] == 2 || localCols[o] == 4) {
-                        printf("  FOUND  %u,%u  num %u  COL %u\n", y, x, o, localCols[o] >> 1);
+                        printf("  FOUND  %d,%d  num %d  COL %d\n", y, x, o, localCols[o] >> 1);
                         u8 topRow = topleft + (localCols[o] >> 1); // NOTE: rshift 1 does 1 -> 0, 2 -> 1, 4 -> 2
                         // clear column outside current square
                         for (i8 i=0; i<6; i++) {
@@ -325,23 +325,23 @@ func void Board.solve(Board* board) {
     while (1) {
         u32 before = board.todo;
 
-        printf("checking rows (%u todo)\n", board.todo);
+        printf("checking rows (%d todo)\n", board.todo);
         for (u8 i=0; i<9; i++) board.checkRow(i);
 
-        printf("checking columns (%u todo)\n", board.todo);
+        printf("checking columns (%d todo)\n", board.todo);
         for (u8 i=0; i<9; i++) board.checkColumn(i);
 
-        printf("checking fields (%u todo)\n", board.todo);
+        printf("checking fields (%d todo)\n", board.todo);
         board.checkFields();
 
-        printf("checking squares (%u todo)\n", board.todo);
+        printf("checking squares (%d todo)\n", board.todo);
         bool cleared = board.checkSquares(false);
 
         loops++;
         if (board.todo == 0) break;
         if (!cleared && board.todo == before) break;
     }
-    printf("%u loops\n", loops);
+    printf("%d loops\n", loops);
 }
 
 type Setup struct {

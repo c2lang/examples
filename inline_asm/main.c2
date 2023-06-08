@@ -12,9 +12,9 @@ func u64 rdtsc() @(inline) {
 }
 
 public func i32 main() {
-    stdio.printf("time is now: %lu\n", rdtsc());
-    stdio.printf("time is now: %lu\n", rdtsc());
-    stdio.printf("time is now: %lu\n", rdtsc());
+    stdio.printf("time is now: %d\n", rdtsc());
+    stdio.printf("time is now: %d\n", rdtsc());
+    stdio.printf("time is now: %d\n", rdtsc());
     return 0;
 }
 

@@ -131,13 +131,13 @@ func void Log.internal(Log* log, Level level, const char* color_, const char* fo
         u64 now = current_time();
         now -= log.base.startTime;
         u64 subsec = now % 1000000;
-        cp += sprintf(cp, "%04ld.%06ld", now / 1000000, subsec);
+        cp += sprintf(cp, "%04d.%06d", now / 1000000, subsec);
     } else {
         Timeval tv;
         gettimeofday(&tv, nil);
         Time now = tv.tv_sec;
         libc_time.Tm* now2 = libc_time.localtime(&now);
-        cp += sprintf(cp, "%02d/%02d/%02d %02d:%02d:%02d.%lu",
+        cp += sprintf(cp, "%02d/%02d/%02d %02d:%02d:%02d.%d",
             now2.tm_year % 100, now2.tm_mon + 1, now2.tm_mday,
             now2.tm_hour, now2.tm_min, now2.tm_sec, tv.tv_usec / 1000);
     }
