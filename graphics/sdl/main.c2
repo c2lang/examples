@@ -8,7 +8,7 @@ import stdlib local;
 import sdl;
 import sdl_image;
 
-const u32 SCREEN_WIDTH = 640;
+const u32 SCREEN_WIDTH = 651;
 const u32 SCREEN_HEIGHT = 480;
 
 sdl.Window* gWindow = nil;
