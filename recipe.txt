@@ -168,7 +168,16 @@ end
 executable plugin_mgr
     $warnings no-unused
 	$generate-c single-module
+    $use dl dynamic
     plugin/other.c2
     plugin/plugin_mgr.c2
+end
+
+executable pthread_test
+    $warnings no-unused
+	$generate-c single-module
+    $use pthread dynamic
+
+    pthread/pthread.c2
 end
 
