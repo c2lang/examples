@@ -2,21 +2,21 @@
 plugin refs_generator
 
 executable base64
-	$generate-c single-module
+	$generate-c
     base64/base64.c2
     base64/main.c2
 end
 
 #executable sha1
 #    $warnings no-unused
-#	$generate-c single-module
+#	$generate-c
 #    sha1/sha1.c2
 #    sha1/main.c2
 #end
 
 executable cstrip
     $warnings no-unused
-	$generate-c single-module
+	$generate-c
     common/file/reader.c2
     common/file/writer.c2
     common/string_buffer.c2
@@ -25,7 +25,7 @@ end
 
 executable event
     $warnings no-unused
-	$generate-c single-module
+	$generate-c
     common/color.c2
     common/logger.c2
     event/events.c2
@@ -35,20 +35,20 @@ end
 
 executable file_ops
     $warnings no-unused
-	$generate-c single-module
+	$generate-c
     common/file/reader.c2
     file_ops/main.c2
 end
 
 executable inline_asm
 #    $warnings no-unused
-	$generate-c single-module
+	$generate-c
     inline_asm/main.c2
 end
 
 executable json_parser
     $warnings no-unused
-	$generate-c single-module
+	$generate-c
     common/file/reader.c2
     common/file/writer.c2
     json_parser/json_parser.c2
@@ -60,8 +60,7 @@ end
 
 executable list
     $warnings no-unused
-	$generate-c single-module
-    common/logger.c2
+	$generate-c
     common/color.c2
     list/list.c2
     list/main.c2
@@ -69,7 +68,7 @@ end
 
 executable log
     $warnings no-unused
-	$generate-c single-module
+	$generate-c
     common/logger.c2
     common/color.c2
     logger/main.c2
@@ -77,13 +76,13 @@ end
 
 executable jump
     $warnings no-unused
-	$generate-c single-module
+	$generate-c
     longjmp/jump.c2
 end
 
 executable lua_test
     $warnings no-unused
-	$generate-c single-module
+	$generate-c
     $use lua static
     common/color.c2
     lua/script.c2
@@ -92,18 +91,18 @@ end
 
 executable signal_test
     $warnings no-unused
-	$generate-c single-module
+	$generate-c
     signals/main.c2
 end
 
 executable socket
-	$generate-c single-module
+	$generate-c
     socket/server.c2
 end
 
 executable string
     $warnings no-unused
-	$generate-c single-module
+	$generate-c
     common/string_buffer.c2
     string_buffer/main.c2
 end
@@ -144,7 +143,7 @@ end
 
 executable sudoku
     $warnings no-unused
-	$generate-c single-module
+	$generate-c
     common/color.c2
     sudoku/sudoku.c2
     sudoku/boards.c2
@@ -152,7 +151,7 @@ end
 
 lib plugin1 shared
     $warnings no-unused
-	$generate-c single-module
+	$generate-c
     $export plugin_main
     plugin/other.c2
     plugin/plugin1.c2
@@ -160,14 +159,14 @@ end
 
 lib plugin2 shared
     $warnings no-unused
-	$generate-c single-module
+	$generate-c
     $export plugin_main
     plugin/plugin2.c2
 end
 
 executable plugin_mgr
     $warnings no-unused
-	$generate-c single-module
+	$generate-c
     $use dl dynamic
     plugin/other.c2
     plugin/plugin_mgr.c2
@@ -175,7 +174,7 @@ end
 
 executable pthread_test
     $warnings no-unused
-	$generate-c single-module
+	$generate-c
     $use pthread dynamic
 
     pthread/pthread.c2
