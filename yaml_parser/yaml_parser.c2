@@ -1,4 +1,20 @@
+/* Copyright 2022-2023 Bas van den Berg
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 module yaml;
+
 import stdlib local;
 import csetjmp local;
 import stdarg local;
@@ -55,7 +71,7 @@ public func const char* Parser.getMessage(const Parser* p) {
     return p.message;
 }
 
-func void Parser.error(Parser* p, const char* format, ...) {
+func void Parser.error(Parser* p, const char* format, ...) @(printf_format=2) {
     Va_list args;
     va_start(args, format);
     char* cp = p.message;
@@ -67,7 +83,7 @@ func void Parser.error(Parser* p, const char* format, ...) {
 
 func void Parser.consumeToken(Parser* p) {
     p.tokenizer.lex(&p.token);
-#if YAML_PRINT_TOKENS
+#if YamlPrintToken
     printf("%s  %s  %d\n", p.token.str(), p.token.loc.str(), p.token.same_line);
 #endif
     if (p.token.kind == TokenKind.Error) longjmp(&p.jmp_err, 1);
@@ -154,7 +170,7 @@ func void Parser.parse_value(Parser* p) {
             p.add_scalar_value(p.token.text_idx);
             p.consumeToken();
         } else {
-            //assert(0); // valid??
+            assert(0); // valid??
         }
         return;
     case Dash:
@@ -266,12 +282,12 @@ func void Parser.push_root(Parser* p) {
 }
 
 func void Parser.push_node(Parser* p, Node* n, NodeKind parent_kind, i32 indent) {
-    //assert(p.stack_size);
+    assert(p.stack_size);
     u32 n_idx = p.data.node2idx(n);
     StackLevel* top = &p.stack[p.stack_size-1];
 
     if (indent < top.indent) { // can happen at end of sequence (1 lower)
-        //assert(indent + 1 == top.indent);
+        assert(indent + 1 == top.indent);
         p.pop();
         top = &p.stack[p.stack_size-1];
     }
@@ -284,8 +300,8 @@ func void Parser.push_node(Parser* p, Node* n, NodeKind parent_kind, i32 indent)
         }
         top.last_child = nil;
     } else {
-        //assert(p.stack_size + 1 < MAX_DEPTH);
-        //assert(indent > top.indent);
+        assert(p.stack_size + 1 < MaxDepth);
+        assert(indent > top.indent);
         Node* parent = top.node;
 
         if (parent.kind == NodeKind.Unknown) {
@@ -296,7 +312,7 @@ func void Parser.push_node(Parser* p, Node* n, NodeKind parent_kind, i32 indent)
         if (top.last_child) {
             top.last_child.next_idx = n_idx;
         } else {
-            //assert(parent.child_idx == 0);
+            assert(parent.child_idx == 0);
             parent.child_idx = n_idx;
         }
         top.last_child = n;    // set last_child on current level before adding level

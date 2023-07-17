@@ -1,3 +1,18 @@
+/* Copyright 2022-2023 Bas van den Berg
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 module yaml;
 
 import string;
@@ -8,11 +23,18 @@ public func bool Node.isSequence(const Node* n) { return n.kind == NodeKind.Sequ
 
 public func bool Node.isScalar(const Node* n) { return n.kind == NodeKind.Scalar; }
 
+
 // TODO only pass iterators? (that way we dont need Parser* anymore)
 public func const Node* Parser.getRoot(const Parser* p) {
     u32 node_count = cast<u32>(p.data.nodes_cur - p.data.nodes) - 1;
     if (node_count == 0) return nil;
     return &p.data.nodes[1];
+}
+
+public func const char* Parser.getScalarValue(const Parser* p, const char* path) {
+    const Node* n = p.findNode(path);
+    if (n && n.isScalar()) return &p.data.text[n.text_idx];
+    return nil;
 }
 
 public func const Node* Parser.findNode(const Parser* p, const char* path) {
@@ -53,9 +75,9 @@ public type Iter struct {
     const Node* node;
 }
 
-public func Iter Parser.getNodeChildIter(Parser* p, const Node* n) {
+public func Iter Parser.getNodeChildIter(const Parser* p, const Node* n) {
     Iter iter = { .data = &p.data, .node = nil }
-    if (n.kind != NodeKind.Scalar && n.child_idx) {
+    if (n && n.kind != NodeKind.Scalar && n.child_idx) {
         iter.node = p.data.idx2node(n.child_idx);
     }
     return iter;
@@ -95,6 +117,16 @@ public func Iter Iter.getChildIter(Iter* parent) {
         iter.node = d.idx2node(n.child_idx);
     }
     return iter;
+}
+
+public func const char* Iter.getChildScalarValue(Iter* iter, const char* path) {
+    if (!iter.node) return nil;
+
+    if (iter.node.kind == NodeKind.Sequence) return nil;
+    const Data* d = cast<Data*>(iter.data);
+    const Node* n = d.findChildNode(path, iter.node.child_idx);
+    if (n && n.isScalar()) return &d.text[n.text_idx];
+    return nil;
 }
 
 func const char* starts_with(const char* full, const char* start) {

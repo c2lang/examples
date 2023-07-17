@@ -33,7 +33,7 @@ public func i32 main(i32 argc, char** argv) {
 
     bool ok = parser.parse(cast<char*>(file.region));
     if (ok) {
-        parser.dump();
+        parser.dump(true);
         get_info(parser);
     } else {
         fprintf(stderr, "Error: %s\n", parser.getMessage());
