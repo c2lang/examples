@@ -83,10 +83,6 @@ func const char* kind2str(NodeKind k) {
 }
 
 
-func u32 get_next(u32 x) { return x & 0x3FFFFFFF; }
-
-func NodeKind get_kind(u32 x) { return cast<NodeKind>(x >> 30); }
-
 type Node struct {
     u32 next_kind;  // 2 upper bits is kind, rest is next_idx;
     u32 name_idx;
@@ -95,6 +91,14 @@ type Node struct {
         u32 value_idx;
     }
 } @(packed)
+
+func u32 Node.next(const Node* n) {
+    return n.next_kind & 0x3FFFFFFF;
+}
+
+func NodeKind Node.kind(const Node* n) {
+    return cast<NodeKind>(n.next_kind >> 30);
+}
 
 
 type NodeBuffer struct {
@@ -146,8 +150,8 @@ func void NodeBuffer.dump(const NodeBuffer* b) {
     u32 idx = 1;
     while (idx < b.cur) {
         const Node* n = &b.data[idx];
-        NodeKind kind = get_kind(n.next_kind);
-        printf("  [%3d] %s %3d  [next %3d]", idx, kind2str(kind), n.name_idx, get_next(n.next_kind));
+        NodeKind kind = n.kind();
+        printf("  [%3d] %s %3d  [next %3d]", idx, kind2str(kind), n.name_idx, n.next());
         switch (kind) {
         case Object:
             printf(" %3d\n", n.child_idx);
@@ -230,7 +234,7 @@ func void Data.dump(const Data* d, bool verbose) {
 func void Data.dumpNode(const Data* d, u32 idx, u32 indent_) {
     while (idx != 0) {
         const Node* n = &d.nodes.data[idx];
-        switch (get_kind(n.next_kind)) {
+        switch (n.kind()) {
         case Object:
             printf("%s%s\n", indent(indent_), &d.names.data[n.name_idx]);
             if (n.child_idx != 0) d.dumpNode(n.child_idx, indent_+1);
@@ -243,7 +247,7 @@ func void Data.dumpNode(const Data* d, u32 idx, u32 indent_) {
             if (n.child_idx != 0) d.dumpNode(n.child_idx, indent_+1);
             break;
         }
-        idx = get_next(n.next_kind);
+        idx = n.next();
     }
 }
 
@@ -276,7 +280,7 @@ public func const char* Parser.find_text(const Parser* p, const char* key) {
     u32 node_idx = p.find_node(key);
     if (node_idx == 0) return nil;
     const Node* n = &p.data.nodes.data[node_idx];
-    if (get_kind(n.next_kind) != NodeKind.Value) return nil;
+    if (n.kind() != NodeKind.Value) return nil;
     return &p.data.values.data[n.value_idx];
 }
 
@@ -294,7 +298,7 @@ func u32 Parser.find_child(const Parser* p, u32 parent_idx, const char* name) {
         //printf("  compare [%d] %s\n", n.name_idx, nname);
         if (strcmp(nname, name) == 0) return next;
 
-        next = get_next(n.next_kind);
+        next = n.next();
     }
     return 0;
 }
@@ -304,13 +308,13 @@ public func Iter Parser.getArrayIter(const Parser* p, const char* key) {
 
     if (key == nil) {
         const Node* n = &p.data.nodes.data[1];
-        if (get_kind(n.next_kind) != NodeKind.Array) return iter;
+        if (n.kind() != NodeKind.Array) return iter;
         iter.cur_idx = n.child_idx;
     } else {
         u32 node_idx = p.find_node(key);
         if (node_idx == 0) return iter;
         const Node* n = &p.data.nodes.data[node_idx];
-        if (get_kind(n.next_kind) != NodeKind.Array) return iter;
+        if (n.kind() != NodeKind.Array) return iter;
         iter.cur_idx = n.child_idx;
     }
     return iter;
@@ -323,7 +327,7 @@ public func Iter Parser.getObjectIter(const Parser* p, const char* key) {
     if (key != nil) node_idx = p.find_node(key);
     if (node_idx == 0) return iter;
     const Node* n = &p.data.nodes.data[node_idx];
-    if (get_kind(n.next_kind) != NodeKind.Object) return iter;
+    if (n.kind() != NodeKind.Object) return iter;
     iter.cur_idx = n.child_idx;
     return iter;
 }
@@ -342,18 +346,18 @@ public func void Iter.next(Iter* i) {
     if (i.cur_idx == 0) return;
 
     const Node* n = &i.data.nodes.data[i.cur_idx];
-    i.cur_idx = get_next(n.next_kind);
+    i.cur_idx = n.next();
 }
 
 public func const char* Iter.find_text(const Iter* i, const char* key) {
     const Node* n = &i.data.nodes.data[i.cur_idx];
-    if (get_kind(n.next_kind) != NodeKind.Object) return nil;
+    if (n.kind() != NodeKind.Object) return nil;
 
     u32 node_idx = i.find_child(n.child_idx, key);
     if (node_idx == 0) return nil;
 
     const Node* child = &i.data.nodes.data[node_idx];
-    if (get_kind(child.next_kind) != NodeKind.Value) return nil;
+    if (child.kind() != NodeKind.Value) return nil;
     return &i.data.values.data[child.value_idx];
 }
 
@@ -365,39 +369,39 @@ func u32 Iter.find_child(const Iter* i, u32 idx, const char* name) {
         //printf("  compare (next %d) %s\n", next, nname);
         if (strcmp(nname, name) == 0) return next;
 
-        next = get_next(n.next_kind);
+        next = n.next();
     }
     return 0;
 }
 
 public func const char* Iter.getKey(const Iter* i) {
     const Node* n = &i.data.nodes.data[i.cur_idx];
-    if (get_kind(n.next_kind) != NodeKind.Value) return nil;
+    if (n.kind() != NodeKind.Value) return nil;
     return &i.data.names.data[n.name_idx];
 }
 
 public func const char* Iter.getValue(const Iter* i) {
     const Node* n = &i.data.nodes.data[i.cur_idx];
-    if (get_kind(n.next_kind) != NodeKind.Value) return nil;
+    if (n.kind() != NodeKind.Value) return nil;
     return &i.data.values.data[n.value_idx];
 }
 
 public func bool Iter.isValue(const Iter* i) {
     const Node* n = &i.data.nodes.data[i.cur_idx];
-    if (get_kind(n.next_kind) == NodeKind.Value) return true;
+    if (n.kind() == NodeKind.Value) return true;
     return false;
 }
 
 public func bool Iter.isObject(const Iter* i) {
     const Node* n = &i.data.nodes.data[i.cur_idx];
-    if (get_kind(n.next_kind) == NodeKind.Object) return true;
+    if (n.kind() == NodeKind.Object) return true;
     return false;
 }
 
 public func Iter Iter.getObjectIter(const Iter* i) {
     Iter iter = { i.data, 0 }
     const Node* n = &i.data.nodes.data[i.cur_idx];
-    if (get_kind(n.next_kind) != NodeKind.Object) return iter;
+    if (n.kind() != NodeKind.Object) return iter;
     iter.cur_idx = n.child_idx;
     return iter;
 }
@@ -412,13 +416,13 @@ func bool Iter.check_schema_priv(const Iter* i, const char** schema) {
         const Node* n = &i.data.nodes.data[cur_idx];
         switch (**schema) {
         case 's':
-            if (get_kind(n.next_kind) != NodeKind.Value) return false;
+            if (n.kind() != NodeKind.Value) return false;
             break;
         case 'a':
-            if (get_kind(n.next_kind) != NodeKind.Array) return false;
+            if (n.kind() != NodeKind.Array) return false;
             break;
         case 'o':
-            if (get_kind(n.next_kind) != NodeKind.Object) return false;
+            if (n.kind() != NodeKind.Object) return false;
             if ((*schema)[1] == '(') {
                 *schema += 2;
                 Iter obj = { i.data, n.child_idx }
@@ -430,7 +434,7 @@ func bool Iter.check_schema_priv(const Iter* i, const char** schema) {
         default:
             return false;
         }
-        cur_idx = get_next(n.next_kind);
+        cur_idx = n.next();
         (*schema)++;
     }
     return (cur_idx == 0);
