@@ -7,7 +7,7 @@ import stdio local;
 import unistd local;
 import file_utils;
 
-public func i32 main(i32 argc, char** argv) {
+public fn i32 main(i32 argc, char** argv) {
     file_utils.Reader file;
     file.open(argv[1]);
 

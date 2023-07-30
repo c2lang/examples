@@ -15,7 +15,7 @@ sdl.Window* gWindow = nil;
 sdl.Surface* gScreenSurface = nil;
 sdl.Surface* gHelloWorld = nil;
 
-func void init() {
+fn void init() {
     if (sdl.init(sdl.INIT_VIDEO) < 0) {
         fprintf(stderr, "error initializing SDL2\n");
         exit(-1);
@@ -32,7 +32,7 @@ func void init() {
 	gScreenSurface = gWindow.getSurface();
 }
 
-func void loadMedia() {
+fn void loadMedia() {
     //const char* filename = "hello_world.bmp";
 	//gHelloWorld = sdl.loadBMP_RW(sdl.rwFromFile(filename, "rb"), 1);
     const char* filename = "c2sdl2.gif";
@@ -43,7 +43,7 @@ func void loadMedia() {
 	}
 }
 
-func void mainloop() {
+fn void mainloop() {
     sdl.Event e;
     while (1) {
         while (e.poll()) {
@@ -53,7 +53,7 @@ func void mainloop() {
     }
 }
 
-func void close() {
+fn void close() {
     sdl_image.quit();
 
     gHelloWorld.free();
@@ -65,7 +65,7 @@ func void close() {
     sdl.quit();
 }
 
-public func i32 main(i32 argc, char** argv) {
+public fn i32 main(i32 argc, char** argv) {
 
     init();
 

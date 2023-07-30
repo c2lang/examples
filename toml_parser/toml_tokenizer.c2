@@ -24,7 +24,7 @@ type TokenKind enum u8 {
     Error,
 }
 
-func const char* token2str(TokenKind k) {
+fn const char* token2str(TokenKind k) {
     switch (k) {
     case Word    : return "word";
     case Text    : return "text";
@@ -49,12 +49,12 @@ type Location struct {
     u32 column;
 }
 
-func void Location.init(Location* l, u32 line, u32 col) {
+fn void Location.init(Location* l, u32 line, u32 col) {
     l.line = line;
     l.column = col;
 }
 
-func const char* Location.str(Location* l) {
+fn const char* Location.str(Location* l) {
     local char[32] msg;
     sprintf(msg, "line %d:%d", l.line, l.column);
     return msg;
@@ -68,31 +68,31 @@ type Token struct {
     u32 number;
 }
 
-func void Token.init(Token* t) {
+fn void Token.init(Token* t) {
     t.loc.init(0, 0);
     t.kind = TokenKind.Eof;
     t.text = nil;
     t.number = 0;
 }
 
-func void Token.clear(Token* t) {
+fn void Token.clear(Token* t) {
     t.text = nil;
     t.number = 0;
 }
 
-func void Token.setLocation(Token* t, Location l) {
+fn void Token.setLocation(Token* t, Location l) {
     t.loc = l;
 }
 
-func bool Token.is(const Token* t, TokenKind k) {
+fn bool Token.is(const Token* t, TokenKind k) {
     return t.kind == k;
 }
 
-func bool Token.isNot(const Token* t, TokenKind k) {
+fn bool Token.isNot(const Token* t, TokenKind k) {
     return t.kind != k;
 }
 
-func const char* Token.getName(const Token* t) {
+fn const char* Token.getName(const Token* t) {
     return token2str(t.kind);
 }
 
@@ -105,7 +105,7 @@ type Tokenizer struct {
     bool haveNext;
 }
 
-func void Tokenizer.init(Tokenizer* t, const char* input) {
+fn void Tokenizer.init(Tokenizer* t, const char* input) {
     t.dataStart = input;
     t.current = input;
     t.loc.init(1, 1);
@@ -113,7 +113,7 @@ func void Tokenizer.init(Tokenizer* t, const char* input) {
     t.text[0] = 0;
 }
 
-func void Tokenizer.lex(Tokenizer* t, Token* result) {
+fn void Tokenizer.lex(Tokenizer* t, Token* result) {
     if (t.haveNext) {
        // Q: ptr assign or copy?
        *result = t.nextToken;
@@ -215,7 +215,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
     }
 }
 
-func Token* Tokenizer.lookahead(Tokenizer* t) {
+fn Token* Tokenizer.lookahead(Tokenizer* t) {
     if (!t.haveNext) {
         t.lex(&t.nextToken);
         t.haveNext = true;
@@ -223,12 +223,12 @@ func Token* Tokenizer.lookahead(Tokenizer* t) {
     return &t.nextToken;
 }
 
-func void Tokenizer.advance(Tokenizer* t, u32 amount) {
+fn void Tokenizer.advance(Tokenizer* t, u32 amount) {
     t.loc.column += amount;
     t.current += amount;
 }
 
-func void Tokenizer.parseComment(Tokenizer* t) {
+fn void Tokenizer.parseComment(Tokenizer* t) {
     while (1) {
         switch (t.current[0]) {
         case 0:
@@ -246,7 +246,7 @@ func void Tokenizer.parseComment(Tokenizer* t) {
     }
 }
 
-func void Tokenizer.parseText(Tokenizer* t, Token* result) {
+fn void Tokenizer.parseText(Tokenizer* t, Token* result) {
     // TODO handle literal strings ' .. ' -> no escaping
     // TODO handle escape chars for normal strings " .. \" \r \n "
     t.advance(1);
@@ -264,7 +264,7 @@ func void Tokenizer.parseText(Tokenizer* t, Token* result) {
     t.advance(1);
 }
 
-func void Tokenizer.parseMultiText(Tokenizer* t, Token* result) {
+fn void Tokenizer.parseMultiText(Tokenizer* t, Token* result) {
     t.advance(3);
     if (t.current[0] == '\n') {
         t.current++;
@@ -299,7 +299,7 @@ func void Tokenizer.parseMultiText(Tokenizer* t, Token* result) {
     t.advance(3);
 }
 
-func void Tokenizer.parseNumber(Tokenizer* t, Token* result) {
+fn void Tokenizer.parseNumber(Tokenizer* t, Token* result) {
     // TODO handle prefix +/-
     // handle hexadecimal/ocal/binary number
     // handle '_', like 1_000_000
@@ -313,7 +313,7 @@ func void Tokenizer.parseNumber(Tokenizer* t, Token* result) {
     }
 }
 
-func bool isKeyChar(u8 c) {
+fn bool isKeyChar(u8 c) {
     if (c >= 128) return true;
     if (isalpha(c)) return true;
     if (isdigit(c)) return true;
@@ -321,7 +321,7 @@ func bool isKeyChar(u8 c) {
     return false;
 }
 
-func void Tokenizer.parseKey(Tokenizer* t, Token* result) {
+fn void Tokenizer.parseKey(Tokenizer* t, Token* result) {
     const char* start = t.current;
     while (t.current[0] && isKeyChar(cast<u8>(t.current[0]))) t.current++;
 

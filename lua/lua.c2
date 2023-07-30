@@ -9,7 +9,7 @@ public type LuaState struct {
     lua_State* l;
 }
 
-public func void LuaState.init(LuaState* ls) {
+public fn void LuaState.init(LuaState* ls) {
     ls.l = luaL_newstate();
     ls.loadLib("", luaopen_base);
     ls.loadLib(LUA_TABLIBNAME, luaopen_table);
@@ -21,23 +21,23 @@ public func void LuaState.init(LuaState* ls) {
     ls.loadLib(LUA_COLIBNAME, luaopen_coroutine);
 }
 
-public func void LuaState.destroy(LuaState* ls) {
+public fn void LuaState.destroy(LuaState* ls) {
     lua_close(ls.l);
 }
 
-func void LuaState.loadLib(LuaState* ls, const char* name, lua_CFunction f) {
+fn void LuaState.loadLib(LuaState* ls, const char* name, lua_CFunction f) {
     luaL_requiref(ls.l, name, f, 1);
     //lua_pop(ls.l, 1);  // TODO macro
     lua_settop(ls.l, -(1)-1);
 }
 
-public func void LuaState.registerFunc(LuaState* ls, const char* name, lua_CFunction fn) {
-    //lua_pushcfunction(ls.l, name, fn);
-    lua_pushcclosure(ls.l, fn, 0);
+public fn void LuaState.registerFunc(LuaState* ls, const char* name, lua_CFunction func) {
+    //lua_pushcfunction(ls.l, name, func);
+    lua_pushcclosure(ls.l, func, 0);
     lua_setglobal(ls.l, name);
 }
 
-public func bool LuaState.loadFile(LuaState* ls, const char* filename) {
+public fn bool LuaState.loadFile(LuaState* ls, const char* filename) {
     i32 status = luaL_loadfilex(ls.l, filename, nil);
     if (status != LUA_OK) {
         printf("lua: %s\n", lua_tolstring(ls.l, -1, nil));
@@ -49,7 +49,7 @@ public func bool LuaState.loadFile(LuaState* ls, const char* filename) {
 
 }
 
-public func bool LuaState.execute(LuaState* ls) {
+public fn bool LuaState.execute(LuaState* ls) {
     i32 status = lua_pcallk(ls.l, 0, LUA_MULTRET, 0, 0, nil);
     if (status != LUA_OK) {
         printf("lua: %s\n", lua_tolstring(ls.l, -1, nil));
@@ -60,7 +60,7 @@ public func bool LuaState.execute(LuaState* ls) {
     return true;
 }
 
-public func bool LuaState.runFunction(LuaState* ls, const char* fname) {
+public fn bool LuaState.runFunction(LuaState* ls, const char* fname) {
     printf("C> running function %s\n", fname);
     // TODO check returns
     lua_getglobal(ls.l, fname);
@@ -74,7 +74,7 @@ public func bool LuaState.runFunction(LuaState* ls, const char* fname) {
     return true;
 }
 
-public func i32 startScript(lua_State* l) {
+public fn i32 startScript(lua_State* l) {
     i32 args = lua_gettop(l);
     if (args != 1) {
         printf("C> startScript: need 1 arg\n");
@@ -100,7 +100,7 @@ public func i32 startScript(lua_State* l) {
     return 0;
 }
 
-public func void LuaState.callIntInt(LuaState* ls, const char* fname, i32 arg1) {
+public fn void LuaState.callIntInt(LuaState* ls, const char* fname, i32 arg1) {
     // TODO check returns
     lua_getglobal(ls.l, fname);
     lua_pushinteger(ls.l, arg1);

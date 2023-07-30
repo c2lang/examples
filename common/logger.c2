@@ -17,7 +17,7 @@ public type Level enum u8 {
     Debug,
 }
 
-func const char* level2str(Level lvl) {
+fn const char* level2str(Level lvl) {
     switch (lvl) {
     case Fatal: return "Fatal";
     case Error: return "Error";
@@ -28,7 +28,7 @@ func const char* level2str(Level lvl) {
     return nil;
 }
 
-func u64 current_time() {
+fn u64 current_time() {
    Timeval tv;
    gettimeofday(&tv, nil);
    u64 tv64 = cast<u64>(tv.tv_sec);
@@ -37,7 +37,7 @@ func u64 current_time() {
    return tv64;
 }
 
-public type WriteFunc func void(const char* data, u32 len);
+public type WriteFunc fn void(const char* data, u32 len);
 
 public type Base struct {
     Level defaultLevel;
@@ -47,11 +47,11 @@ public type Base struct {
     WriteFunc write;
 }
 
-func void log_stdout(const char* data, u32 len) {
+fn void log_stdout(const char* data, u32 len) {
     printf("%s", data);
 }
 
-public func void Base.init(Base* base, Level lvl_, bool color_, bool relativeTimes_)
+public fn void Base.init(Base* base, Level lvl_, bool color_, bool relativeTimes_)
 {
     base.defaultLevel = lvl_;
     base.useColor = color_;
@@ -60,7 +60,7 @@ public func void Base.init(Base* base, Level lvl_, bool color_, bool relativeTim
     base.write = log_stdout;
 }
 
-public func void Base.destroy(Base* base)
+public fn void Base.destroy(Base* base)
 {
 }
 
@@ -70,18 +70,18 @@ public type Log struct {
     char[16] name;
 }
 
-public func void Log.init(Log* log, Base* base, const char* name_) {
+public fn void Log.init(Log* log, Base* base, const char* name_) {
     log.base = base;
     log.level = base.defaultLevel;
     strncpy(log.name, name_, 16);
     log.name[15] = 0;
 }
 
-public func void Log.setLevel(Log* log, Level lvl) {
+public fn void Log.setLevel(Log* log, Level lvl) {
     log.level = lvl;
 }
 
-public func void Log.debug(Log* log, const char* format, ...) {
+public fn void Log.debug(Log* log, const char* format, ...) {
     if (Level.Debug > log.level) return;
     Va_list args;
     va_start(args, format);
@@ -89,7 +89,7 @@ public func void Log.debug(Log* log, const char* format, ...) {
     va_end(args);
 }
 
-public func void Log.info(Log* log, const char* format, ...) {
+public fn void Log.info(Log* log, const char* format, ...) {
     if (Level.Info > log.level) return;
     Va_list args;
     va_start(args, format);
@@ -97,7 +97,7 @@ public func void Log.info(Log* log, const char* format, ...) {
     va_end(args);
 }
 
-public func void Log.warn(Log* log, const char* format, ...) {
+public fn void Log.warn(Log* log, const char* format, ...) {
     if (Level.Warn > log.level) return;
     Va_list args;
     va_start(args, format);
@@ -105,7 +105,7 @@ public func void Log.warn(Log* log, const char* format, ...) {
     va_end(args);
 }
 
-public func void Log.error(Log* log, const char* format, ...) {
+public fn void Log.error(Log* log, const char* format, ...) {
     if (Level.Error > log.level) return;
     Va_list args;
     va_start(args, format);
@@ -113,7 +113,7 @@ public func void Log.error(Log* log, const char* format, ...) {
     va_end(args);
 }
 
-public func void Log.fatal(Log* log, const char* format, ...) {
+public fn void Log.fatal(Log* log, const char* format, ...) {
     Va_list args;
     va_start(args, format);
     log.internal(Level.Fatal, color.Red, format, args);
@@ -121,7 +121,7 @@ public func void Log.fatal(Log* log, const char* format, ...) {
     exit(EXIT_FAILURE);
 }
 
-func void Log.internal(Log* log, Level level, const char* color_, const char* format, Va_list args) {
+fn void Log.internal(Log* log, Level level, const char* color_, const char* format, Va_list args) {
     char[256] buffer;
     char* cp = buffer;
 

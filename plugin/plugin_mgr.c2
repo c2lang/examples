@@ -7,9 +7,9 @@ import dlfcn local;
 import stdio local;
 import string local;
 
-type LoadFn func void(i32 arg);
+type LoadFn fn void(i32 arg);
 
-public func i32 main(i32 argc, char** argv) {
+public fn i32 main(i32 argc, char** argv) {
     if (argc != 2) {
         printf("Usage: %s [filename]\n", argv[0]);
         return 0;

@@ -5,12 +5,12 @@ import stdio local;
 import lua;
 
 // TODO wrap in own type so lua remains hidden
-func i32 atpanic(lua.State* l) {
+fn i32 atpanic(lua.State* l) {
     printf("lua panic\n");
     return 0;
 }
 
-public func i32 main(i32 argc, char** argv) {
+public fn i32 main(i32 argc, char** argv) {
     const char* scriptName = "lua/script1.lua";
     if (argc == 2) scriptName = argv[1];
 

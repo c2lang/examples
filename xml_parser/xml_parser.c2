@@ -13,13 +13,13 @@ public const u32 MAX_DIAG = 256;
 
 const u32 CHILD_TEXT = (cast<u32>(1)<<31);
 
-func bool isNameStartChar(i8 ch) {
+fn bool isNameStartChar(i8 ch) {
     if (ch < 0) return true;
     if (isalpha(ch)) return true;
     return ch == ':' || ch == '_';
 }
 
-func bool isNameChar(i8 ch) {
+fn bool isNameChar(i8 ch) {
     return isNameStartChar(ch)
         || isdigit(ch)
         || ch == '.'
@@ -31,11 +31,11 @@ public type Parser struct {
     Blocks blocks;
 }
 
-public func void Parser.destroy(Parser* p) {
+public fn void Parser.destroy(Parser* p) {
     p.blocks.destroy();
 }
 
-public func bool Parser.parse(Parser* p, const char* text, bool verbose) {
+public fn bool Parser.parse(Parser* p, const char* text, bool verbose) {
     p.message[0] = 0;
     p.blocks.init();
 
@@ -45,7 +45,7 @@ public func bool Parser.parse(Parser* p, const char* text, bool verbose) {
     return status;
 }
 
-public func Node2 Parser.getRoot(const Parser* p) {
+public fn Node2 Parser.getRoot(const Parser* p) {
     Node2 result;
     if (p.blocks.node_count == 0) {
         result.node = nil;
@@ -56,7 +56,7 @@ public func Node2 Parser.getRoot(const Parser* p) {
     return result;
 }
 
-public func const char* Parser.getDiag(Parser* p) {
+public fn const char* Parser.getDiag(Parser* p) {
     return p.message;
 }
 
@@ -70,7 +70,7 @@ type XmlParser struct {
     Blocks* blocks;
 }
 
-func bool XmlParser.parse(XmlParser* p, const char* text, char* diagMsg, Blocks* blocks_) {
+fn bool XmlParser.parse(XmlParser* p, const char* text, char* diagMsg, Blocks* blocks_) {
     p.tokenizer.init(text);
     p.token.init();
     p.prev.set(0, 0);
@@ -93,12 +93,12 @@ func bool XmlParser.parse(XmlParser* p, const char* text, char* diagMsg, Blocks*
     return false;
 }
 
-func void XmlParser.fatal(XmlParser* p, const char* text) {
+fn void XmlParser.fatal(XmlParser* p, const char* text) {
     sprintf(p.msg, "error %s %s", text, p.diagLoc());
     longjmp(&p.jmp_err, 1);
 }
 
-func u32 XmlParser.parseNode(XmlParser* p) {
+fn u32 XmlParser.parseNode(XmlParser* p) {
     p.expectAndConsume(TokenKind.ElemBegin);
     p.expect(TokenKind.Name);
     u32 off = p.blocks.addNode(p.token.getText());
@@ -158,7 +158,7 @@ func u32 XmlParser.parseNode(XmlParser* p) {
     return off;
 }
 
-func bool XmlParser.parseTag(XmlParser* p, Node* node) {
+fn bool XmlParser.parseTag(XmlParser* p, Node* node) {
     u32 last_attr_off = 0;
     Attr* lastAttr = nil;
 
@@ -208,7 +208,7 @@ func bool XmlParser.parseTag(XmlParser* p, Node* node) {
     return false;
 }
 
-func void XmlParser.parseEndTag(XmlParser* p, const Node* node) {
+fn void XmlParser.parseEndTag(XmlParser* p, const Node* node) {
     // Syntax: </name>
     p.consumeToken();
     p.expect(TokenKind.Name);
@@ -220,7 +220,7 @@ func void XmlParser.parseEndTag(XmlParser* p, const Node* node) {
     p.expectAndConsume(TokenKind.ElemEnd);
 }
 
-func void XmlParser.parseXml(XmlParser* p) {
+fn void XmlParser.parseXml(XmlParser* p) {
     p.expectAndConsume(TokenKind.XmlBegin);
     while (1) {
         switch (p.token.getKind()) {
@@ -254,7 +254,7 @@ func void XmlParser.parseXml(XmlParser* p) {
     }
 }
 
-func u32 XmlParser.parseAttribute(XmlParser* p) {
+fn u32 XmlParser.parseAttribute(XmlParser* p) {
     // Syntax: name='value'
     u32 off = p.blocks.addAttr(p.token.getText());
     Attr* attr = &p.blocks.attrs[off];
@@ -266,7 +266,7 @@ func u32 XmlParser.parseAttribute(XmlParser* p) {
     return off;
 }
 
-func Location XmlParser.consumeToken(XmlParser* p) {
+fn Location XmlParser.consumeToken(XmlParser* p) {
     p.prev = p.token.getLoc();
     p.tokenizer.lex(&p.token);
 #if 0
@@ -283,19 +283,19 @@ func Location XmlParser.consumeToken(XmlParser* p) {
     return p.prev;
 }
 
-func const char* XmlParser.diagLoc(const XmlParser* p) {
+fn const char* XmlParser.diagLoc(const XmlParser* p) {
     Location loc = p.token.getLoc();
     return loc.str();
 }
 
-func void XmlParser.expect(XmlParser* p, TokenKind k) {
+fn void XmlParser.expect(XmlParser* p, TokenKind k) {
     if (p.token.isNot(k)) {
         sprintf(p.msg, "expected '%s' %s", getTokenName(k), p.diagLoc());
         longjmp(&p.jmp_err, 1);
     }
 }
 
-func void XmlParser.expectAndConsume(XmlParser* p, TokenKind k) {
+fn void XmlParser.expectAndConsume(XmlParser* p, TokenKind k) {
     p.expect(k);
     p.consumeToken();
 }
@@ -308,13 +308,13 @@ type Tokenizer struct {
     bool inElement;
 }
 
-func void Tokenizer.init(Tokenizer* t, const char* text) {
+fn void Tokenizer.init(Tokenizer* t, const char* text) {
     t.current = text;
     t.loc.set(1, 1);
     t.inElement = false;
 }
 
-func void Tokenizer.lex(Tokenizer* t, Token* result) {
+fn void Tokenizer.lex(Tokenizer* t, Token* result) {
     result.clear();
 
     // read away whitespace
@@ -464,7 +464,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
     }
 }
 
-func bool Tokenizer.readLtToken(Tokenizer* t, Token* result) {
+fn bool Tokenizer.readLtToken(Tokenizer* t, Token* result) {
     if (t.current[1] == '/') {
         result.setLocation(t.loc);
         result.setKind(TokenKind.ElemBeginClose);
@@ -528,7 +528,7 @@ func bool Tokenizer.readLtToken(Tokenizer* t, Token* result) {
     return true;
 }
 
-func bool Tokenizer.readComments(Tokenizer* t, Token* result) {
+fn bool Tokenizer.readComments(Tokenizer* t, Token* result) {
     t.advance(3);
     // TODO escaped chars
     while (1) {
@@ -571,7 +571,7 @@ func bool Tokenizer.readComments(Tokenizer* t, Token* result) {
     return true;
 }
 
-func void Tokenizer.parseValue(Tokenizer* t, Token* result, char delimiter) {
+fn void Tokenizer.parseValue(Tokenizer* t, Token* result, char delimiter) {
     t.advance(1);
     const char* start = t.current;
     // NOTE: newlines are not supported
@@ -598,7 +598,7 @@ func void Tokenizer.parseValue(Tokenizer* t, Token* result, char delimiter) {
     t.loc.col += len+1;
 }
 
-func void Tokenizer.parseName(Tokenizer* t, Token* result) {
+fn void Tokenizer.parseName(Tokenizer* t, Token* result) {
     const char* start = t.current;
     while (t.current[0] && isNameChar(t.current[0])) t.current++;
 
@@ -613,7 +613,7 @@ func void Tokenizer.parseName(Tokenizer* t, Token* result) {
     t.loc.col += len;
 }
 
-func void Tokenizer.advance(Tokenizer* t, u32 amount) {
+fn void Tokenizer.advance(Tokenizer* t, u32 amount) {
     t.loc.col += amount;
     t.current += amount;
 }
@@ -637,7 +637,7 @@ type TokenKind enum u8 {
     Error,
 }
 
-func const char* getTokenName(TokenKind k) {
+fn const char* getTokenName(TokenKind k) {
     switch (k) {
     case XmlBegin:      return "<?xml";
     case XmlEnd:        return "?>";
@@ -665,49 +665,49 @@ type Token struct {
     const char* text;
 }
 
-func void Token.init(Token* t) {
+fn void Token.init(Token* t) {
     t.loc.set(0, 0);
     t.kind = TokenKind.Eof;
     t.text = nil;
 }
 
-func Location Token.getLoc(const Token* t) {
+fn Location Token.getLoc(const Token* t) {
     return t.loc;
 }
 
-func void Token.clear(Token* t) {
+fn void Token.clear(Token* t) {
     t.text = nil;
 }
 
-func void Token.setData(Token* t, const char* d) {
+fn void Token.setData(Token* t, const char* d) {
     t.text = d;
 }
 
-func const char* Token.getName(const Token* t) {
+fn const char* Token.getName(const Token* t) {
     return getTokenName(t.kind);
 }
 
-func TokenKind Token.getKind(const Token* t) {
+fn TokenKind Token.getKind(const Token* t) {
     return t.kind;
 }
 
-func bool Token.is(const Token* t, TokenKind kind) {
+fn bool Token.is(const Token* t, TokenKind kind) {
     return t.kind == kind;
 }
 
-func bool Token.isNot(const Token* t, TokenKind kind) {
+fn bool Token.isNot(const Token* t, TokenKind kind) {
     return t.kind != kind;
 }
 
-func const char* Token.getText(const Token* t) {
+fn const char* Token.getText(const Token* t) {
     return t.text;
 }
 
-func void Token.setKind(Token* t, TokenKind kind) {
+fn void Token.setKind(Token* t, TokenKind kind) {
     t.kind = kind;
 }
 
-func void Token.setLocation(Token* t, Location loc) {
+fn void Token.setLocation(Token* t, Location loc) {
     t.loc = loc;
 }
 
@@ -717,12 +717,12 @@ type Location struct {
     u32 col;
 }
 
-func void Location.set(Location* loc, u32 l, u32 c) {
+fn void Location.set(Location* loc, u32 l, u32 c) {
     loc.line = l;
     loc.col = c;
 }
 
-func const char* Location.str(const Location* loc) {
+fn const char* Location.str(const Location* loc) {
     local char[32] msg;
     sprintf(msg, "at line %d:%-3d", loc.line, loc.col);
     return msg;

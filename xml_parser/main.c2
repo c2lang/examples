@@ -4,7 +4,7 @@ import stdio local;
 import file_utils;
 import xml;
 
-public func i32 main(i32 argc, char** argv) {
+public fn i32 main(i32 argc, char** argv) {
     if (argc != 2 && argc != 3) {
         printf("Usage: parser [xml-file] <verbose>\n");
         return 0;

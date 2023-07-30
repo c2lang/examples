@@ -8,7 +8,7 @@ import string local;
 import libc_poll local;
 import libc_fcntl local;
 
-public func u64 current_time() {
+public fn u64 current_time() {
     sys_time.Timeval tv;
     sys_time.gettimeofday(&tv, nil);
     u64 now64 = cast<u64>(tv.tv_sec);
@@ -30,7 +30,7 @@ type Cmd struct {
     CmdKind kind;
     union {
         struct callback {
-            Function fn;
+            Function func;
             void* arg1;
             void* arg2;
         }
@@ -57,7 +57,7 @@ public type Base struct {
     bool eventsDirty;
 } @(opaque)
 
-public func Base* Base.create() {
+public fn Base* Base.create() {
     i32[2] pipefd;
     if (pipe2(pipefd, O_CLOEXEC | O_NONBLOCK) != 0) {
         return nil;
@@ -72,11 +72,11 @@ public func Base* Base.create() {
     return base;
 }
 
-public func void Base.destroy(Base* base) {
+public fn void Base.destroy(Base* base) {
     stdlib.free(base);
 }
 
-public func u8 Base.mainloop(Base* base) {
+public fn u8 Base.mainloop(Base* base) {
     base.return_value = 0;
     base.running_loop = 1;
     while (!base.loop_break) {
@@ -86,7 +86,7 @@ public func u8 Base.mainloop(Base* base) {
     return base.return_value;
 }
 
-public func void Base.loopbreak(Base* base, u8 return_value) {
+public fn void Base.loopbreak(Base* base, u8 return_value) {
     base.return_value = return_value;
     base.loop_break = 1;
     if (base.running_loop) {
@@ -97,7 +97,7 @@ public func void Base.loopbreak(Base* base, u8 return_value) {
     }
 }
 
-func void Base.writeCmd(Base* base, Cmd* cmd) {
+fn void Base.writeCmd(Base* base, Cmd* cmd) {
     i64 written = write(base.write_pipe, cmd, sizeof(Cmd));
     if (written != sizeof(Cmd)) {
         fprintf(stderr, "Error writing to pipe\n");
@@ -105,7 +105,7 @@ func void Base.writeCmd(Base* base, Cmd* cmd) {
     }
 }
 
-func void handlePipe(i32 fd, void* arg, u16 flags) {
+fn void handlePipe(i32 fd, void* arg, u16 flags) {
     Base* base = cast<Base*>(arg);
     Cmd cmd;
     i64 numread = read(base.read_pipe, &cmd, sizeof(Cmd));
@@ -114,7 +114,7 @@ func void handlePipe(i32 fd, void* arg, u16 flags) {
     case LoopBreak:
         break;
     case Callback:
-        cmd.callback.fn(cmd.callback.arg1, cmd.callback.arg2);
+        cmd.callback.func(cmd.callback.arg1, cmd.callback.arg2);
         break;
     case TimerAdd:
         cmd.timer.timer.add(cmd.timer.delay_us);
@@ -125,7 +125,7 @@ func void handlePipe(i32 fd, void* arg, u16 flags) {
     }
 }
 
-func void Base.fire_timer(Base* base) {
+fn void Base.fire_timer(Base* base) {
     Timer* timer = base.timers;
     base.timers = timer.next;
     timer.next = nil;
@@ -138,7 +138,7 @@ func void Base.fire_timer(Base* base) {
     timer.handler(timer.handler_arg);
 }
 
-func void Base.internal_loop(Base* base) {
+fn void Base.internal_loop(Base* base) {
     i32 timeout_ms = -1;    // infinity
     if (base.timers) {
         u64 now = current_time();
@@ -189,18 +189,18 @@ func void Base.internal_loop(Base* base) {
     }
 }
 
-func void Base.updateEvents(Base* base)
+fn void Base.updateEvents(Base* base)
 {
     base.eventsDirty = true;
 }
 
-public type Function func void (void* arg1, void* arg2);
+public type Function fn void (void* arg1, void* arg2);
 
-public func void Base.schedule_safe(Base* base, Function fn, void* arg1, void* arg2) {
+public fn void Base.schedule_safe(Base* base, Function func, void* arg1, void* arg2) {
     Cmd cmd;
     memset(&cmd, 0, sizeof(Cmd));
     cmd.kind = CmdKind.Callback;
-    cmd.callback.fn = fn;
+    cmd.callback.func = func;
     cmd.callback.arg1 = arg1;
     cmd.callback.arg2 = arg2;
     base.writeCmd(&cmd);
@@ -208,7 +208,7 @@ public func void Base.schedule_safe(Base* base, Function fn, void* arg1, void* a
 
 
 
-public type EventFunc func void(i32 fd, void* arg, u16 flags);
+public type EventFunc fn void(i32 fd, void* arg, u16 flags);
 
 public type Event struct {
     i32 fd;
@@ -222,17 +222,17 @@ public type Event struct {
 public const u8 READ  = 0x02;
 public const u8 WRITE = 0x04;
 
-public func void Event.assign(Event* ev, Base* base, i32 fd, u16 flags, EventFunc fn, void* arg)
+public fn void Event.assign(Event* ev, Base* base, i32 fd, u16 flags, EventFunc func, void* arg)
 {
     ev.fd = fd;
     ev.next = nil;
     ev.base = base;
-    ev.handler = fn;
+    ev.handler = func;
     ev.handler_arg = arg;
     ev.flags = flags;
 }
 
-public func void Event.add(Event* ev)
+public fn void Event.add(Event* ev)
 {
     Base* base = ev.base;
     if (base.event_tail) base.event_tail.next = ev;
@@ -242,7 +242,7 @@ public func void Event.add(Event* ev)
     base.updateEvents();
 }
 
-public func void Event.del(Event* ev)
+public fn void Event.del(Event* ev)
 {
     Base* base = ev.base;
 
@@ -271,7 +271,7 @@ public func void Event.del(Event* ev)
 }
 
 
-public type TimerHandler func void(void* arg);
+public type TimerHandler fn void(void* arg);
 
 // struct fields for internal use only. Users should consider this struct opaque
 public type Timer struct {
@@ -287,18 +287,18 @@ public type Timer struct {
 public const u32 PERSIST = 0x1;
 const u32 TIMER_PENDING  = 0x2;
 
-public func void Timer.assign(Timer* timer, Base* base, u32 flags, TimerHandler fn, void* arg)
+public fn void Timer.assign(Timer* timer, Base* base, u32 flags, TimerHandler func, void* arg)
 {
     timer.next = nil;
     timer.timeout = 0;
     timer.base = base;
-    timer.handler = fn;
+    timer.handler = func;
     timer.handler_arg = arg;
     timer.interval_usec = 0;
     timer.flags = flags;
 }
 
-func void Timer.add_internal(Timer* timer)
+fn void Timer.add_internal(Timer* timer)
 {
     Base* base = timer.base;
     u64 timeout = timer.timeout;
@@ -323,7 +323,7 @@ func void Timer.add_internal(Timer* timer)
     }
 }
 
-public func void Timer.add(Timer* timer, u64 delay_usec)
+public fn void Timer.add(Timer* timer, u64 delay_usec)
 {
     u64 now = current_time();
     timer.interval_usec = delay_usec;
@@ -333,12 +333,12 @@ public func void Timer.add(Timer* timer, u64 delay_usec)
     timer.add_internal();
 }
 
-public func bool Timer.isActive(const Timer* timer)
+public fn bool Timer.isActive(const Timer* timer)
 {
     return (timer.flags & TIMER_PENDING) != 0;
 }
 
-public func void Timer.del(Timer* timer)
+public fn void Timer.del(Timer* timer)
 {
     if (!timer.isActive()) return;
     Base* base = timer.base;
@@ -360,7 +360,7 @@ public func void Timer.del(Timer* timer)
 
 }
 
-public func void Timer.add_sync(Timer* timer, u64 delay_us)
+public fn void Timer.add_sync(Timer* timer, u64 delay_us)
 {
     Cmd cmd;
     memset(&cmd, 0, sizeof(Cmd));
@@ -370,7 +370,7 @@ public func void Timer.add_sync(Timer* timer, u64 delay_us)
     timer.base.writeCmd(&cmd);
 }
 
-public func void Timer.del_sync(Timer* timer)
+public fn void Timer.del_sync(Timer* timer)
 {
     Cmd cmd;
     memset(&cmd, 0, sizeof(Cmd));
@@ -379,11 +379,11 @@ public func void Timer.del_sync(Timer* timer)
     timer.base.writeCmd(&cmd);
 }
 
-public func u64 sec(u64 t) {
+public fn u64 sec(u64 t) {
     return 1000 * 1000 * t;
 }
 
-public func u64 msec(u64 t) {
+public fn u64 msec(u64 t) {
     return 1000 * t;
 }
 

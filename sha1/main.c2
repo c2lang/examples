@@ -4,7 +4,7 @@ import sha1;
 import string local;
 import stdio local;
 
-func void test(const char* name, const char* input, const char* expect) {
+fn void test(const char* name, const char* input, const char* expect) {
     char[21] result;
     char[41] hexresult;
     sha1.hash(result, input, cast<u32>(strlen(input)));
@@ -16,7 +16,7 @@ func void test(const char* name, const char* input, const char* expect) {
     if (strcmp(expect, hexresult) != 0) printf("FAIL %s\n", name);
 }
 
-public func i32 main() {
+public fn i32 main() {
     const char[] input1 = "abc";
     const char[] expect1 = "a9993e364706816aba3e25717850c26c9cd0d89d";
     test("test1", input1, expect1);

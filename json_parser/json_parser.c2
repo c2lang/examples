@@ -11,37 +11,37 @@ public type Parser struct {
     char[MAX_DIAG] message;
 }
 
-public func void Parser.init(Parser* p) {
+public fn void Parser.init(Parser* p) {
     p.data = Data.create();
     p.message[0] = 0;
 }
 
-public func void Parser.destroy(Parser* p) {
+public fn void Parser.destroy(Parser* p) {
     p.data.destroy();
     p.data = nil;
 }
 
-public func bool Parser.parse(Parser* p, const char* text) {
+public fn bool Parser.parse(Parser* p, const char* text) {
     p.data.reset();
     p.message[0] = 0;
     JParser parser;
     return parser.parse(text, p.message, p.data);
 }
 
-public func Iter Parser.get_root(const Parser* p) {
+public fn Iter Parser.get_root(const Parser* p) {
     Iter node = { p.data, 1 }
     return node;
 }
 
-public func void Parser.report(const Parser* p) {
+public fn void Parser.report(const Parser* p) {
     printf("JSON: %d nodes, names: %d bytes, values: %d bytes\n", p.data.nodes.cur, p.data.names.cur, p.data.values.cur);
 }
 
-public func void Parser.dump(const Parser* p, bool verbose) {
+public fn void Parser.dump(const Parser* p, bool verbose) {
     p.data.dump(verbose);
 }
 
-public func const char* Parser.getDiag(Parser* p) {
+public fn const char* Parser.getDiag(Parser* p) {
     return p.message;
 }
 
@@ -59,7 +59,7 @@ type JParser struct {
     char* msg;
 }
 
-func bool JParser.parse(JParser* p, const char* text, char* diagMsg, Data* data) {
+fn bool JParser.parse(JParser* p, const char* text, char* diagMsg, Data* data) {
     p.tokenizer.init(text);
     p.token.init();
     p.prev.set(0, 0);
@@ -78,7 +78,7 @@ func bool JParser.parse(JParser* p, const char* text, char* diagMsg, Data* data)
     return false;
 }
 
-func Location JParser.consumeToken(JParser* p) {
+fn Location JParser.consumeToken(JParser* p) {
     p.prev = p.token.getLoc();
     p.tokenizer.lex(&p.token);
 #if 0
@@ -93,7 +93,7 @@ func Location JParser.consumeToken(JParser* p) {
     return p.prev;
 }
 
-func void JParser.parseFile(JParser* p) {
+fn void JParser.parseFile(JParser* p) {
     switch (p.token.getKind()) {
     case L_brace:
         u32 node_idx = p.data.addNode(NodeKind.Object, 0, 0);
@@ -111,24 +111,24 @@ func void JParser.parseFile(JParser* p) {
     p.expect(TokenKind.Eof);
 }
 
-func const char* JParser.diagLoc(const JParser* p) {
+fn const char* JParser.diagLoc(const JParser* p) {
     Location loc = p.token.getLoc();
     return loc.str();
 }
 
-func void JParser.expect(JParser* p, TokenKind k) {
+fn void JParser.expect(JParser* p, TokenKind k) {
     if (p.token.isNot(k)) {
         sprintf(p.msg, "expected '%s' %s", getTokenName(k), p.diagLoc());
         longjmp(&p.jmp_err, 1);
     }
 }
 
-func void JParser.expectAndConsume(JParser* p, TokenKind k) {
+fn void JParser.expectAndConsume(JParser* p, TokenKind k) {
     p.expect(k);
     p.consumeToken();
 }
 
-func void JParser.parseArray(JParser* p, u32 parent_idx) {
+fn void JParser.parseArray(JParser* p, u32 parent_idx) {
     p.expectAndConsume(TokenKind.L_sbracket);
 
     // TODO check names already present in array
@@ -186,7 +186,7 @@ func void JParser.parseArray(JParser* p, u32 parent_idx) {
     p.inArray = false;
 }
 
-func u32 JParser.addName(JParser* p, u32 entry_idx, const char* name) {
+fn u32 JParser.addName(JParser* p, u32 entry_idx, const char* name) {
     if (!p.inArray || entry_idx >= elemsof(p.name_cache)) {
         return p.data.addName(name, cast<u32>(strlen(name)));
     }
@@ -201,7 +201,7 @@ func u32 JParser.addName(JParser* p, u32 entry_idx, const char* name) {
     return name_idx;
 }
 
-func void JParser.parseObject(JParser* p, u32 parent_idx) {
+fn void JParser.parseObject(JParser* p, u32 parent_idx) {
     p.expectAndConsume(TokenKind.L_brace);
     u32 prev_idx = 0;
     u32 entry_idx = 0;
@@ -263,7 +263,7 @@ func void JParser.parseObject(JParser* p, u32 parent_idx) {
     p.expectAndConsume(TokenKind.R_brace);
 }
 
-func u32 JParser.parseValue(JParser* p) {
+fn u32 JParser.parseValue(JParser* p) {
     char[MAX_TEXT] value;
     switch (p.token.getKind()) {
     case Kw_true:
@@ -299,13 +299,13 @@ type Tokenizer struct {
     char[MAX_TEXT] msg;
 }
 
-func void Tokenizer.init(Tokenizer* t, const char* text) {
+fn void Tokenizer.init(Tokenizer* t, const char* text) {
     t.dataStart = text;
     t.current = text;
     t.loc.set(1, 1);
 }
 
-func void Tokenizer.lex(Tokenizer* t, Token* result) {
+fn void Tokenizer.lex(Tokenizer* t, Token* result) {
     result.clear();
     while (1) {
         switch (t.current[0]) {
@@ -391,7 +391,7 @@ func void Tokenizer.lex(Tokenizer* t, Token* result) {
     }
 }
 
-func void Tokenizer.parseText(Tokenizer* t, Token* result) {
+fn void Tokenizer.parseText(Tokenizer* t, Token* result) {
     t.current++;
     const char* start = t.current;
     while (t.current[0] && t.current[0] != '"') t.current++;
@@ -422,7 +422,7 @@ func void Tokenizer.parseText(Tokenizer* t, Token* result) {
     t.loc.col += len+1;
 }
 
-func void Tokenizer.parseNumber(Tokenizer* t, Token* result) {
+fn void Tokenizer.parseNumber(Tokenizer* t, Token* result) {
     const char* start = t.current;
     if (t.current[0] == '-') t.current++;
     while (t.current[0] >= '0' && t.current[0] <= '9') t.current++;
@@ -439,7 +439,7 @@ func void Tokenizer.parseNumber(Tokenizer* t, Token* result) {
     t.loc.col += len;
 }
 
-func void Tokenizer.parseKeyword(Tokenizer* t, Token* result) {
+fn void Tokenizer.parseKeyword(Tokenizer* t, Token* result) {
     // TODO should check on next char as well (not letter/number/undercore/etc)
     if (strncmp(t.current, "true", 4) == 0) {
         result.setLocation(t.loc);
@@ -460,7 +460,7 @@ func void Tokenizer.parseKeyword(Tokenizer* t, Token* result) {
     }
 }
 
-func void Tokenizer.advance(Tokenizer* t, u32 amount) {
+fn void Tokenizer.advance(Tokenizer* t, u32 amount) {
     t.loc.col += amount;
     t.current += amount;
 }
@@ -481,7 +481,7 @@ type TokenKind enum u8 {
     Error,
 }
 
-func const char* getTokenName(TokenKind k) {
+fn const char* getTokenName(TokenKind k) {
     switch (k) {
     case Kw_true:    return "true";
     case Kw_false:   return "false";
@@ -505,49 +505,49 @@ type Token struct {
     const char* text;
 }
 
-func void Token.init(Token* t) {
+fn void Token.init(Token* t) {
     t.loc.set(0, 0);
     t.kind = TokenKind.Eof;
     t.text = nil;
 }
 
-func Location Token.getLoc(const Token* t) {
+fn Location Token.getLoc(const Token* t) {
     return t.loc;
 }
 
-func void Token.clear(Token* t) {
+fn void Token.clear(Token* t) {
     t.text = nil;
 }
 
-func void Token.setData(Token* t, const char* d) {
+fn void Token.setData(Token* t, const char* d) {
     t.text = d;
 }
 
-func const char* Token.getName(const Token* t) {
+fn const char* Token.getName(const Token* t) {
     return getTokenName(t.kind);
 }
 
-func TokenKind Token.getKind(const Token* t) {
+fn TokenKind Token.getKind(const Token* t) {
     return t.kind;
 }
 
-func bool Token.is(const Token* t, TokenKind kind) {
+fn bool Token.is(const Token* t, TokenKind kind) {
     return t.kind == kind;
 }
 
-func bool Token.isNot(const Token* t, TokenKind kind) {
+fn bool Token.isNot(const Token* t, TokenKind kind) {
     return t.kind != kind;
 }
 
-func const char* Token.getText(const Token* t) {
+fn const char* Token.getText(const Token* t) {
     return t.text;
 }
 
-func void Token.setKind(Token* t, TokenKind kind) {
+fn void Token.setKind(Token* t, TokenKind kind) {
     t.kind = kind;
 }
 
-func void Token.setLocation(Token* t, Location loc) {
+fn void Token.setLocation(Token* t, Location loc) {
     t.loc = loc;
 }
 
@@ -557,12 +557,12 @@ type Location struct {
     u32 col;
 }
 
-func void Location.set(Location* loc, u32 l, u32 c) {
+fn void Location.set(Location* loc, u32 l, u32 c) {
     loc.line = l;
     loc.col = c;
 }
 
-func const char* Location.str(const Location* loc) {
+fn const char* Location.str(const Location* loc) {
     local char[32] msg;
     sprintf(msg, "at line %d:%d", loc.line, loc.col);
     return msg;

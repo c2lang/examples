@@ -11,12 +11,12 @@ import logger;
 const u8 LF = 0x0A;
 const u8 CR = 0x0D;
 
-func void fatal(const char* msg) {
+fn void fatal(const char* msg) {
     printf("%s\n", msg);
     exit(EXIT_FAILURE);
 }
 
-func void stripNewline(char* buffer, i64 len)
+fn void stripNewline(char* buffer, i64 len)
 {
     if (buffer[len-1] == LF) {
         buffer[len-1] = 0;
@@ -36,7 +36,7 @@ type Connection struct {
     Socket* socket;
 }
 
-func Connection* Connection.create(i32 fd, Socket* s, logger.Log* log) {
+fn Connection* Connection.create(i32 fd, Socket* s, logger.Log* log) {
     Connection* conn = calloc(1, sizeof(Connection));
     conn.fd = fd;
     conn.log = log;
@@ -49,7 +49,7 @@ func Connection* Connection.create(i32 fd, Socket* s, logger.Log* log) {
     return conn;
 }
 
-func void Connection.onData(Connection* conn)
+fn void Connection.onData(Connection* conn)
 {
     char[128] buffer;
 
@@ -69,7 +69,7 @@ func void Connection.onData(Connection* conn)
     }
 }
 
-func void Connection.destroy(Connection* conn)
+fn void Connection.destroy(Connection* conn)
 {
     conn.log.debug("destroy conn %d", conn.fd);
     conn.socket.removeConnection(conn);
@@ -78,7 +78,7 @@ func void Connection.destroy(Connection* conn)
     free(conn);
 }
 
-func void connection_on_data(i32 fd, void* arg, u16 flags)
+fn void connection_on_data(i32 fd, void* arg, u16 flags)
 {
     Connection* conn = arg;
     conn.onData();
@@ -93,7 +93,7 @@ public type Socket struct {
     Connection* conns;
 } @(opaque)
 
-public func Socket* Socket.create(events.Base* base, logger.Base* logbase, const char* name, u16 port)
+public fn Socket* Socket.create(events.Base* base, logger.Base* logbase, const char* name, u16 port)
 {
     Socket* s = calloc(1, sizeof(Socket));
     s.base = base;
@@ -126,7 +126,7 @@ public func Socket* Socket.create(events.Base* base, logger.Base* logbase, const
     return s;
 }
 
-public func void Socket.destroy(Socket* s)
+public fn void Socket.destroy(Socket* s)
 {
     s.log.debug("closing socket");
     while (s.conns) {
@@ -137,7 +137,7 @@ public func void Socket.destroy(Socket* s)
     free(s);
 }
 
-func void Socket.addConnection(Socket* s, Connection* c)
+fn void Socket.addConnection(Socket* s, Connection* c)
 {
     s.log.debug("add conn %d", c.fd);
     if (s.conns == nil) {
@@ -149,7 +149,7 @@ func void Socket.addConnection(Socket* s, Connection* c)
     }
 }
 
-func void Socket.removeConnection(Socket* s, Connection* c)
+fn void Socket.removeConnection(Socket* s, Connection* c)
 {
     s.log.debug("remove conn %d", c.fd);
     if (s.conns == c) {
@@ -162,7 +162,7 @@ func void Socket.removeConnection(Socket* s, Connection* c)
     c.next = nil;
 }
 
-func void Socket.onConnection(Socket* s)
+fn void Socket.onConnection(Socket* s)
 {
     u32 sin_size = sizeof(Sockaddr_in);
     Sockaddr_in remote;
@@ -174,7 +174,7 @@ func void Socket.onConnection(Socket* s)
     s.addConnection(Connection.create(new_fd, s, &s.log));
 }
 
-func void socket_on_connection(i32 fd, void* arg, u16 flags)
+fn void socket_on_connection(i32 fd, void* arg, u16 flags)
 {
     Socket* s = arg;
     s.onConnection();

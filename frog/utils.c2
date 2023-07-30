@@ -1,11 +1,11 @@
 module utils;
 import stdlib local;
 
-public func void init() {
+public fn void init() {
     srand(1);
 }
 
-public func u32 roll() {
+public fn u32 roll() {
     return cast<u32>((rand() % 6) + 1);
 }
 

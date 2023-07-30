@@ -37,11 +37,11 @@ public type Node2 struct {
     const Blocks* blocks;
 }
 
-public func const char* Node2.getName(const Node2* node) {
+public fn const char* Node2.getName(const Node2* node) {
     return &node.blocks.node_names[node.node.name_off];
 }
 
-public func const char* Node2.getAttr(const Node2* node, const char* name) {
+public fn const char* Node2.getAttr(const Node2* node, const char* name) {
     u32 offset = node.node.attr_off;
     while (offset != 0) {
         const Attr* attr = &node.blocks.attrs[offset];
@@ -54,7 +54,7 @@ public func const char* Node2.getAttr(const Node2* node, const char* name) {
     return nil;
 }
 
-public func NodeIter Node2.getIter(const Node2* node) {
+public fn NodeIter Node2.getIter(const Node2* node) {
     NodeIter iter;
     // TODO check CHILD_TEXT
     u32 child = node.node.children;
@@ -68,17 +68,17 @@ public type NodeIter struct {
     const Blocks* blocks;
 }
 
-public func bool NodeIter.done(const NodeIter* iter) {
+public fn bool NodeIter.done(const NodeIter* iter) {
     return iter.current == nil;
 }
 
-public func void NodeIter.next(NodeIter* iter) {
+public fn void NodeIter.next(NodeIter* iter) {
     u32 next = iter.current.next_node;
     if (next == 0) iter.current = nil;
     else iter.current = &iter.blocks.nodes[next];
 }
 
-public func Node2 NodeIter.get(NodeIter* iter) {
+public fn Node2 NodeIter.get(NodeIter* iter) {
     Node2 result;
     result.node = iter.current;
     result.blocks = iter.blocks;
@@ -99,7 +99,7 @@ public type Attr struct {
 } @(packed, opaque)
 
 
-func void Blocks.init(Blocks* b) {
+fn void Blocks.init(Blocks* b) {
     memset(b, 0, sizeof(Blocks));
     b.nodes = calloc(MAX_NODES, sizeof(Node));
     b.max_nodes = MAX_NODES;
@@ -118,13 +118,13 @@ func void Blocks.init(Blocks* b) {
     b.data = calloc(1, b.data_size);
 }
 
-func void Blocks.destroy(Blocks* b) {
+fn void Blocks.destroy(Blocks* b) {
     free(b.attrs);
     free(b.node_names);
     free(b.nodes);
 }
 
-func u32 Blocks.addNode(Blocks* b, const char* name) {
+fn u32 Blocks.addNode(Blocks* b, const char* name) {
     // TODO check if fits in block, otherwise re-alloc
     if (b.node_count == b.max_nodes) {
         printf("NODE LIMIT REACHED!\n");
@@ -151,7 +151,7 @@ func u32 Blocks.addNode(Blocks* b, const char* name) {
     return off;
 }
 
-func u32 Blocks.addAttr(Blocks* b, const char* name) {
+fn u32 Blocks.addAttr(Blocks* b, const char* name) {
     // TODO check if fits in block, otherwise re-alloc
     if (b.attr_count == b.max_attrs) {
         printf("ATTR LIMIT REACHED!\n");
@@ -172,7 +172,7 @@ func u32 Blocks.addAttr(Blocks* b, const char* name) {
     return off;
 }
 
-func u32 Blocks.addValue(Blocks* b, const char* value) {
+fn u32 Blocks.addValue(Blocks* b, const char* value) {
     u32 len = cast<u32>(strlen(value)) + 1;
     if (b.data_off + len >= b.data_size) {
         printf("DATA LIMIT REACHED\n");
@@ -184,7 +184,7 @@ func u32 Blocks.addValue(Blocks* b, const char* value) {
     return off;
 }
 
-func void Blocks.dump(const Blocks* b, bool full) {
+fn void Blocks.dump(const Blocks* b, bool full) {
     if (b.node_count != 0) b.dumpNode(0, 0);
 
     if (full) {
@@ -272,7 +272,7 @@ func void Blocks.dump(const Blocks* b, bool full) {
     }
 }
 
-func void Blocks.dumpNode(const Blocks* b, u32 off, u32 depth) {
+fn void Blocks.dumpNode(const Blocks* b, u32 off, u32 depth) {
     const Node* node = &b.nodes[off];
     for (u32 i=0; i<depth; ++i) printf("   ");
     printf("%s", &b.node_names[node.name_off]);

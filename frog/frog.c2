@@ -77,7 +77,7 @@ const Tile[] Tiles = {
     Tile.End,
 }
 
-func char tile2str(Tile t) {
+fn char tile2str(Tile t) {
     switch (t) {
     case Tile.Frog:  return 'F';
     case Tile.Goose: return 'G';
@@ -98,7 +98,7 @@ type Player struct {
     u32 position;
 }
 
-public func void init() {
+public fn void init() {
     memset(&board, 0, sizeof(Board));
     board.positions[0] |= Tile.Frog;
     board.positions[0] |= Tile.Goose;
@@ -117,7 +117,7 @@ public func void init() {
     }
 }
 
-func void do_step(u32 step) {
+fn void do_step(u32 step) {
     // remove from list
     list.Element* cur = board.order.popFront();
     Player* p = to_container(Player, element, cur);
@@ -140,7 +140,7 @@ func void do_step(u32 step) {
     if (p.position != Num_tiles+1) board.order.addTail(cur);
 }
 
-public func void run() {
+public fn void run() {
     u32 step = 1;
     while (!board.order.isEmpty()) {
         do_step(step);
@@ -151,7 +151,7 @@ public func void run() {
     }
 }
 
-func void print_pos(Dump* d, u8 pos) {
+fn void print_pos(Dump* d, u8 pos) {
     for (u32 i=Tile.Frog; i<= Tile.Rat; i = i*2) {
         *d.l1++ = ' ';
         Tile t = pos & i;
@@ -168,13 +168,13 @@ type Dump struct {
     char* l2;
 }
 
-func void Dump.init(Dump* d) {
+fn void Dump.init(Dump* d) {
     memset(d, 0, sizeof(Dump));
     d.l1 = d.line1;
     d.l2 = d.line2;
 }
 
-public func void dump() {
+public fn void dump() {
     Dump d;
     d.init();
     print_pos(&d, board.positions[0]);

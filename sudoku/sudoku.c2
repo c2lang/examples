@@ -45,7 +45,7 @@ const i8[] ColOffsets = { // from left column element in Square
     -6, -5, -4, -3, -2, -1, // right square column
 }
 
-func void Board.set(Board* board, u8 x, u8 y, u8 value) {
+fn void Board.set(Board* board, u8 x, u8 y, u8 value) {
     if (!board.inSetup) printf("set %d,%d -> %d\n", y, x, value);
     u32 idx = 9*y + x;
     board.fields[idx].value = value;
@@ -71,7 +71,7 @@ func void Board.set(Board* board, u8 x, u8 y, u8 value) {
     if (!board.inSetup) board.print(false, x, y);
 }
 
-func void Board.init(Board* board) {
+fn void Board.init(Board* board) {
     memset(board, 0, sizeof(Board));
     for (u32 y=0; y<9; y++) {
         for (u32 x=0; x<9; x++) {
@@ -82,7 +82,7 @@ func void Board.init(Board* board) {
     board.todo = 9*9;
 }
 
-func void Board.print(const Board* board, bool showOptions, u8 xx, u8 yy) {
+fn void Board.print(const Board* board, bool showOptions, u8 xx, u8 yy) {
     char[2048] buffer;
     memset(buffer, 0, sizeof(buffer));
     char* cp = buffer;
@@ -112,7 +112,7 @@ func void Board.print(const Board* board, bool showOptions, u8 xx, u8 yy) {
     if (showOptions && board.todo != 0) board.printOptions();
 }
 
-func void Board.printOptions(const Board* board) {
+fn void Board.printOptions(const Board* board) {
     const u32 height = 9 * 4 + 1;
     const u32 width =  9 * 8 + 2;
     char[width * height + 1] buffer;
@@ -150,7 +150,7 @@ func void Board.printOptions(const Board* board) {
     puts(buffer);
 }
 
-func void Board.setup(Board* board, const Setup* setup, u32 size) {
+fn void Board.setup(Board* board, const Setup* setup, u32 size) {
     board.init();
     board.inSetup = true;
     for (u32 i=0; i<size; i++) {
@@ -162,7 +162,7 @@ func void Board.setup(Board* board, const Setup* setup, u32 size) {
     board.print(false, 10, 0);
 }
 
-func void Board.checkFields(Board* board) {
+fn void Board.checkFields(Board* board) {
     for (u8 y=0; y<9; y++) {
         for (u8 x=0; x<9; x++) {
             Field* f = &board.fields[y*9 + x];
@@ -202,7 +202,7 @@ func void Board.checkFields(Board* board) {
     }
 }
 
-func void Board.checkRow(Board* board, u8 row) {
+fn void Board.checkRow(Board* board, u8 row) {
     u8[10] count = { 0 }
     u8[10] pos = { 0 }
     for (u8 x=0; x<9; x++) {
@@ -222,7 +222,7 @@ func void Board.checkRow(Board* board, u8 row) {
     }
 }
 
-func void Board.checkColumn(Board* board, u8 col) {
+fn void Board.checkColumn(Board* board, u8 col) {
     u8[10] count = { 0 }
     u8[10] pos = { 0 }
     for (u8 y=0; y<9; y++) {
@@ -240,7 +240,7 @@ func void Board.checkColumn(Board* board, u8 col) {
     }
 }
 
-func bool Board.checkSquares(Board* board, bool extra) {
+fn bool Board.checkSquares(Board* board, bool extra) {
     u32 cleared = 0;
     for (u8 y=0; y<3; y++) {
         for (u8 x=0; x<3; x++) {
@@ -319,7 +319,7 @@ func bool Board.checkSquares(Board* board, bool extra) {
     return (cleared != 0);
 }
 
-func void Board.solve(Board* board) {
+fn void Board.solve(Board* board) {
     printf("solving Sudoku\n");
     u32 loops = 0;
     while (1) {
@@ -356,7 +356,7 @@ type Puzzle struct {
     u32 setup_count;
 }
 
-func const Puzzle* find(const Puzzle* puzzles, u32 count, const char* name) {
+fn const Puzzle* find(const Puzzle* puzzles, u32 count, const char* name) {
     for (u32 i=0; i<count; i++) {
         if (strcmp(puzzles[i].name, name) == 0) {
             return &puzzles[i];
@@ -372,7 +372,7 @@ const Puzzle[] Puzzles = {
     { "u5", Ultra_pg5, elemsof(Ultra_pg5) },
 }
 
-public func i32 main(i32 argc, char** argv) {
+public fn i32 main(i32 argc, char** argv) {
     if (argc != 2) {
         printf("usage: %s [puzzle]\n", argv[0]);
         for (u32 i=0; i<elemsof(Puzzles); i++) {

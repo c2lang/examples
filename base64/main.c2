@@ -4,7 +4,7 @@ import stdio local;
 import string local;
 import base64;
 
-func void test(const char* input) {
+fn void test(const char* input) {
     i8[64] encoded;
     u8[64] decoded;
     memset(encoded, 0, sizeof(encoded));
@@ -16,7 +16,7 @@ func void test(const char* input) {
     printf("   decoded: %s\n", cast<char*>(decoded));
 }
 
-public func i32 main() {
+public fn i32 main() {
     test("pleasure.");
     test("The quick brown fox jumped");
     return 0;

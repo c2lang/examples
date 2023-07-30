@@ -6,12 +6,12 @@ import unistd local;
 import string local;
 import sys_socket local;
 
-func void fatal(const char* msg) {
+fn void fatal(const char* msg) {
     printf("%s\n", msg);
     exit(EXIT_FAILURE);
 }
 
-func i32 open_socket(u16 port)
+fn i32 open_socket(u16 port)
 {
     i32 fd = socket(AF_INET, SocketType.SOCK_STREAM | SocketType.SOCK_CLOEXEC, IPPROTO_TCP);
     if (fd == -1) {
@@ -36,7 +36,7 @@ func i32 open_socket(u16 port)
     return fd;
 }
 
-func i32 wait_for_connection(i32 fd, char** src_ipnr)
+fn i32 wait_for_connection(i32 fd, char** src_ipnr)
 {
     u32 sin_size = sizeof(Sockaddr_in);
     Sockaddr_in remote;
@@ -47,7 +47,7 @@ func i32 wait_for_connection(i32 fd, char** src_ipnr)
     return new_fd;
 }
 
-public func i32 main() {
+public fn i32 main() {
     // open socket
     u16 port = 8888;
     i32 fd = open_socket(port);

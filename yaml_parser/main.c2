@@ -5,11 +5,11 @@ import string local;
 import file_utils;
 import yaml;
 
-func void get_info(yaml.Parser* parser) {
+fn void get_info(yaml.Parser* parser) {
     const yaml.Node* cmds;
 }
 
-public func i32 main(i32 argc, char** argv) {
+public fn i32 main(i32 argc, char** argv) {
     if (argc != 2) {
         printf("Usage: parser [yaml-file]\n");
         return 0;

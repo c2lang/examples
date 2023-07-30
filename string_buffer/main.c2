@@ -3,9 +3,9 @@ module tester;
 import stdio local;
 import utils;
 
-type Callback func void (utils.StringBuffer* buf, const char* text);
+type Callback fn void (utils.StringBuffer* buf, const char* text);
 
-public func i32 main() {
+public fn i32 main() {
     utils.StringBuffer* buf = utils.StringBuffer.create(8);
     //utils.StringBuffer* buf = utils.StringBuffer.create(100);
 

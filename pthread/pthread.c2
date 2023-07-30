@@ -6,7 +6,7 @@ import unistd local;
 
 bool stop = false;
 
-func void* startThread1(void*) {
+fn void* startThread1(void*) {
     io.printf("started thread1\n");
     while (!stop) {
         sleep(1);
@@ -16,7 +16,7 @@ func void* startThread1(void*) {
     return nil;
 }
 
-func void* startThread2(void*) {
+fn void* startThread2(void*) {
     io.printf("started thread2\n");
     while (!stop) {
         sleep(1);
@@ -26,7 +26,7 @@ func void* startThread2(void*) {
     return nil;
 }
 
-public func i32 main() {
+public fn i32 main() {
     pthread.Pthread[2] threads;
     i32 rc = pthread.create(&threads[0], nil, startThread1, nil);
     if (rc != 0) {

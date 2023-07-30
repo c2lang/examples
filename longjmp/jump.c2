@@ -7,7 +7,7 @@ import csetjmp local;
 JmpBufTag env1;
 JmpBufTag env2;
 
-func i32 function2(char n)
+fn i32 function2(char n)
 {
     printf("function2(%c)\n", n);
     if (n == 'D') longjmp(&env1, 5);
@@ -16,7 +16,7 @@ func i32 function2(char n)
     return 15;
 }
 
-func void function1()
+fn void function1()
 {
     char i;
     for (i='A'; i<'H'; i++) {
@@ -36,7 +36,7 @@ func void function1()
     }
 }
 
-public func i32 main() {
+public fn i32 main() {
     printf("size=%d\n", sizeof(JmpBufTag));
     function1();
     return 0;

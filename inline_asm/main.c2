@@ -1,7 +1,7 @@
 module test;
 import stdio;
 
-func u64 rdtsc() @(inline) {
+fn u64 rdtsc() @(inline) {
     u32 lo;
     u32 hi;
     asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
@@ -11,7 +11,7 @@ func u64 rdtsc() @(inline) {
     return res;
 }
 
-public func i32 main() {
+public fn i32 main() {
     stdio.printf("time is now: %d\n", rdtsc());
     stdio.printf("time is now: %d\n", rdtsc());
     stdio.printf("time is now: %d\n", rdtsc());

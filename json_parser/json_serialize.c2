@@ -8,7 +8,7 @@ import c_errno local;
 import unistd local;
 import file_utils;
 
-func u32 roundup(u32 size) {
+fn u32 roundup(u32 size) {
     if ((size & 0x3) == 0) return size;
     return (size + 3) & ~0x3;
 }
@@ -20,7 +20,7 @@ type Header struct {
     u8[0] data;
 } @(packed)
 
-func bool Data.write(const Data* d,  i32 fd) {
+fn bool Data.write(const Data* d,  i32 fd) {
     // NOTE: copy to internal buffer first, do single write()
     u32 size = sizeof(Header);
     size += roundup(d.names.cur);
@@ -45,7 +45,7 @@ func bool Data.write(const Data* d,  i32 fd) {
     return true;
 }
 
-func Data* Data.read(const u8* data, u32 size) {
+fn Data* Data.read(const u8* data, u32 size) {
     if (size < sizeof(Header)) return nil;
     const Header* hdr = cast<Header*>(data);
     u32 exp_size = sizeof(Header);
@@ -74,7 +74,7 @@ func Data* Data.read(const u8* data, u32 size) {
     return d;
 }
 
-public func bool Parser.write_cache(Parser* p, const char* filename) {
+public fn bool Parser.write_cache(Parser* p, const char* filename) {
     if (!p.data) return true;
     i32 fd = open(filename, O_CREAT | O_WRONLY | O_TRUNC, 0660);
     if (fd == -1) {
@@ -90,7 +90,7 @@ public func bool Parser.write_cache(Parser* p, const char* filename) {
     return true;
 }
 
-public func bool Parser.read_cache(Parser* p, const char* filename) {
+public fn bool Parser.read_cache(Parser* p, const char* filename) {
     if (p.data) p.data.destroy();
     p.message[0] = 0;
 

@@ -12,11 +12,11 @@ import logger;
 events.Base* base;
 logger.Log* mainlog;
 
-func void timeout_func(void*) {
+fn void timeout_func(void*) {
     mainlog.warn("timeout");
 }
 
-public func i32 main() {
+public fn i32 main() {
     logger.Base logbase;
     logbase.init(logger.Level.Info, unistd.isatty(1), true);
 
@@ -54,11 +54,11 @@ public func i32 main() {
     return ret;
 }
 
-func void fatal(const char* msg) {
+fn void fatal(const char* msg) {
 	exit(EXIT_FAILURE);
 }
 
-func void signal_handler(i32 num) {
+fn void signal_handler(i32 num) {
     base.loopbreak(EXIT_SUCCESS);
 }
 

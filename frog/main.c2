@@ -1,7 +1,7 @@
 module frog_main;
 import frog;
 
-public func i32 main(i32 argc, char** argv) {
+public fn i32 main(i32 argc, char** argv) {
     frog.init();
     frog.dump();
     frog.run();

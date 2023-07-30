@@ -12,7 +12,7 @@ public type StringBuffer struct {
 
 static_assert(16, sizeof(StringBuffer));
 
-public func StringBuffer* StringBuffer.create(u32 capacity)
+public fn StringBuffer* StringBuffer.create(u32 capacity)
 {
     StringBuffer* buf = malloc(sizeof(StringBuffer));
     buf.capacity = capacity;
@@ -21,34 +21,34 @@ public func StringBuffer* StringBuffer.create(u32 capacity)
     return buf;
 }
 
-public func void StringBuffer.destroy(StringBuffer* buf)
+public fn void StringBuffer.destroy(StringBuffer* buf)
 {
     free(buf.data_);
     free(buf);
 }
 
-public func u32 StringBuffer.size(const StringBuffer* buf)
+public fn u32 StringBuffer.size(const StringBuffer* buf)
 {
     return buf.size_;
 }
 
-public func const char* StringBuffer.data(const StringBuffer* buf)
+public fn const char* StringBuffer.data(const StringBuffer* buf)
 {
     return buf.data_;
 }
 
-public func void StringBuffer.clear(StringBuffer* buf)
+public fn void StringBuffer.clear(StringBuffer* buf)
 {
     buf.size_ = 0;
 }
 
-public func void StringBuffer.add(StringBuffer* buf, const char* text)
+public fn void StringBuffer.add(StringBuffer* buf, const char* text)
 {
     u32 len = cast<u32>(strlen(text));
     buf.add2(text, len);
 }
 
-public func void StringBuffer.add2(StringBuffer* buf, const char* text, u32 len)
+public fn void StringBuffer.add2(StringBuffer* buf, const char* text, u32 len)
 {
     if ((len + 1) >= (buf.capacity - buf.size_)) {
         u32 newcap = buf.capacity * 2;
@@ -64,7 +64,7 @@ public func void StringBuffer.add2(StringBuffer* buf, const char* text, u32 len)
     buf.data_[buf.size_] = 0;
 }
 
-public func void StringBuffer.print(StringBuffer* buf, const char* format, ...) {
+public fn void StringBuffer.print(StringBuffer* buf, const char* format, ...) {
     // NOTE: no growing
     Va_list args;
     va_start(args, format);
@@ -74,7 +74,7 @@ public func void StringBuffer.print(StringBuffer* buf, const char* format, ...) 
     va_end(args);
 }
 
-public func void StringBuffer.indent(StringBuffer* buf, u32 indent) {
+public fn void StringBuffer.indent(StringBuffer* buf, u32 indent) {
     // NOTE: no growing/checking
     for (u32 i=0; i<indent; i++) {
         buf.data_[buf.size_++] = ' ';

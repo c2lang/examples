@@ -13,7 +13,7 @@ type TextBuffer struct {
     u32 cap;
 }
 
-func void TextBuffer.init(TextBuffer* b, u32 size) {
+fn void TextBuffer.init(TextBuffer* b, u32 size) {
     // NOTE: entry 0 is reserved for empty strings
     b.cap = size;
     b.cur = 1;
@@ -21,16 +21,16 @@ func void TextBuffer.init(TextBuffer* b, u32 size) {
     b.data[0] = 0;
 }
 
-func void TextBuffer.reset(TextBuffer* b) {
+fn void TextBuffer.reset(TextBuffer* b) {
     b.cur = 1;
     b.data[0] = 0;
 }
 
-func void TextBuffer.destroy(TextBuffer* b) {
+fn void TextBuffer.destroy(TextBuffer* b) {
     free(b.data);
 }
 
-func void TextBuffer.resize(TextBuffer* b, u32 cap2) {
+fn void TextBuffer.resize(TextBuffer* b, u32 cap2) {
     b.cap = cap2;
     char* data2 = malloc(b.cap);
     memcpy(data2, b.data, b.cur);
@@ -38,7 +38,7 @@ func void TextBuffer.resize(TextBuffer* b, u32 cap2) {
     b.data = data2;
 }
 
-func u32 TextBuffer.add(TextBuffer* b, const char* text, u32 len) {
+fn u32 TextBuffer.add(TextBuffer* b, const char* text, u32 len) {
     u32 left = b.cap - b.cur;
     if (len >= left) {
         u32 cap2 = b.cap;
@@ -56,7 +56,7 @@ func u32 TextBuffer.add(TextBuffer* b, const char* text, u32 len) {
     return idx;
 }
 
-func void TextBuffer.dump(const TextBuffer* b, const char* text) {
+fn void TextBuffer.dump(const TextBuffer* b, const char* text) {
     printf("%s:  %d|%d\n", text, b.cur, b.cap);
     u32 idx = 1;
     while (idx < b.cur) {
@@ -73,7 +73,7 @@ type NodeKind enum u8 {
     Array = 2,
 }
 
-func const char* kind2str(NodeKind k) {
+fn const char* kind2str(NodeKind k) {
     switch (k) {
     case Object:   return "<object>";
     case Value:    return " <value>";
@@ -92,28 +92,28 @@ type Node struct {
     }
 } @(packed)
 
-func u32 Node.next(const Node* n) {
+fn u32 Node.next(const Node* n) {
     return n.next_kind & 0x3FFFFFFF;
 }
 
-func NodeKind Node.kind(const Node* n) {
+fn NodeKind Node.kind(const Node* n) {
     return cast<NodeKind>(n.next_kind >> 30);
 }
 
-func bool Node.has_child(const Node* n) {
+fn bool Node.has_child(const Node* n) {
     if (n.is_value()) return false;
     return n.child_idx != 0;
 }
 
-func bool Node.is_value(const Node* n) {
+fn bool Node.is_value(const Node* n) {
     return n.kind() == NodeKind.Value;
 }
 
-func bool Node.is_object(const Node* n) {
+fn bool Node.is_object(const Node* n) {
     return n.kind() == NodeKind.Object;
 }
 
-func bool Node.is_array(const Node* n) {
+fn bool Node.is_array(const Node* n) {
     return n.kind() == NodeKind.Array;
 }
 
@@ -123,25 +123,25 @@ type NodeBuffer struct {
     u32 cap;
 }
 
-func void NodeBuffer.init(NodeBuffer* b, u32 size) {
+fn void NodeBuffer.init(NodeBuffer* b, u32 size) {
     b.cap = size;
     b.cur = 1;  // skip nodes with idx 0 (reserved value)
     b.data = malloc(size * sizeof(Node));
 }
 
-func void NodeBuffer.destroy(NodeBuffer* b) {
+fn void NodeBuffer.destroy(NodeBuffer* b) {
     free(b.data);
 }
 
-func void NodeBuffer.reset(NodeBuffer* b) {
+fn void NodeBuffer.reset(NodeBuffer* b) {
     b.cur = 1;
 }
 
-func u32 NodeBuffer.getSize(const NodeBuffer* b) {
+fn u32 NodeBuffer.getSize(const NodeBuffer* b) {
     return b.cur * sizeof(Node);
 }
 
-func void NodeBuffer.resize(NodeBuffer* b, u32 cap2) {
+fn void NodeBuffer.resize(NodeBuffer* b, u32 cap2) {
     b.cap = cap2;
     char* data2 = malloc(b.cap * sizeof(Node));
     memcpy(data2, b.data, b.cur * sizeof(Node));
@@ -149,7 +149,7 @@ func void NodeBuffer.resize(NodeBuffer* b, u32 cap2) {
     b.data = cast<Node*>(data2);
 }
 
-func u32 NodeBuffer.add(NodeBuffer* b, NodeKind kind, u32 name_idx, u32 value_idx) {
+fn u32 NodeBuffer.add(NodeBuffer* b, NodeKind kind, u32 name_idx, u32 value_idx) {
     if (b.cur == b.cap) b.resize(b.cap * 2);
 
     u32 idx = b.cur;
@@ -161,7 +161,7 @@ func u32 NodeBuffer.add(NodeBuffer* b, NodeKind kind, u32 name_idx, u32 value_id
     return idx;
 }
 
-func void NodeBuffer.dump(const NodeBuffer* b) {
+fn void NodeBuffer.dump(const NodeBuffer* b) {
     printf("Nodes:  %d|%d\n", b.cur, b.cap);
     u32 idx = 1;
     while (idx < b.cur) {
@@ -190,7 +190,7 @@ public type Data struct {
     NodeBuffer nodes;
 } @(opaque)
 
-func Data* Data.create() {
+fn Data* Data.create() {
     Data* d = malloc(sizeof(Data));
     d.names.init(TEXT_INIT_SIZE);
     d.values.init(TEXT_INIT_SIZE);
@@ -198,42 +198,42 @@ func Data* Data.create() {
     return d;
 }
 
-func void Data.destroy(Data* d) {
+fn void Data.destroy(Data* d) {
     d.names.destroy();
     d.values.destroy();
     d.nodes.destroy();
     free(d);
 }
 
-func void Data.reset(Data* d) {
+fn void Data.reset(Data* d) {
     d.names.reset();
     d.values.reset();
     d.nodes.reset();
 }
 
-func u32 Data.addName(Data* d, const char* name, u32 len) {
+fn u32 Data.addName(Data* d, const char* name, u32 len) {
     return d.names.add(name, len);
 }
 
-func u32 Data.addValue(Data* d, const char* value, u32 len) {
+fn u32 Data.addValue(Data* d, const char* value, u32 len) {
     return d.values.add(value, len);
 }
 
-func u32 Data.addNode(Data* d, NodeKind kind, u32 name_idx, u32 value_idx) {
+fn u32 Data.addNode(Data* d, NodeKind kind, u32 name_idx, u32 value_idx) {
     return d.nodes.add(kind, name_idx, value_idx);
 }
 
-func void Data.setChild(Data* d, u32 parent_idx, u32 child_idx) {
+fn void Data.setChild(Data* d, u32 parent_idx, u32 child_idx) {
     Node* n = &d.nodes.data[parent_idx];
     n.child_idx = child_idx;
 }
 
-func void Data.setNext(Data* d, u32 prev_idx, u32 next_idx) {
+fn void Data.setNext(Data* d, u32 prev_idx, u32 next_idx) {
     Node* n = &d.nodes.data[prev_idx];
     n.next_kind |= next_idx;
 }
 
-func u32 Data.find_child(const Data* d, u32 idx, const char* key) {
+fn u32 Data.find_child(const Data* d, u32 idx, const char* key) {
     if (idx == 0) return 0;
     const Node* n = &d.nodes.data[idx];
     if (n.is_value()) return 0;
@@ -241,7 +241,7 @@ func u32 Data.find_child(const Data* d, u32 idx, const char* key) {
     return 0;
 }
 
-func void Data.dump(const Data* d, bool verbose) {
+fn void Data.dump(const Data* d, bool verbose) {
     u32 used = d.nodes.cur * sizeof(Node) + d.names.cur + d.values.cur;
     u32 cap = d.nodes.cap * sizeof(Node) + d.names.cap + d.values.cap;
     printf("JSON  (memory: %d|%d)\n", used, cap);
@@ -255,7 +255,7 @@ func void Data.dump(const Data* d, bool verbose) {
     d.dumpNode(1, 0);
 }
 
-func void Data.dumpNode(const Data* d, u32 idx, u32 indent_) {
+fn void Data.dumpNode(const Data* d, u32 idx, u32 indent_) {
     while (idx != 0) {
         const Node* n = &d.nodes.data[idx];
         switch (n.kind()) {
@@ -281,53 +281,53 @@ public type Iter struct {
     u32 cur_idx;
 }
 
-public func bool Iter.done(const Iter* i) {
+public fn bool Iter.done(const Iter* i) {
     return i.cur_idx == 0;
 }
 
-public func void Iter.next(Iter* i) {
+public fn void Iter.next(Iter* i) {
     if (i.cur_idx == 0) return;
 
     const Node* n = &i.data.nodes.data[i.cur_idx];
     i.cur_idx = n.next();
 }
 
-public func bool Iter.is_value(const Iter* i) {
+public fn bool Iter.is_value(const Iter* i) {
     if (i.cur_idx == 0) return false;
     const Node* n = &i.data.nodes.data[i.cur_idx];
     return n.is_value();
 }
 
-public func bool Iter.is_object(const Iter* i) {
+public fn bool Iter.is_object(const Iter* i) {
     if (i.cur_idx == 0) return false;
     const Node* n = &i.data.nodes.data[i.cur_idx];
     return n.is_object();
 }
 
-public func bool Iter.is_array(const Iter* i) {
+public fn bool Iter.is_array(const Iter* i) {
     if (i.cur_idx == 0) return false;
     const Node* n = &i.data.nodes.data[i.cur_idx];
     return n.is_array();
 }
 
-public func bool Iter.is_valid(const Iter* i) {
+public fn bool Iter.is_valid(const Iter* i) {
     return i.cur_idx != 0;
 }
 
-public func bool Iter.has_child(const Iter* i) {
+public fn bool Iter.has_child(const Iter* i) {
     if (i.cur_idx == 0) return false;
     const Node* n = &i.data.nodes.data[i.cur_idx];
     return n.has_child();
 }
 
-public func const char* Iter.key(const Iter* i) {
+public fn const char* Iter.key(const Iter* i) {
     if (i.cur_idx == 0) return nil;
     const Node* n = &i.data.nodes.data[i.cur_idx];
     if (!n.is_value()) return nil;
     return &i.data.names.data[n.name_idx];
 }
 
-public func const char* Iter.value(const Iter* i) {
+public fn const char* Iter.value(const Iter* i) {
     if (i.cur_idx == 0) return nil;
     const Node* n = &i.data.nodes.data[i.cur_idx];
     if (!n.is_value()) return nil;
@@ -337,7 +337,7 @@ public func const char* Iter.value(const Iter* i) {
 // for objects/arrays
 
 // Note: key == nil returns first child TODO
-public func Iter Iter.get_child(const Iter* i, const char* key) {
+public fn Iter Iter.get_child(const Iter* i, const char* key) {
     Iter i2 = { i.data, 0 }
     if (i.cur_idx == 0) return i2;
 
@@ -345,7 +345,7 @@ public func Iter Iter.get_child(const Iter* i, const char* key) {
     return i2;
 }
 
-public func Iter Iter.get_child_iter(const Iter* i) {
+public fn Iter Iter.get_child_iter(const Iter* i) {
     Iter iter = { i.data, 0 }
     const Node* n = &i.data.nodes.data[i.cur_idx];
     if (n.is_value()) return iter;
@@ -355,7 +355,7 @@ public func Iter Iter.get_child_iter(const Iter* i) {
 
 
 // Returns first child if key == nil, return nil if not found/not value
-public func const char* Iter.child_value(const Iter* i, const char* key) {
+public fn const char* Iter.child_value(const Iter* i, const char* key) {
     u32 idx = find_nested_child(i.data, i.cur_idx, key);
     if (idx == 0) return nil;
 
@@ -364,7 +364,7 @@ public func const char* Iter.child_value(const Iter* i, const char* key) {
     return &i.data.values.data[n.value_idx];
 }
 
-func u32 find_nested_child(const Data* data, u32 idx, const char* key) {
+fn u32 find_nested_child(const Data* data, u32 idx, const char* key) {
     if (idx == 0) return 0;
 
     const Node* n = &data.nodes.data[idx];
@@ -393,7 +393,7 @@ func u32 find_nested_child(const Data* data, u32 idx, const char* key) {
     return node_idx;
 }
 
-func u32 find_child(const Data* data, u32 cur_idx, const char* key) {
+fn u32 find_child(const Data* data, u32 cur_idx, const char* key) {
     const Node* n = &data.nodes.data[cur_idx];
 
     if (n.kind() == NodeKind.Value) return 0;
@@ -410,7 +410,7 @@ func u32 find_child(const Data* data, u32 cur_idx, const char* key) {
 }
 
 // Schema stuff
-func bool Iter.check_schema_priv(const Iter* i, const char** schema) {
+fn bool Iter.check_schema_priv(const Iter* i, const char** schema) {
     u32 cur_idx = i.cur_idx;
     while (**schema != 0) {
         if (cur_idx == 0) {
@@ -445,7 +445,7 @@ func bool Iter.check_schema_priv(const Iter* i, const char** schema) {
 }
 
 // schema: s = string, a = array, o = object, o(..) = object children, . = more coming (dont care)
-public func bool Iter.check_schema(const Iter* i, const char* schema) {
+public fn bool Iter.check_schema(const Iter* i, const char* schema) {
     return i.check_schema_priv(&schema);
 }
 

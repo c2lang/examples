@@ -13,7 +13,7 @@ type Char64Long16 union {
     u32[16] l;
 }
 
-func u32 rol(u32 value, u32 bits) {
+fn u32 rol(u32 value, u32 bits) {
     return ((value) << (bits)) | ((value) >> (32 - (bits)));
 }
 
@@ -36,7 +36,7 @@ func u32 rol(u32 value, u32 bits) {
 #define R4(v,w,x,y,z,i) z+=(w^x^y)+blk(i)+0xCA62C1D6+rol(v,5);w=rol(w,30);
 
 //func void transform(u32[5] state, const u8[64] buffer) {
-func void transform(u32* state, const u8* buffer) {
+fn void transform(u32* state, const u8* buffer) {
     Char64Long16 block;
     memcpy(&block, buffer, 64);
 
@@ -137,7 +137,7 @@ func void transform(u32* state, const u8* buffer) {
     memset(&block, 0, sizeof(block));
 }
 
-public func void Ctx.init(Ctx* ctx) {
+public fn void Ctx.init(Ctx* ctx) {
     ctx.state[0] = 0x67452301;
     ctx.state[1] = 0xEFCDAB89;
     ctx.state[2] = 0x98BADCFE;
@@ -148,7 +148,7 @@ public func void Ctx.init(Ctx* ctx) {
 
 }
 
-public func void Ctx.update(Ctx* ctx, const u8* data, u32 len) {
+public fn void Ctx.update(Ctx* ctx, const u8* data, u32 len) {
     u32 i;
     u32 j = ctx.count[0];
     if ((ctx.count[0] += len << 3) < j) ctx.count[1]++;
@@ -170,7 +170,7 @@ public func void Ctx.update(Ctx* ctx, const u8* data, u32 len) {
 }
 
 // digest is 20 long
-public func void Ctx.finalize(Ctx* ctx, u8* digest) {
+public fn void Ctx.finalize(Ctx* ctx, u8* digest) {
     u8[8] finalcount;
     for(u32 i=0; i<8; i++) {
         finalcount[i] = cast<u8>(((ctx.count[i >= 4 ? 0 : 1] >> ((3 - (i & 3)) * 8)) & 255));
@@ -189,7 +189,7 @@ public func void Ctx.finalize(Ctx* ctx, u8* digest) {
     memset(&finalcount, 0, sizeof(finalcount));
 }
 
-public func void hash(char* output, const char* input, u32 len) {
+public fn void hash(char* output, const char* input, u32 len) {
     Ctx ctx;
     ctx.init();
 

@@ -10,7 +10,7 @@ import json;
 
 const char[] Cache_suffix = ".cache";
 
-func u64 current_time() {
+fn u64 current_time() {
     sys_time.Timeval tv;
     sys_time.gettimeofday(&tv, nil);
     u64 now64 = cast<u64>(tv.tv_sec);
@@ -19,7 +19,7 @@ func u64 current_time() {
     return now64;
 }
 
-func bool isCache(const char* filename) {
+fn bool isCache(const char* filename) {
     u64 len = strlen(filename);
     u64 suflen = strlen(Cache_suffix);
     if (len <= suflen + 1) return false;
@@ -27,7 +27,7 @@ func bool isCache(const char* filename) {
     return false;
 }
 
-public func i32 main(i32 argc, char** argv) {
+public fn i32 main(i32 argc, char** argv) {
     if (argc < 2) {
         printf("Usage: parser [json-file]\n");
         return 0;
