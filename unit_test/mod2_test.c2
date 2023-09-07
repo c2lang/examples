@@ -1,0 +1,20 @@
+module mod2;
+
+// NOTE: import c2test not needed without asserts!
+
+type Test struct {
+    i32 x;
+} @(unittest)
+
+fn void Test.setup(Test* t) {
+    t.x = 20;
+}
+
+fn void Test.teardown(Test* t) { }
+
+fn void Test.test1(Test* t) {
+}
+
+fn void Test.test2(Test* t) {
+}
+

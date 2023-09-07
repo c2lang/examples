@@ -40,7 +40,7 @@ Open a server socket and listen to it
 A very simple StringBuffer showing off struct functions
 
 ## unit_tests
-showing of incremental arrays, used to store unit tests
+Shows the use of the unit-test plugin in combination with auto-arguments.
 
 
 # Graphics examples

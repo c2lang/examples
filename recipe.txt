@@ -180,3 +180,15 @@ executable pthread_test
     pthread/pthread.c2
 end
 
+executable unit_test
+    $warnings no-unused
+    $backend c
+    $plugin unit_test []
+
+    unit_test/mod1.c2
+    unit_test/mod2.c2
+
+    unit_test/mod1_test.c2
+    unit_test/mod2_test.c2
+    unit_test/test_main.c2
+end

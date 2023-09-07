@@ -1,0 +1,7 @@
+module mod1;
+
+fn i32 func1(i32 a) {
+    return 2 * a;
+}
+
+

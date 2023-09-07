@@ -1,0 +1,78 @@
+module mod1;
+
+import c2test local;
+
+type Test struct {
+    i32 x;
+} @(unittest)
+
+fn void Test.setup(Test* t) {
+    t.x = 10;
+}
+
+fn void Test.teardown(Test* t) {
+}
+
+fn void Test.test1(Test* t) {
+    check_eq(2, func1(1));
+    check_eq(7, func1(3));
+    check_eq(4, func1(4));
+}
+
+fn void Test.test2(Test* t) {
+    t.helper();
+    check_str_contains("foobar", "oba");
+    check_str("foo", "bar");
+    log("test2..");
+}
+
+fn void Test.test3(Test* t) {
+    t.helper();
+    log("foo bar faa");
+}
+
+/*
+fn void Test.test4(Test* t) @(skip) {
+    check_eq(1, 2);
+}
+*/
+
+fn void Test.test5(Test* t) {
+    u8[] a = { 0x1, 0x2, 0x3, 0x4 }
+    u8[] b = { 0x1, 0x2, 0x8, 0x4 }
+    check_data(a, elemsof(a), b, elemsof(b));
+}
+
+fn void Test.test6(Test* t) {
+    check_lt(10, 8);
+    check_le(10, 10);
+    check_between(10, 20, 19);
+}
+
+fn void Test.test7(Test* t) {
+    check_not_nil(t);
+    check_nil(t);
+}
+
+fn void Test.helper(Test* t) {
+    log("helper");
+}
+
+#if 0
+type Test2 stru{
+    i32 x;
+} @(unittest)
+
+fn void Test2.setup(Test2* t) {
+    t.x = 10;
+}
+
+fn void Test2.test1(Test2* t) {
+}
+
+fn void Test2.test2(Test2* t) {
+    //CHECK_EQ(t.x, 20);
+    // -> need (hygienic) macros!
+}
+#endif
+
