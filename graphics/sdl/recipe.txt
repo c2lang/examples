@@ -1,7 +1,7 @@
 
 executable sdltest
 	$warnings no-unused
-	$generate-c single-module
+	$backend c
     $use sdl2 dynamic
     $use sdl2_image dynamic
 	main.c2
