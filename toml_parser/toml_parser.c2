@@ -368,10 +368,10 @@ fn void Parser.expect(Parser* p, TokenKind k) {
 
 const u32 MaxDiag = 128;
 
-public type Reader struct {
+public type Reader struct @(opaque) {
     char[MaxDiag] message;
     Blocks* blocks;
-} @(opaque)
+}
 
 public fn Reader* Reader.create() {
     Reader* r = malloc(sizeof(Reader));
@@ -606,16 +606,16 @@ fn const char* type2str(ValueType t) {
 }
 
 
-public type Node struct {
+public type Node struct @(opaque, packed) {
     u32 nameOffset;
     u32 nextNode;
     union {
         u32 child;
         u32 rawValue;      // bit 31 isArray, bit 29-30 ValueType
     }
-} @(opaque, packed)
+}
 
-public type Blocks struct {
+public type Blocks struct @(opaque) {
     Node* nodes;
     u32 nodeCount;
 
@@ -629,7 +629,7 @@ public type Blocks struct {
     char* values;
     u32 valuesOffset;
     u32 valuesSize;
-} @(opaque)
+}
 
 fn void Blocks.init(Blocks* b) {
     memset(b, 0, sizeof(Blocks));

@@ -85,18 +85,18 @@ public fn Node2 NodeIter.get(NodeIter* iter) {
     return result;
 }
 
-public type Node struct {
+public type Node struct @(packed, opaque) {
     u32 name_off;    // off in node_names
     u32 next_node;      // off in nodes (index of Node)
     u32 attr_off;    // off in attrs
     u32 children;       // if upper bit is set, point to Data
-} @(packed, opaque)
+}
 
-public type Attr struct {
+public type Attr struct @(packed, opaque) {
     u32 name_off;     // off in attr_names
     u32 next_attr;    // off in attrs (index of Attr)
     u32 value_off;    // off in data;
-} @(packed, opaque)
+}
 
 
 fn void Blocks.init(Blocks* b) {

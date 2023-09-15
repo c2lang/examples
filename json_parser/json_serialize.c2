@@ -13,12 +13,12 @@ fn u32 roundup(u32 size) {
     return (size + 3) & ~0x3;
 }
 
-type Header struct {
+type Header struct @(packed) {
     u32 names_size;
     u32 values_size;
     u32 nodes_size;
     u8[0] data;
-} @(packed)
+}
 
 fn bool Data.write(const Data* d,  i32 fd) {
     // NOTE: copy to internal buffer first, do single write()

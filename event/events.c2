@@ -41,7 +41,7 @@ type Cmd struct {
     }
 }
 
-public type Base struct {
+public type Base struct @(opaque) {
     u32 running_loop;
     u32 loop_break;
     u8 return_value;
@@ -55,7 +55,7 @@ public type Base struct {
     i32 write_pipe;
     u32 numfds;
     bool eventsDirty;
-} @(opaque)
+}
 
 public fn Base* Base.create() {
     i32[2] pipefd;

@@ -344,11 +344,11 @@ fn void Board.solve(Board* board) {
     printf("%d loops\n", loops);
 }
 
-type Setup struct {
+type Setup struct @(packed) {
     u8 y;
     u8 x;
     u8 value;
-} @(packed)
+}
 
 type Puzzle struct {
      const char* name;

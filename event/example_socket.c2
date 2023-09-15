@@ -85,13 +85,13 @@ fn void connection_on_data(i32 fd, void* arg, u16 flags)
 }
 
 
-public type Socket struct {
+public type Socket struct @(opaque) {
     i32 fd;
     events.Base* base;
     events.Event event;
     logger.Log log;
     Connection* conns;
-} @(opaque)
+}
 
 public fn Socket* Socket.create(events.Base* base, logger.Base* logbase, const char* name, u16 port)
 {

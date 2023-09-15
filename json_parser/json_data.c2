@@ -83,14 +83,14 @@ fn const char* kind2str(NodeKind k) {
 }
 
 
-type Node struct {
+type Node struct @(packed) {
     u32 next_kind;  // 2 upper bits is kind, rest is next_idx;
     u32 name_idx;
     union {
         u32 child_idx;
         u32 value_idx;
     }
-} @(packed)
+}
 
 fn u32 Node.next(const Node* n) {
     return n.next_kind & 0x3FFFFFFF;
@@ -184,11 +184,11 @@ fn void NodeBuffer.dump(const NodeBuffer* b) {
 }
 
 
-public type Data struct {
+public type Data struct @(opaque) {
     TextBuffer names;
     TextBuffer values;
     NodeBuffer nodes;
-} @(opaque)
+}
 
 fn Data* Data.create() {
     Data* d = malloc(sizeof(Data));
