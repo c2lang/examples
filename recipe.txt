@@ -149,7 +149,7 @@ executable sudoku
     sudoku/boards.c2
 end
 
-lib plugin1 shared
+lib plugin1 dynamic
     $warnings no-unused
 	$backend c
     $export plugin_main
@@ -157,7 +157,7 @@ lib plugin1 shared
     plugin/plugin1.c2
 end
 
-lib plugin2 shared
+lib plugin2 dynamic
     $warnings no-unused
 	$backend c
     $export plugin_main
