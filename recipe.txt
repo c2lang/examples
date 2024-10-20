@@ -192,3 +192,21 @@ executable unit_test
     unit_test/mod2_test.c2
     unit_test/test_main.c2
 end
+
+executable mc_sender
+    $warnings no-unused
+    $backend c
+
+    multicast/multicast_sender.c2
+    multicast/sender.c2
+end
+
+executable mc_receiver
+    $warnings no-unused
+    $backend c
+
+    event/events.c2
+    multicast/multicast_receiver.c2
+    multicast/receiver.c2
+end
+

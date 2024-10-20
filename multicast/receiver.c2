@@ -1,0 +1,27 @@
+module test;
+
+import events;
+import multicast_receiver local;
+
+import stdio local;
+import string local;
+import unistd;
+
+const char[] MULTICAST_IP = "225.0.0.37";
+const u16 MULTICAST_PORT = 12345;
+
+
+public fn i32 main() {
+    events.Base* evbase = events.Base.create();
+
+    Receiver receiver;
+    receiver.init(evbase, MULTICAST_IP, MULTICAST_PORT);
+
+    u8 ret = evbase.mainloop();
+
+    receiver.destroy();
+    evbase.destroy();
+    return ret;
+}
+
+

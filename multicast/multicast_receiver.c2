@@ -1,0 +1,93 @@
+module multicast_receiver;
+
+import events;
+
+import stdio local;
+import stdlib local;
+import unistd local;
+import c_errno local;
+import string local;
+import sys_socket local;
+
+public type Receiver struct {
+    events.Base* evbase;
+    events.Event rx_event;
+    i32 fd;
+    char[16] ipnr;
+    u16 port;
+    Sockaddr_in addr;
+}
+
+public fn void Receiver.init(Receiver* s, events.Base* evbase, const char* ipnr, u16 port) {
+    s.evbase = evbase;
+    s.fd = -1;
+    strcpy(s.ipnr, ipnr);
+    s.port = port;
+    s.open_socket();
+
+    s.rx_event.assign(evbase, s.fd, events.READ, on_data, s);
+    s.rx_event.add();
+}
+
+public fn void Receiver.destroy(Receiver* s) {
+    s.rx_event.del();
+    Ip_Mreq mreq;
+    mreq.imr_multiaddr.s_addr = inet_addr(s.ipnr);
+    mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+    if (setsockopt(s.fd, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq)) < 0) {
+        fprintf(stderr, "setsockopt(IP_DROP_MEMBERSHIP): %s\n", strerror(*errno2()));
+        exit(EXIT_FAILURE);
+    }
+
+    close(s.fd);
+}
+
+fn void Receiver.open_socket(Receiver* s) {
+    // create what looks like an ordinary UDP socket
+    if ((s.fd = socket(AF_INET, SocketType.SOCK_DGRAM | SocketType.SOCK_CLOEXEC, 0)) < 0) {
+        fprintf(stderr, "error opening socket: %s\n", strerror(*errno2()));
+        exit(EXIT_FAILURE);
+    }
+
+    i32 reuse = 1;
+    if (setsockopt(s.fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) != 0) {
+        fprintf(stderr, "setsockopt(SO_REUSEADDR): %s\n", strerror(*errno2()));
+        exit(EXIT_FAILURE);
+    }
+
+    // bind to address
+    Sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    addr.sin_port = htons(s.port);
+    if (bind(s.fd, cast<Sockaddr*>(&addr), sizeof(addr))) {
+        fprintf(stderr, "bind: %s\n", strerror(*errno2()));
+        exit(EXIT_FAILURE);
+    }
+    s.addr = addr;
+
+    // use setsockopt() to request that the kernel join a multicast group
+    Ip_Mreq mreq;
+    mreq.imr_multiaddr.s_addr = inet_addr(s.ipnr);
+    mreq.imr_interface.s_addr = htonl(INADDR_ANY);
+    if (setsockopt(s.fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, &mreq, sizeof(mreq)) < 0) {
+        fprintf(stderr, "setsockopt(IP_ADD_MEMBERSHIP): %s\n", strerror(*errno2()));
+        exit(EXIT_FAILURE);
+    }
+}
+
+fn void on_data(i32 fd, void* arg, u16 flags) {
+    Receiver* r = arg;
+
+    char[64] msgbuf;
+    u32 addrlen = sizeof(r.addr);
+    isize recv_bytes = recvfrom(r.fd, msgbuf, sizeof(msgbuf), 0, cast<Sockaddr*>(&r.addr), &addrlen);
+    if (recv_bytes < 0) {
+        perror("recvfrom");
+        exit(1);
+    }
+    msgbuf[recv_bytes] = 0;
+    printf("received: %s\n", msgbuf);
+}
+

@@ -1,0 +1,79 @@
+module multicast_sender;
+
+import stdio local;
+import stdlib local;
+import unistd local;
+import c_errno local;
+import string local;
+import sys_socket local;
+
+public type Sender struct {
+    i32 fd;
+    char[16] ipnr;
+    u16 port;
+}
+
+public fn void Sender.init(Sender* s, const char* ipnr, u16 port) {
+    s.fd = -1;
+    strcpy(s.ipnr, ipnr);
+    s.port = port;
+    s.open_socket();
+}
+
+public fn void Sender.destroy(Sender* s) {
+    close(s.fd);
+}
+
+fn void Sender.open_socket(Sender* s) {
+    // create what looks like an ordinary UDP socket
+    //if ((s.fd = socket(AF_INET, SocketType.SOCK_DGRAM | SocketType.SOCK_CLOEXEC, IPPROTO_UDP)) < 0) {
+    if ((s.fd = socket(AF_INET, SocketType.SOCK_DGRAM | SocketType.SOCK_CLOEXEC, 0)) < 0) {
+        fprintf(stderr, "error opening socket: %s\n", strerror(*errno2()));
+        exit(EXIT_FAILURE);
+    }
+
+    // set up destination address
+    Sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = inet_addr(s.ipnr);
+    addr.sin_port = htons(s.port);
+
+    u8 ttl = 1;
+    if (setsockopt(s.fd, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(ttl)) != 0) {
+        fprintf(stderr, "setsockopt(IP_MULTICAST_TTL): %s\n", strerror(*errno2()));
+        exit(EXIT_FAILURE);
+    }
+
+    i32 reuse = 1;
+    if (setsockopt(s.fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) != 0) {
+        fprintf(stderr, "setsockopt(SO_REUSEADDR): %s\n", strerror(*errno2()));
+        exit(EXIT_FAILURE);
+    }
+
+    if (bind(s.fd, cast<Sockaddr*>(&addr), sizeof(addr))) {
+        fprintf(stderr, "bind: %s\n", strerror(*errno2()));
+        exit(EXIT_FAILURE);
+    }
+
+    if (connect(s.fd, cast<Sockaddr*>(&addr), sizeof(addr)) < 0) {
+        fprintf(stderr, "connect: %s\n", strerror(*errno2()));
+        exit(EXIT_FAILURE);
+    }
+
+    //u8 loop;
+    //socklen_t size;
+    //getsockopt(fd, IPPROTO_IP, IP_MULTICAST_LOOP, &loop, &size);
+    //printf("loop = %u\n", loop);
+
+    //printf("sending to %s, port %d\n", s.ipnr, s.port);
+}
+
+public fn void Sender.broadcast(Sender* s, const u8* data, u32 size) {
+    if (send(s.fd, data, size, 0) < 0) {
+        fprintf(stderr, "send: %s\n", strerror(*errno2()));
+        exit(EXIT_FAILURE);
+    }
+
+}
+
