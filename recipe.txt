@@ -210,3 +210,10 @@ executable mc_receiver
     multicast/receiver.c2
 end
 
+executable dir_walker
+    $warnings no-unused
+    $backend c
+
+    dir_walker/main.c2
+end
+
