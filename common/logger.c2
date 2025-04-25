@@ -83,7 +83,7 @@ public fn void Log.setLevel(Log* log, Level lvl) {
 
 public fn void Log.debug(Log* log, const char* format, ...) {
     if (Level.Debug > log.level) return;
-    Va_list args;
+    va_list args;
     va_start(args, format);
     log.internal(Level.Debug, color.Blue, format, args);
     va_end(args);
@@ -91,7 +91,7 @@ public fn void Log.debug(Log* log, const char* format, ...) {
 
 public fn void Log.info(Log* log, const char* format, ...) {
     if (Level.Info > log.level) return;
-    Va_list args;
+    va_list args;
     va_start(args, format);
     log.internal(Level.Info, color.White, format, args);
     va_end(args);
@@ -99,7 +99,7 @@ public fn void Log.info(Log* log, const char* format, ...) {
 
 public fn void Log.warn(Log* log, const char* format, ...) {
     if (Level.Warn > log.level) return;
-    Va_list args;
+    va_list args;
     va_start(args, format);
     log.internal(Level.Warn, color.Yellow, format, args);
     va_end(args);
@@ -107,21 +107,21 @@ public fn void Log.warn(Log* log, const char* format, ...) {
 
 public fn void Log.error(Log* log, const char* format, ...) {
     if (Level.Error > log.level) return;
-    Va_list args;
+    va_list args;
     va_start(args, format);
     log.internal(Level.Error, color.Red, format, args);
     va_end(args);
 }
 
 public fn void Log.fatal(Log* log, const char* format, ...) {
-    Va_list args;
+    va_list args;
     va_start(args, format);
     log.internal(Level.Fatal, color.Red, format, args);
     va_end(args);
     exit(EXIT_FAILURE);
 }
 
-fn void Log.internal(Log* log, Level level, const char* color_, const char* format, Va_list args) {
+fn void Log.internal(Log* log, Level level, const char* color_, const char* format, va_list args) {
     char[256] buffer;
     char* cp = buffer;
 

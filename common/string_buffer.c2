@@ -3,6 +3,7 @@ module utils;
 import stdarg local;
 import stdlib local;
 import string local;
+import stdio local;
 
 public type StringBuffer struct {
     u32 capacity;
@@ -66,7 +67,7 @@ public fn void StringBuffer.add2(StringBuffer* buf, const char* text, u32 len)
 
 public fn void StringBuffer.print(StringBuffer* buf, const char* format, ...) {
     // NOTE: no growing
-    Va_list args;
+    va_list args;
     va_start(args, format);
     i32 len = vsprintf(&buf.data_[buf.size_], format, args);
     // TODO check size
