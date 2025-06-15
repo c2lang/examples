@@ -13,13 +13,18 @@ public type LuaState struct {
 public fn void LuaState.init(LuaState* ls) {
     ls.l = luaL_newstate();
     ls.loadLib("", luaopen_base);
-    ls.loadLib(LUA_TABLIBNAME, luaopen_table);
+    //ls.loadLib(LUA_TABLIBNAME, luaopen_table);
+    ls.loadLib("table", luaopen_table);
     //ls.loadLib(LUA_IOLIBNAME, luaopen_io);
     //ls.loadLib(LUA_OSLIBNAME, luaopen_os);
-    ls.loadLib(LUA_MATHLIBNAME, luaopen_math);
-    ls.loadLib(LUA_STRINGLIBNAME, luaopen_string);
-    ls.loadLib(LUA_DBLIBNAME, luaopen_debug);
-    ls.loadLib(LUA_COLIBNAME, luaopen_coroutine);
+    //ls.loadLib(LUA_MATHLIBNAME, luaopen_math);
+    ls.loadLib("math", luaopen_math);
+    //ls.loadLib(LUA_STRINGLIBNAME, luaopen_string);
+    ls.loadLib("string", luaopen_string);
+    //ls.loadLib(LUA_DBLIBNAME, luaopen_debug);
+    ls.loadLib("debug", luaopen_debug);
+    //ls.loadLib(LUA_COLIBNAME, luaopen_coroutine);
+    ls.loadLib("coroutine", luaopen_coroutine);
 }
 
 public fn void LuaState.destroy(LuaState* ls) {
