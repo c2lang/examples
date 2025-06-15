@@ -80,7 +80,7 @@ public fn i32 startScript(lua.State* l) {
     i32 args = lua.gettop(l);
     if (args != 1) {
         lua.pushboolean(l, false);
-        lua.pushfstring(l, "need 1 argument, got %d", 1, args);
+        lua.pushfstring(l, "need 1 argument, got %d", args);
         //printf("  C> startScript: need 1 arg\n");
         return 2;
         //return -1;
@@ -109,7 +109,7 @@ public fn i32 stopScript(lua.State* l) {
     i32 args = lua.gettop(l);
     if (args != 1) {
         lua.pushboolean(l, false);
-        lua.pushfstring(l, "need 1 argument, got %d", 1, args);
+        lua.pushfstring(l, "need 1 argument, got %d", args);
         return -2;
     }
     if (!lua.isstring(l, 1)) {
