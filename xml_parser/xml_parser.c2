@@ -13,13 +13,13 @@ public const u32 MAX_DIAG = 256;
 
 const u32 CHILD_TEXT = (cast<u32>(1)<<31);
 
-fn bool isNameStartChar(i8 ch) {
+fn bool isNameStartChar(u8 ch) {
     if (ch < 0) return true;
     if (isalpha(ch)) return true;
     return ch == ':' || ch == '_';
 }
 
-fn bool isNameChar(i8 ch) {
+fn bool isNameChar(u8 ch) {
     return isNameStartChar(ch)
         || isdigit(ch)
         || ch == '.'

@@ -80,7 +80,7 @@ public fn i32 main(i32 argc, char** argv) {
 
     utils.StringBuffer* buffer = utils.StringBuffer.create(infile.size);
 
-    strip_comments(cast<const i8*>(infile.data()), buffer);
+    strip_comments(cast<const char*>(infile.data()), buffer);
     infile.close();
 
     file_utils.Writer outfile;

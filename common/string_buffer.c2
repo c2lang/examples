@@ -1,6 +1,7 @@
 module utils;
 
 import stdarg local;
+import stdio local;
 import stdlib local;
 import string local;
 
@@ -66,7 +67,7 @@ public fn void StringBuffer.add2(StringBuffer* buf, const char* text, u32 len)
 
 public fn void StringBuffer.print(StringBuffer* buf, const char* format, ...) {
     // NOTE: no growing
-    Va_list args;
+    va_list args;
     va_start(args, format);
     i32 len = vsprintf(&buf.data_[buf.size_], format, args);
     // TODO check size
