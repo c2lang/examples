@@ -1,9 +1,9 @@
 module utils;
 
 import stdarg local;
+import stdio local;
 import stdlib local;
 import string local;
-import stdio local;
 
 public type StringBuffer struct {
     u32 capacity;

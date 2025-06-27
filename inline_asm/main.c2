@@ -2,6 +2,7 @@ module test;
 import stdio;
 
 fn u64 rdtsc() @(inline) {
+#if ARCH_X86_64
     u32 lo;
     u32 hi;
     asm volatile ("rdtsc" : "=a" (lo), "=d" (hi));
@@ -9,6 +10,13 @@ fn u64 rdtsc() @(inline) {
     res <<= 32;
     res |= lo;
     return res;
+#elif ARCH_ARM64
+    u64 val;
+    asm volatile("mrs %0, cntvct_el0" : "=r" (val));
+    return val;
+#else
+    return 0;
+#endif
 }
 
 public fn i32 main() {
