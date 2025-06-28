@@ -37,7 +37,7 @@ Signal handling example
 Open a server socket and listen to it
 
 ## string_buffer
-A very simple StringBuffer showing off struct functions
+A very simple StringBuffer showing off type functions
 
 ## unit_tests
 Shows the use of the unit-test plugin in combination with auto-arguments.
@@ -60,7 +60,7 @@ sudo apt-get install gcc-arm-linux-gnueabi qemu-user
 Then cross compile the examples with
 
 ```bash
-c2c -b build_arm.toml
+c2c -b build_arm.yaml
 ```
 
 This should even work for the lua example that uses a lua library.

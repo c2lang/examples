@@ -13,7 +13,7 @@ fn void fatal(const char* msg) {
 
 fn i32 open_socket(u16 port)
 {
-    i32 fd = socket(AF_INET, SocketType.SOCK_STREAM | SocketType.SOCK_CLOEXEC, IPPROTO_TCP);
+    i32 fd = socket(AF_INET, SocketType.SOCK_STREAM | SOCK_CLOEXEC, IPPROTO_TCP);
     if (fd == -1) {
         fatal("opening TCP socket");
     }
@@ -40,7 +40,7 @@ fn i32 wait_for_connection(i32 fd, char** src_ipnr)
 {
     u32 sin_size = sizeof(Sockaddr_in);
     Sockaddr_in remote;
-    i32 new_fd = accept4(fd, cast<Sockaddr*>(&remote), &sin_size, SocketType.SOCK_CLOEXEC);
+    i32 new_fd = accept4(fd, cast<Sockaddr*>(&remote), &sin_size, SOCK_CLOEXEC);
     if (new_fd == -1) fatal("accept4");
 
     *src_ipnr = inet_ntoa(remote.sin_addr);
