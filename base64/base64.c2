@@ -86,7 +86,7 @@ public fn i32 decode(const i8* in, u32 len, u8* out) {
         i8 cc;
         switch (i % 4) {
         case 0:
-            cc = (c << 2);
+            cc = (i8)(c << 2);
             out[j] = cast<u8>(cc);
             //out[j] = cast<u8>((c << 2) & 0xFF);       // TODO c2c assert fails on cast
             continue;
@@ -95,7 +95,7 @@ public fn i32 decode(const i8* in, u32 len, u8* out) {
             // if not last char with padding
             if (i < (len -3) || in[len -2] != PAD) {
                 //out[j] = cast<u8>((c & 0xF) << 4);    // TODO c2c assert fails on cast
-                cc = (c & 0xF) << 4;
+                cc = (i8)((c & 0xF) << 4);
                 out[j] = cast<u8>(cc);
             }
             continue;
@@ -103,7 +103,7 @@ public fn i32 decode(const i8* in, u32 len, u8* out) {
             out[j++] += (c >> 2) & 0xF;
             if (i < (len -2) || in[len -1] != PAD) {
                 //out[j] = cast<u8>((c & 0x3) << 6);  // TODO c2c assert fails on cast
-                cc = (c & 0x3) << 6;
+                cc = (i8)((c & 0x3) << 6);
                 out[j] = cast<u8>(cc);
             }
             continue;

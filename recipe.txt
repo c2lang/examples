@@ -172,6 +172,13 @@ executable plugin_mgr
     plugin/plugin_mgr.c2
 end
 
+executable test_lib
+    $warnings no-unused
+	$backend c
+    $use plugin1 dynamic
+    plugin/test_lib.c2
+end
+
 executable pthread_test
     $warnings no-unused
 	$backend c

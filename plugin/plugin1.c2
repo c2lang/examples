@@ -4,9 +4,23 @@ import other;
 
 import stdio;
 
+public i32[] array1 = { 1, 2, 3 }
+
+public i32[+] array2;
+
+array2 += 4;
+array2 += 5;
+array2 += 6;
+array2 += 7;
+
+public i32[5] array3 = { 8, 9, 10, 11, 12 }
+
 public fn void load(i32 arg) {
     stdio.printf("Plugin1.load() %d\n", arg);
     stdio.printf("other.test1 = %p\n", other.test1);
+    stdio.printf("plugin1.array1 = %d\n", elemsof(array1));
+    stdio.printf("plugin1.array2 = %d\n", elemsof(array2));
+    stdio.printf("plugin1.array3 = %d\n", elemsof(array3));
     other.test1();
 }
 
