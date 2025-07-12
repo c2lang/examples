@@ -16,7 +16,7 @@ public fn i32 main() {
 
     u32 nr = 0;
     while (1) {
-        char* message="Hello Multicast World!";
+        const char* message = "Hello Multicast World!";
         char[64] tmp;
         sprintf(tmp, "%s %d", message, nr);
         nr++;
