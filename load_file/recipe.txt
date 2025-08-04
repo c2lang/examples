@@ -2,7 +2,6 @@
 plugin refs_generator [all-targets]
 
 executable test
-    $plugin load_file [load_file.yaml]
     $warnings no-unused
     $backend c
 
