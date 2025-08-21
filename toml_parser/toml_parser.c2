@@ -526,7 +526,7 @@ public fn NodeIter Reader.getNodeIter(const Reader* r, const char* key) {
     if (node && getKind(node.nameOffset) == NodeKind.TableArray) {
         node = &r.blocks.nodes[node.child];
     }
-    NodeIter iter = { r.blocks, node };
+    NodeIter iter = { r.blocks, node }
     return iter;
 }
 
@@ -537,7 +537,7 @@ public type ValueIter struct {
 }
 
 fn ValueIter ValueIter.create(const char* values, bool isArray) {
-    ValueIter iter = { values, isArray };
+    ValueIter iter = { values, isArray }
     return iter;
 }
 

@@ -29,7 +29,7 @@ public fn bool Parser.parse(Parser* p, const char* text) {
 }
 
 public fn Iter Parser.get_root(const Parser* p) {
-    Iter node = { p.data, 1 };
+    Iter node = { p.data, 1 }
     return node;
 }
 
