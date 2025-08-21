@@ -203,8 +203,8 @@ fn void Board.checkFields(Board* board) {
 }
 
 fn void Board.checkRow(Board* board, u8 row) {
-    u8[10] count = { 0 };
-    u8[10] pos = { 0 };
+    u8[10] count = { 0 }
+    u8[10] pos = { 0 }
     for (u8 x=0; x<9; x++) {
         u32 idx = 9*row + x;
         const Field* f = &board.fields[idx];
@@ -223,8 +223,8 @@ fn void Board.checkRow(Board* board, u8 row) {
 }
 
 fn void Board.checkColumn(Board* board, u8 col) {
-    u8[10] count = { 0 };
-    u8[10] pos = { 0 };
+    u8[10] count = { 0 }
+    u8[10] pos = { 0 }
     for (u8 y=0; y<9; y++) {
         u32 idx = 9*y + col;
         const Field* f = &board.fields[idx];
@@ -246,10 +246,10 @@ fn bool Board.checkSquares(Board* board, bool extra) {
         for (u8 x=0; x<3; x++) {
             // check square
             u8 topleft = (y*9 + x) *3;
-            u8[10] count = { 0 };
-            u8[10] pos = { 0 };
-            u8[10] localRows = { 0 };
-            u8[10] localCols = { 0 };
+            u8[10] count = { 0 }
+            u8[10] pos = { 0 }
+            u8[10] localRows = { 0 }
+            u8[10] localCols = { 0 }
             const Field* f = &board.fields[topleft + 0];
             for (u32 o=1; o<10; o++) {
                 // TODO refactor with block below

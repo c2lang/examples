@@ -338,7 +338,7 @@ public fn const char* Iter.value(const Iter* i) {
 
 // Note: key == nil returns first child TODO
 public fn Iter Iter.get_child(const Iter* i, const char* key) {
-    Iter i2 = { i.data, 0 };
+    Iter i2 = { i.data, 0 }
     if (i.cur_idx == 0) return i2;
 
     i2.cur_idx = find_nested_child(i.data, i.cur_idx, key);
@@ -346,7 +346,7 @@ public fn Iter Iter.get_child(const Iter* i, const char* key) {
 }
 
 public fn Iter Iter.get_child_iter(const Iter* i) {
-    Iter iter = { i.data, 0 };
+    Iter iter = { i.data, 0 }
     const Node* n = &i.data.nodes.data[i.cur_idx];
     if (n.is_value()) return iter;
     iter.cur_idx = n.child_idx;
@@ -429,7 +429,7 @@ fn bool Iter.check_schema_priv(const Iter* i, const char** schema) {
             if (!n.is_object()) return false;
             if ((*schema)[1] == '(') {
                 *schema += 2;
-                Iter obj = { i.data, n.child_idx };
+                Iter obj = { i.data, n.child_idx }
                 if (!obj.check_schema_priv(schema)) return false;
             }
             break;
